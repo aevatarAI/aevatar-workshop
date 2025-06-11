@@ -1,0 +1,22 @@
+<Project>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <AbpVersion>9.0.3</AbpVersion>
+        <OrleansVersion>9.0.1</OrleansVersion>
+        <AevatarCoreVersion>1.5.1</AevatarCoreVersion>
+        <AevatarGAgentVersion>1.5.0-workflow-2</AevatarGAgentVersion>
+        <AevatarSignalRVersion>1.5.6-upgrade-core.0</AevatarSignalRVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="Aevatar" Version="$(AevatarCoreVersion)" />
+        <PackageVersion Include="Aevatar.Core" Version="$(AevatarCoreVersion)" />
+        <PackageVersion Include="Aevatar.Core.Abstractions" Version="$(AevatarCoreVersion)" />
+        <PackageVersion Include="Aevatar.EventSourcing.Core" Version="$(AevatarCoreVersion)" />
+        <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarSignalRVersion)" />
+
+        <PackageVersion Include="Microsoft.Orleans.Server" Version="$(OrleansVersion)" />
+        <PackageVersion Include="Microsoft.Orleans.Client" Version="$(OrleansVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(OrleansVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(OrleansVersion)" />
+    </ItemGroup>
+</Project>

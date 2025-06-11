@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DABA362F-0A8F-4B27-9F60-C92A4A442512}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0D89BDDA-A4EB-43F6-9B16-6A41470DB13E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.Workshop.Client", "src\Aevatar.Workshop.Client\Aevatar.Workshop.Client.csproj", "{C531EDB6-7441-49A4-B250-75718BEDB2C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.Workshop.GAgent", "src\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj", "{B52800ED-309F-48D5-965F-3154F47B2477}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.Workshop.Host", "src\Aevatar.Workshop.Host\Aevatar.Workshop.Host.csproj", "{057FBEE7-E1EC-457C-A2B5-9C5FA17574F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.Workshop.AIGAgent", "src\Aevatar.Workshop.AIGAgent\Aevatar.Workshop.AIGAgent.csproj", "{528BD80E-1912-45B7-B1F1-FDB74F32F498}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C531EDB6-7441-49A4-B250-75718BEDB2C7} = {DABA362F-0A8F-4B27-9F60-C92A4A442512}
+		{B52800ED-309F-48D5-965F-3154F47B2477} = {DABA362F-0A8F-4B27-9F60-C92A4A442512}
+		{057FBEE7-E1EC-457C-A2B5-9C5FA17574F8} = {DABA362F-0A8F-4B27-9F60-C92A4A442512}
+		{528BD80E-1912-45B7-B1F1-FDB74F32F498} = {DABA362F-0A8F-4B27-9F60-C92A4A442512}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B52800ED-309F-48D5-965F-3154F47B2477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B52800ED-309F-48D5-965F-3154F47B2477}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B52800ED-309F-48D5-965F-3154F47B2477}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B52800ED-309F-48D5-965F-3154F47B2477}.Release|Any CPU.Build.0 = Release|Any CPU
+		{057FBEE7-E1EC-457C-A2B5-9C5FA17574F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{057FBEE7-E1EC-457C-A2B5-9C5FA17574F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{057FBEE7-E1EC-457C-A2B5-9C5FA17574F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{057FBEE7-E1EC-457C-A2B5-9C5FA17574F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{528BD80E-1912-45B7-B1F1-FDB74F32F498}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{528BD80E-1912-45B7-B1F1-FDB74F32F498}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{528BD80E-1912-45B7-B1F1-FDB74F32F498}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{528BD80E-1912-45B7-B1F1-FDB74F32F498}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
