@@ -3,6 +3,9 @@ using Orleans.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Aevatar.Core.Placement;
+using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.SemanticKernel.Extensions;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = Host.CreateDefaultBuilder(args)
     .UseOrleans(silo =>
@@ -20,9 +23,11 @@ var builder = Host.CreateDefaultBuilder(args)
     })
     .UseConsoleLifetime();
 
-builder.ConfigureServices((_, services) =>
+builder.ConfigureServices((context, services) =>
 {
     services.AddPlacementDirector<SiloNamePatternPlacement, SiloNamePatternPlacementDirector>();
+    services.Configure<SystemLLMConfigOptions>(context.Configuration);
+    services.AddSemanticKernel();
 });
 
 using var host = builder.Build();
