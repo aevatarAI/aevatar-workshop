@@ -19,7 +19,7 @@ public static class Startup
             .ConfigureLogging(logging => logging.AddConsole())
             .UseConsoleLifetime();
 
-        using var host = builder.Build();
+        var host = builder.Build();
         await host.StartAsync();
         return host.Services;
     }
