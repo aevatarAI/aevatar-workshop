@@ -1,7 +1,5 @@
 # Aevatar Workshop Quickstart Guide
 
-**Estimated reading time: 10 minutes**
-
 Welcome to the Aevatar Workshop! This guide will help you get started with the core features of the Aevatar framework, focusing on GAgent collaboration. You'll learn how to run the provided demos, understand the basics of event-driven agent communication, and create your own custom GAgent.
 
 ## What is Aevatar?
@@ -48,7 +46,7 @@ This demo shows the simplest event handler usage. The client sends a `GreetingEv
 sh quickstart.sh 0 "Hello, Aevatar!"
 ```
 - The second argument customizes the greeting message (optional).
-- Check `client.log` for output.
+- Check `host.log` for output.
 
 ### 2.2 MultiGAgentDemo (mode 1)
 This demo demonstrates two GAgents (Alice and Bob) communicating via events:
@@ -60,7 +58,7 @@ This demo demonstrates two GAgents (Alice and Bob) communicating via events:
 ```bash
 sh quickstart.sh 1
 ```
-- Check `client.log` for the collaboration log between Alice and Bob.
+- Check `host.log` for the collaboration log between Alice and Bob.
 
 ### 2.3 RouterDemo (mode 2)
 This demo showcases a more complex scenario with AI agents:
@@ -72,7 +70,7 @@ This demo showcases a more complex scenario with AI agents:
 ```bash
 sh quickstart.sh 2
 ```
-- Check `client.log` for the research and report output.
+- Check `host.log` for the research and report output.
 
 ---
 
