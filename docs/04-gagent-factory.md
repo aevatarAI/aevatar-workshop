@@ -4,7 +4,7 @@
 
 `GAgentFactory` is the central utility for creating, retrieving, and configuring GAgents in the Aevatar framework. It abstracts away the complexity of Orleans grain instantiation and ensures that your agents are properly activated and configured before use.
 
-For context on GAgent design and registration, see the [GAgent documentation](./gagent.md) and [GAgent Attribute](./gagent-attribute.md).
+For context on GAgent design and registration, see the [GAgent documentation](./01-gagent.md) and [GAgent Attribute](./03-gagent-attribute.md).
 
 ---
 
@@ -132,10 +132,10 @@ Console.WriteLine(state.Content.First()); // Should output "Test"
 
 ## Further Reading
 
-- [GAgent Documentation](./gagent.md)
-- [GAgent Attribute](./gagent-attribute.md)
-- [Aevatar Overview](./overview.md)
-- [GAgentFactoryTests (source)](../../test/Aevatar.GAgents.Tests/GAgentFactoryTests.cs)
+- [GAgent Documentation](./01-gagent.md)
+- [GAgent Attribute](./03-gagent-attribute.md)
+- [Aevatar Overview](./00-overview.md)
+- [GAgentFactoryTests (source)](https://github.com/aevatarAI/aevatar-framework/blob/dev/test/Aevatar.GAgents.Tests/GAgentFactoryTests.cs)
 
 ---
 

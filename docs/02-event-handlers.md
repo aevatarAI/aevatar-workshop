@@ -4,7 +4,7 @@
 
 Event handlers are a cornerstone of the Aevatar framework's event-driven model. They allow GAgents to react to domain events, trigger workflows, and coordinate distributed logic. In Aevatar, **event handler events** are distinct from **event sourcing events**: the former are messages that flow between agents and should inherit from `EventBase`, while the latter are used for state mutation and may inherit from `StateLogEventBase<T>`.
 
-For a broader context, see the [Overview](./overview.md) and [GAgent documentation](./gagent.md).
+For a broader context, see the [Overview](./00-overview.md) and [GAgent documentation](./01-gagent.md).
 
 ---
 
@@ -119,8 +119,8 @@ protected override void GAgentTransitionState(MyAgentState state, StateLogEventB
 
 ## Further Reading
 
-- [GAgent Documentation](./gagent.md)
-- [Aevatar Overview](./overview.md)
+- [GAgent Documentation](./01-gagent.md)
+- [Aevatar Overview](./00-overview.md)
 - [Event System Deep Dive](https://deepwiki.com/aevatarAI/aevatar-framework/2.2-event-system)
 
 ---

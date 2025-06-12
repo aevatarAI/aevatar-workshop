@@ -39,7 +39,7 @@ await connection.InvokeAsync("PublishEventAsync",
 - The GAgent processes the event and pushes the result back to the client via the `ReceiveResponse` method.
 
 > See the complete runnable example in: `samples/SignalRSample.Client/Program.cs`  
-> For more details, refer to the official [README.md](../README.md)
+> For more details, refer to the official [README.md](https://github.com/aevatarAI/aevatar-signalR/blob/dev/README.md)
 
 ---
 
@@ -115,7 +115,7 @@ app.MapHub<AevatarSignalRHub>("/aevatarHub");
 - **Response Publishing**: After the GAgent processes an event, `SignalRGAgent` pushes the response back to the client through the SignalR channel.
 - **Extensibility**: Supports multi-tenancy, plugin loading, and AI integration, making it a flexible point for advanced features.
 
-> For more, see [README](../README.md) and [DeepWiki: GAgent Integration](https://deepwiki.com/aevatarAI/aevatar-signalR)
+> For more, see [README](https://github.com/aevatarAI/aevatar-signalR/blob/dev/README.md) and [DeepWiki: GAgent Integration](https://deepwiki.com/aevatarAI/aevatar-signalR)
 
 ### Supporting Grains: State and Routing Infrastructure
 
