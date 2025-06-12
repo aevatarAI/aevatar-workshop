@@ -134,7 +134,8 @@ In your client demo (e.g. in `YourOwnDemo.cs`):
 
 ```csharp
 var myAgent = await gAgentFactory.GetGAgentAsync("mycustom", "demo");
-await myAgent.PublishEventAsync(new MyEvent { Message = "Hello from my custom agent!" });
+var publisher = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>();
+await publisher.PublishEventAsync(new MyEvent { Message = "Hello from my custom agent!" }, myAgent);
 ```
 
 ---
