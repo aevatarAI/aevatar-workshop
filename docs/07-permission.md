@@ -2,7 +2,7 @@
 
 The permission management system consists of two core components: **GAgent Access Permissions** and **Data Access Permissions**.
 
-## 2.1 GAgent Access Permissions
+## GAgent Access Permissions
 
 ### Introduction
 
@@ -144,7 +144,7 @@ public static List<PermissionInfo> GetAllPermissionInfos()
     - Avoid permissions that are too granular or too coarse
     - Establish permission inheritance and dependency relationships
 
-## 2.2 Data Access Permissions
+## Data Access Permissions
 
 ### Introduction
 
