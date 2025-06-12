@@ -67,7 +67,7 @@ var artifactGAgent = await gAgentFactory.GetArtifactGAgentAsync<MyArtifact, MyAr
 
 ## Real-World Usage Patterns (from Tests)
 
-The following examples are inspired by the [GAgentFactoryTests](../../test/Aevatar.GAgents.Tests/GAgentFactoryTests.cs):
+The following examples are inspired by the [GAgentFactoryTests](https://github.com/aevatarAI/aevatar-framework/blob/dev/test/Aevatar.GAgents.Tests/GAgentFactoryTests.cs):
 
 - **Create by GrainId:**
   - Ensures the agent's primary key matches the GrainId.

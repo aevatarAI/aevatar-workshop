@@ -5,6 +5,10 @@ set -e
 WORKSHOP_ROOT=$(cd "$(dirname "$0")" && pwd)
 cd "$WORKSHOP_ROOT"
 
+# Parse arguments for Client
+MODE=${1:-0}
+GREETING=${2:-}
+
 # Step 1: Build all projects
 echo "[Aevatar Workshop] Building all projects..."
 dotnet build aevatar-workshop.sln -c Debug
@@ -16,7 +20,7 @@ echo "[Aevatar Workshop] Starting Host service..."
 cd src/Aevatar.Workshop.Host
 nohup dotnet run --no-build > "$WORKSHOP_ROOT/host.log" 2>&1 &
 HOST_PID=$!
-echo "[HyperAevatar WorkshopEcho] Host started (PID: $HOST_PID), logs at host.log"
+echo "[Aevatar Workshop] Host started (PID: $HOST_PID), logs at host.log"
 
 # Step 3: Wait for Host to initialize (adjust seconds if needed)
 sleep 3
@@ -24,7 +28,11 @@ sleep 3
 # Step 4: Start Client service (in background)
 echo "[Aevatar Workshop] Starting Client service..."
 cd "$WORKSHOP_ROOT/src/Aevatar.Workshop.Client"
-nohup dotnet run --no-build > "$WORKSHOP_ROOT/client.log" 2>&1 &
+if [ -z "$GREETING" ]; then
+  nohup dotnet run --no-build -- "$MODE" > "$WORKSHOP_ROOT/client.log" 2>&1 &
+else
+  nohup dotnet run --no-build -- "$MODE" "$GREETING" > "$WORKSHOP_ROOT/client.log" 2>&1 &
+fi
 CLIENT_PID=$!
 echo "[Aevatar Workshop] Client started (PID: $CLIENT_PID), logs at client.log"
 
