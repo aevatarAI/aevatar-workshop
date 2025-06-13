@@ -54,11 +54,22 @@ app.MapGet("/run", async (HttpContext context) =>
 });
 
 // API endpoint to get last 100 lines of host.log
-app.MapGet("/hostlog", async (HttpContext context) =>
+app.MapGet("/hostlog", async (HttpContext _) =>
 {
     var logPath = Environment.GetEnvironmentVariable("HOST_LOG_PATH") ?? "host.log";
     if (!File.Exists(logPath))
         return Results.Text($"host.log not found at {logPath}");
+    var lines = await File.ReadAllLinesAsync(logPath);
+    var lastLines = string.Join("\n", lines.Skip(Math.Max(0, lines.Length - 100)));
+    return Results.Text(lastLines, "text/plain");
+});
+
+// API endpoint to get last 100 lines of client.log
+app.MapGet("/clientlog", async (HttpContext _) =>
+{
+    var logPath = Environment.GetEnvironmentVariable("CLIENT_LOG_PATH") ?? "client.log";
+    if (!File.Exists(logPath))
+        return Results.Text($"client.log not found at {logPath}");
     var lines = await File.ReadAllLinesAsync(logPath);
     var lastLines = string.Join("\n", lines.Skip(Math.Max(0, lines.Length - 100)));
     return Results.Text(lastLines, "text/plain");

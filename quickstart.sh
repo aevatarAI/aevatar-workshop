@@ -32,6 +32,7 @@ printf "\n"
 
 # Set HOST_LOG_PATH environment variable for client
 export HOST_LOG_PATH="$WORKSHOP_ROOT/host.log"
+export CLIENT_LOG_PATH="$WORKSHOP_ROOT/client.log"
 
 # Step 4: Start Client service (in background)
 echo "[Aevatar Workshop] Starting Client service..."
@@ -49,7 +50,10 @@ echo "[Aevatar Workshop] 🚀 Aevatar Workshop Projects is up and running!"
 echo "[Aevatar Workshop] Host logs: $WORKSHOP_ROOT/host.log"
 echo "[Aevatar Workshop] Client logs: $WORKSHOP_ROOT/client.log"
 echo "[Aevatar Workshop] To stop the services, run: kill $HOST_PID $CLIENT_PID"
+echo "[Aevatar Workshop] Or run: sh shutdown.sh"
 echo "[Aevatar Workshop] For port and access info, check the respective log files or console output."
+
+sleep 3
 
 if command -v open >/dev/null 2>&1; then
   open http://localhost:5000

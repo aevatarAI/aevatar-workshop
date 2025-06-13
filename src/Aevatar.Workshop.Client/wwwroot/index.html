@@ -4,29 +4,163 @@
   <meta charset='UTF-8'>
   <title>Aevatar Workshop Demos</title>
   <style>
-    #hostLogBox { display:none; border:1px solid #ccc; padding:10px; margin-top:20px; background:#f9f9f9; white-space:pre; max-height:300px; overflow:auto; }
-    #showHostLogBtn { margin-top:20px; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #f4f6fa;
+      margin: 0;
+    }
+    h1 {
+      margin-top: 40px;
+      margin-bottom: 24px;
+    }
+    #main-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 900px;
+    }
+    form {
+      background: #fff;
+      padding: 24px 32px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      margin-bottom: 24px;
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    label, select, input, button {
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+    button {
+      padding: 8px 20px;
+      border-radius: 5px;
+      border: none;
+      background: #3b82f6;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 0;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+    #result {
+      margin-top: 10px;
+      background: #f1f5f9;
+      border-radius: 5px;
+      padding: 10px;
+      min-height: 24px;
+      width: 100%;
+      max-width: 500px;
+      box-sizing: border-box;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #router-tip {
+      color: #b45309;
+      background: #fef9c3;
+      border: 1px solid #fde68a;
+      border-radius: 5px;
+      padding: 10px 16px;
+      margin-bottom: 12px;
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+    }
+    #logs-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 32px;
+      width: 100%;
+      max-width: 1400px;
+      margin-top: 32px;
+    }
+    .log-panel {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 16px;
+      width: 650px;
+      min-height: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .log-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .log-btn {
+      margin-bottom: 8px;
+      width: 120px;
+      display: none;
+    }
+    .log-box {
+      display: block;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #f9f9f9;
+      white-space: pre;
+      max-height: 600px;
+      min-height: 400px;
+      overflow: auto;
+      width: 100%;
+      font-size: 0.95rem;
+      font-family: monospace;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
-<h1>Aevatar Workshop Demos</h1>
-<form id='demoForm'>
-  <label>Choose Demo:</label>
-  <select name='mode' id='mode'>
-    <option value='0'>EventHandlerDemo</option>
-    <option value='1'>MultiGAgentDemo</option>
-    <option value='2'>RouterDemo</option>
-    <option value='3'>YourOwnDemo</option>
-  </select><br><br>
-  <label>Greeting (for EventHandlerDemo):</label>
-  <input type='text' name='greeting' id='greeting' value='Hello, Aevatar!'><br><br>
-  <button type='submit'>Run Demo</button>
-</form>
-<pre id='result'></pre>
-
-<button id='showHostLogBtn'>Show Host Log</button>
-<div id='hostLogBox'></div>
-
+  <h1>Aevatar Workshop Demos</h1>
+  <div id="main-content">
+    <form id='demoForm'>
+      <label>Choose Demo:</label>
+      <select name='mode' id='mode'>
+        <option value='0'>EventHandlerDemo</option>
+        <option value='1'>MultiGAgentDemo</option>
+        <option value='2'>RouterDemo</option>
+        <option value='3'>YourOwnDemo</option>
+      </select>
+      <div id="router-tip">
+        ⚠️ For RouterDemo, please make sure you have configured your API key as described in the Quickstart documentation.
+      </div>
+      <div id="greeting-group">
+        <label>Greeting (for EventHandlerDemo):</label>
+        <input type='text' name='greeting' id='greeting' value='Hello, Aevatar!'>
+      </div>
+      <button type='submit'>Run Demo</button>
+    </form>
+    <pre id='result'></pre>
+    <div id="logs-container">
+      <div class="log-panel">
+        <div class="log-title">Host Log</div>
+        <button class="log-btn" id="showHostLogBtn">Show Host Log</button>
+        <div class="log-box" id="hostLogBox"></div>
+      </div>
+      <div class="log-panel">
+        <div class="log-title">Client Log</div>
+        <button class="log-btn" id="showClientLogBtn">Show Client Log</button>
+        <div class="log-box" id="clientLogBox"></div>
+      </div>
+    </div>
+  </div>
 <script>
 document.getElementById('demoForm').onsubmit = async function(e) {
   e.preventDefault();
@@ -34,33 +168,36 @@ document.getElementById('demoForm').onsubmit = async function(e) {
   const greeting = document.getElementById('greeting').value;
   let url = `/run?mode=${mode}`;
   if (mode == '0') url += `&greeting=${encodeURIComponent(greeting)}`;
-  document.getElementById('result').textContent = 'Running...';
+  document.getElementById('result').textContent = 'Running...Check host log for working details, check client log for final report.';
   const resp = await fetch(url);
   document.getElementById('result').textContent = await resp.text();
 };
 
-const showHostLogBtn = document.getElementById('showHostLogBtn');
-const hostLogBox = document.getElementById('hostLogBox');
-let hostLogInterval = null;
+const modeSelect = document.getElementById('mode');
+const greetingGroup = document.getElementById('greeting-group');
+const routerTip = document.getElementById('router-tip');
 
-showHostLogBtn.onclick = function() {
-  if (hostLogBox.style.display === 'none') {
-    hostLogBox.style.display = 'block';
-    showHostLogBtn.textContent = 'Hide Host Log';
-    fetchHostLog();
-    hostLogInterval = setInterval(fetchHostLog, 5000);
-  } else {
-    hostLogBox.style.display = 'none';
-    showHostLogBtn.textContent = 'Show Host Log';
-    clearInterval(hostLogInterval);
-  }
-};
-
-async function fetchHostLog() {
-  hostLogBox.textContent = 'Loading...';
-  const resp = await fetch('/hostlog');
-  hostLogBox.textContent = await resp.text();
+function updateFormUI() {
+  const mode = modeSelect.value;
+  greetingGroup.style.display = (mode === '0') ? 'block' : 'none';
+  routerTip.style.display = (mode === '2') ? 'block' : 'none';
 }
+modeSelect.addEventListener('change', updateFormUI);
+window.onload = updateFormUI;
+
+function setupLogPanel(boxId, api) {
+  const box = document.getElementById(boxId);
+  async function fetchLog() {
+    box.textContent = 'Loading...';
+    const resp = await fetch(api);
+    box.textContent = await resp.text();
+  }
+  fetchLog();
+  setInterval(fetchLog, 5000);
+}
+
+setupLogPanel('hostLogBox', '/hostlog');
+setupLogPanel('clientLogBox', '/clientlog');
 </script>
 </body>
-</html> 
+</html>
