@@ -9,20 +9,20 @@ namespace Aevatar.Workshop.Client;
 
 public static class RouterDemo
 {
-    public static async Task RunAsync(IGAgentFactory gAgentFactory)
+    public static async Task RunAsync(IGAgentFactory gAgentFactory, string systemLLM = "OpenAI")
     {
         var routerGAgent = await gAgentFactory.GetGAgentAsync<IRouterGAgent>();
         await routerGAgent.InitializeAsync(new InitializeDto
         {
             Instructions = "You are a router agent",
-            LLMConfig = new LLMConfigDto { SystemLLM = "OpenAI" }
+            LLMConfig = new LLMConfigDto { SystemLLM = systemLLM }
         });
 
         var researcherGAgent = await gAgentFactory.GetGAgentAsync<IResearcherGAgent>();
         await researcherGAgent.InitializeAsync(new InitializeDto
         {
             Instructions = "You are a researcher",
-            LLMConfig = new LLMConfigDto { SystemLLM = "OpenAI" }
+            LLMConfig = new LLMConfigDto { SystemLLM = systemLLM }
         });
         var researcherGAgentEvents = await researcherGAgent.GetAllSubscribedEventsAsync();
         await routerGAgent.AddAgentDescription(researcherGAgent.GetType(), researcherGAgentEvents);
@@ -31,7 +31,7 @@ public static class RouterDemo
         await writerGAgent.InitializeAsync(new InitializeDto
         {
             Instructions = "You are a writer",
-            LLMConfig = new LLMConfigDto() { SystemLLM = "OpenAI" }
+            LLMConfig = new LLMConfigDto() { SystemLLM = systemLLM }
         });
         var writerGAgentEvents = await writerGAgent.GetAllSubscribedEventsAsync();
         await routerGAgent.AddAgentDescription(writerGAgent.GetType(), writerGAgentEvents);

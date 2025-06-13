@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
     .AddJsonFile("appsettings.secrets.json", optional: true)
+    .AddJsonFile("appsettings.json")
     .Build();
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()

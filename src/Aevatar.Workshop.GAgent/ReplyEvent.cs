@@ -6,4 +6,4 @@ namespace Aevatar.Workshop.GAgent;
 public class ReplyEvent : EventBase
 {
     [Id(0)] public string Reply { get; set; }
-} 
+}
