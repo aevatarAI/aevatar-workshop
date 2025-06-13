@@ -10,8 +10,9 @@
   <ItemGroup>
     <PackageVersion Include="Aevatar" Version="$(AevatarCoreVersion)" />
     <PackageVersion Include="Aevatar.Core" Version="$(AevatarCoreVersion)" />
-    <PackageVersion Include="Aevatar.Core.Abstractions" Version="1.5.1-alpha.2" />
+    <PackageVersion Include="Aevatar.Core.Abstractions" Version="$(AevatarCoreVersion)" />
     <PackageVersion Include="Aevatar.EventSourcing.Core" Version="$(AevatarCoreVersion)" />
+    <PackageVersion Include="Aevatar.TestKit" Version="$(AevatarCoreVersion)" />
     <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarSignalRVersion)" />
     <PackageVersion Include="Aevatar.GAgents.Basic" Version="$(AevatarGAgentVersion)" />
     <PackageVersion Include="Aevatar.GAgents.Router" Version="$(AevatarGAgentVersion)" />
@@ -39,5 +40,11 @@
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
     <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="3.0.0" />
+
+    <PackageVersion Include="coverlet.collector" Version="6.0.2"/>
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
+    <PackageVersion Include="xunit" Version="2.9.2"/>
+    <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2"/>
+    <PackageVersion Include="Shouldly" Version="4.2.1" />
   </ItemGroup>
 </Project>
