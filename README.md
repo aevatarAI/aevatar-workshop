@@ -67,6 +67,23 @@ This demo showcases a more complex scenario with AI agents:
 - The process is fully automated and demonstrates multi-agent orchestration.
 
 **Run:**
+- Configure: Open Host's configuration file (src/Aevatar.Workshop.Host/appsettings.json) and configure the SystemLLMConfigs section. Here we have used Azure OpenAI. Please configure your Endpoint and ApiKey.
+
+```json
+{
+  "SystemLLMConfigs": {
+    "OpenAI": {
+      "ProviderEnum": "Azure",
+      "ModelIdEnum": "OpenAI",
+      "ModelName": "gpt-4o",
+      "Endpoint": "",
+      "ApiKey": ""
+    }
+  }
+}
+```
+
+- Run the demo.
 ```bash
 sh quickstart.sh 2
 ```
