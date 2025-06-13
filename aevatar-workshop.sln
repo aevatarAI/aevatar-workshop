@@ -12,6 +12,124 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.Workshop.Host", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.Workshop.AIRouterWorkflowGAgent", "src\Aevatar.Workshop.AIRouterWorkflowGAgent\Aevatar.Workshop.AIRouterWorkflowGAgent.csproj", "{11605857-0959-406A-8563-DAB09E78772D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{BB370C57-8BFC-4062-917D-296D1BCA09DF}"
+	ProjectSection(SolutionItems) = preProject
+		docs\README.md = docs\README.md
+		docs\.gitignore = docs\.gitignore
+		docs\sidebars.ts = docs\sidebars.ts
+		docs\package.json = docs\package.json
+		docs\tsconfig.json = docs\tsconfig.json
+		docs\pnpm-lock.yaml = docs\pnpm-lock.yaml
+		docs\docusaurus.config.ts = docs\docusaurus.config.ts
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "blog", "blog", "{B87FE638-92E3-4475-B7F7-16F1160D53C6}"
+	ProjectSection(SolutionItems) = preProject
+		docs\blog\tags.yml = docs\blog\tags.yml
+		docs\blog\authors.yml = docs\blog\authors.yml
+		docs\blog\2019-05-29-long-blog-post.md = docs\blog\2019-05-29-long-blog-post.md
+		docs\blog\2021-08-01-mdx-blog-post.mdx = docs\blog\2021-08-01-mdx-blog-post.mdx
+		docs\blog\2019-05-28-first-blog-post.md = docs\blog\2019-05-28-first-blog-post.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "config", "config", "{4B506E04-6438-4049-8D5E-7EB3181A2B44}"
+	ProjectSection(SolutionItems) = preProject
+		docs\config\navbar-links.json = docs\config\navbar-links.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{0F2DA717-067B-4861-852B-A5F9D47021E2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CF3AEA45-C655-4DC5-899C-2C129ECDD198}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "static", "static", "{2C4488E2-BCBD-4417-8C14-EFD8679AF911}"
+	ProjectSection(SolutionItems) = preProject
+		docs\static\.nojekyll = docs\static\.nojekyll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "img", "img", "{25B46D5B-F065-42C6-9735-36FB34DE11E3}"
+	ProjectSection(SolutionItems) = preProject
+		docs\static\img\logo.svg = docs\static\img\logo.svg
+		docs\static\img\focus.svg = docs\static\img\focus.svg
+		docs\static\img\favicon.ico = docs\static\img\favicon.ico
+		docs\static\img\docusaurus.png = docs\static\img\docusaurus.png
+		docs\static\img\powered by.svg = docs\static\img\powered by.svg
+		docs\static\img\easy-to-use.svg = docs\static\img\easy-to-use.svg
+		docs\static\img\docusaurus-social-card.jpg = docs\static\img\docusaurus-social-card.jpg
+		docs\static\img\undraw_docusaurus_tree.svg = docs\static\img\undraw_docusaurus_tree.svg
+		docs\static\img\undraw_docusaurus_react.svg = docs\static\img\undraw_docusaurus_react.svg
+		docs\static\img\undraw_docusaurus_mountain.svg = docs\static\img\undraw_docusaurus_mountain.svg
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "components", "components", "{E2CFE2E7-EB93-4B3C-9AF1-27129B408653}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "css", "css", "{EA929209-0FB0-4794-93DD-87C7E9D6BB9F}"
+	ProjectSection(SolutionItems) = preProject
+		docs\src\css\custom.css = docs\src\css\custom.css
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pages", "pages", "{C344107C-095E-430B-9786-F5474D0EA327}"
+	ProjectSection(SolutionItems) = preProject
+		docs\src\pages\index.tsx = docs\src\pages\index.tsx
+		docs\src\pages\index.module.css = docs\src\pages\index.module.css
+		docs\src\pages\markdown-page.md = docs\src\pages\markdown-page.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "theme", "theme", "{B5D9E41A-96DB-4CB3-8A89-6D70DC536C2F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Feedback", "Feedback", "{42B7B3D9-B891-4218-AA96-7570A151317F}"
+	ProjectSection(SolutionItems) = preProject
+		docs\src\components\Feedback\index.css = docs\src\components\Feedback\index.css
+		docs\src\components\Feedback\index.tsx = docs\src\components\Feedback\index.tsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HomepageFeatures", "HomepageFeatures", "{43CFAA0A-58C9-437C-B86D-A2EF44CD9C96}"
+	ProjectSection(SolutionItems) = preProject
+		docs\src\components\HomepageFeatures\index.tsx = docs\src\components\HomepageFeatures\index.tsx
+		docs\src\components\HomepageFeatures\styles.module.css = docs\src\components\HomepageFeatures\styles.module.css
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DocRoot", "DocRoot", "{9FAEA83A-74EA-42B7-BE02-1B7BA8C2D847}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Layout", "Layout", "{15C812E5-1108-4E06-AA7F-148B203276BB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Main", "Main", "{EFE1EE67-195D-4B9E-9286-5D94E2CDEE60}"
+	ProjectSection(SolutionItems) = preProject
+		docs\src\theme\DocRoot\Layout\Main\index.tsx = docs\src\theme\DocRoot\Layout\Main\index.tsx
+		docs\src\theme\DocRoot\Layout\Main\styles.module.css = docs\src\theme\DocRoot\Layout\Main\styles.module.css
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2021-08-26-welcome", "2021-08-26-welcome", "{68CF36B0-1348-4317-A50C-BE50316F87BB}"
+	ProjectSection(SolutionItems) = preProject
+		docs\blog\2021-08-26-welcome\index.md = docs\blog\2021-08-26-welcome\index.md
+		docs\blog\2021-08-26-welcome\docusaurus-plushie-banner.jpeg = docs\blog\2021-08-26-welcome\docusaurus-plushie-banner.jpeg
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "document", "document", "{D7327366-2588-4D2E-8042-9CB769D55BB9}"
+	ProjectSection(SolutionItems) = preProject
+		docs\docs\document\01-gagent.md = docs\docs\document\01-gagent.md
+		docs\docs\document\07-plugin.md = docs\docs\document\07-plugin.md
+		docs\docs\document\00-overview.md = docs\docs\document\00-overview.md
+		docs\docs\document\08-permission.md = docs\docs\document\08-permission.md
+		docs\docs\document\02-event-handlers.md = docs\docs\document\02-event-handlers.md
+		docs\docs\document\04-gagent-factory.md = docs\docs\document\04-gagent-factory.md
+		docs\docs\document\06-aevatar-signalR.md = docs\docs\document\06-aevatar-signalR.md
+		docs\docs\document\03-gagent-attribute.md = docs\docs\document\03-gagent-attribute.md
+		docs\docs\document\05-gagent-mongodb-event-sourcing.md = docs\docs\document\05-gagent-mongodb-event-sourcing.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "quick-start", "quick-start", "{AF309904-48F6-4547-87F0-853C6A34B394}"
+	ProjectSection(SolutionItems) = preProject
+		docs\docs\quick-start\index.md = docs\docs\quick-start\index.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{1F474376-3680-40EF-A2E5-028753150A6E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{6B7DFE8F-0DB3-4B8D-BA3E-E0FE2516A4DB}"
+	ProjectSection(SolutionItems) = preProject
+		docs\.github\workflows\s3-prod.yml = docs\.github\workflows\s3-prod.yml
+		docs\.github\workflows\s3-staging.yml = docs\.github\workflows\s3-staging.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -22,6 +140,26 @@ Global
 		{B52800ED-309F-48D5-965F-3154F47B2477} = {DABA362F-0A8F-4B27-9F60-C92A4A442512}
 		{057FBEE7-E1EC-457C-A2B5-9C5FA17574F8} = {DABA362F-0A8F-4B27-9F60-C92A4A442512}
 		{11605857-0959-406A-8563-DAB09E78772D} = {DABA362F-0A8F-4B27-9F60-C92A4A442512}
+		{B87FE638-92E3-4475-B7F7-16F1160D53C6} = {BB370C57-8BFC-4062-917D-296D1BCA09DF}
+		{4B506E04-6438-4049-8D5E-7EB3181A2B44} = {BB370C57-8BFC-4062-917D-296D1BCA09DF}
+		{0F2DA717-067B-4861-852B-A5F9D47021E2} = {BB370C57-8BFC-4062-917D-296D1BCA09DF}
+		{CF3AEA45-C655-4DC5-899C-2C129ECDD198} = {BB370C57-8BFC-4062-917D-296D1BCA09DF}
+		{2C4488E2-BCBD-4417-8C14-EFD8679AF911} = {BB370C57-8BFC-4062-917D-296D1BCA09DF}
+		{25B46D5B-F065-42C6-9735-36FB34DE11E3} = {2C4488E2-BCBD-4417-8C14-EFD8679AF911}
+		{E2CFE2E7-EB93-4B3C-9AF1-27129B408653} = {CF3AEA45-C655-4DC5-899C-2C129ECDD198}
+		{EA929209-0FB0-4794-93DD-87C7E9D6BB9F} = {CF3AEA45-C655-4DC5-899C-2C129ECDD198}
+		{C344107C-095E-430B-9786-F5474D0EA327} = {CF3AEA45-C655-4DC5-899C-2C129ECDD198}
+		{B5D9E41A-96DB-4CB3-8A89-6D70DC536C2F} = {CF3AEA45-C655-4DC5-899C-2C129ECDD198}
+		{42B7B3D9-B891-4218-AA96-7570A151317F} = {E2CFE2E7-EB93-4B3C-9AF1-27129B408653}
+		{43CFAA0A-58C9-437C-B86D-A2EF44CD9C96} = {E2CFE2E7-EB93-4B3C-9AF1-27129B408653}
+		{9FAEA83A-74EA-42B7-BE02-1B7BA8C2D847} = {B5D9E41A-96DB-4CB3-8A89-6D70DC536C2F}
+		{15C812E5-1108-4E06-AA7F-148B203276BB} = {9FAEA83A-74EA-42B7-BE02-1B7BA8C2D847}
+		{EFE1EE67-195D-4B9E-9286-5D94E2CDEE60} = {15C812E5-1108-4E06-AA7F-148B203276BB}
+		{68CF36B0-1348-4317-A50C-BE50316F87BB} = {B87FE638-92E3-4475-B7F7-16F1160D53C6}
+		{D7327366-2588-4D2E-8042-9CB769D55BB9} = {0F2DA717-067B-4861-852B-A5F9D47021E2}
+		{AF309904-48F6-4547-87F0-853C6A34B394} = {0F2DA717-067B-4861-852B-A5F9D47021E2}
+		{1F474376-3680-40EF-A2E5-028753150A6E} = {BB370C57-8BFC-4062-917D-296D1BCA09DF}
+		{6B7DFE8F-0DB3-4B8D-BA3E-E0FE2516A4DB} = {1F474376-3680-40EF-A2E5-028753150A6E}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
