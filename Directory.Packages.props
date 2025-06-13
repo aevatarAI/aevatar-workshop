@@ -10,15 +10,34 @@
   <ItemGroup>
     <PackageVersion Include="Aevatar" Version="$(AevatarCoreVersion)" />
     <PackageVersion Include="Aevatar.Core" Version="$(AevatarCoreVersion)" />
-    <PackageVersion Include="Aevatar.Core.Abstractions" Version="$(AevatarCoreVersion)" />
+    <PackageVersion Include="Aevatar.Core.Abstractions" Version="1.5.1-alpha.2" />
     <PackageVersion Include="Aevatar.EventSourcing.Core" Version="$(AevatarCoreVersion)" />
     <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarSignalRVersion)" />
     <PackageVersion Include="Aevatar.GAgents.Basic" Version="$(AevatarGAgentVersion)" />
     <PackageVersion Include="Aevatar.GAgents.Router" Version="$(AevatarGAgentVersion)" />
     <PackageVersion Include="Aevatar.GAgents.AI.Abstractions" Version="$(AevatarGAgentVersion)" />
+    
     <PackageVersion Include="Microsoft.Orleans.Server" Version="$(OrleansVersion)" />
     <PackageVersion Include="Microsoft.Orleans.Client" Version="$(OrleansVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(OrleansVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="$(OrleansVersion)" />
+    
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+    
+    <PackageVersion Include="Orleans.Providers.MongoDB" Version="8.1.0" />
+
+    <PackageVersion Include="Volo.Abp.AspNetCore.Serilog" Version="$(AbpVersion)" />
+    <PackageVersion Include="Volo.Abp.AutoMapper" Version="$(AbpVersion)" />
+    <PackageVersion Include="Volo.Abp.Autofac" Version="$(AbpVersion)" />
+
+    <PackageVersion Include="Serilog" Version="4.0.0" />
+    <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+    <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.1" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.1" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="8.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Async" Version="1.5.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="3.0.0" />
   </ItemGroup>
 </Project>

@@ -1,35 +1,37 @@
-﻿using Aevatar.Core.Abstractions;
-using Orleans.Configuration;
+﻿using Aevatar.Workshop.Host;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Aevatar.Core.Placement;
-using Aevatar.GAgents.AI.Options;
-using Aevatar.GAgents.SemanticKernel.Extensions;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
-var builder = Host.CreateDefaultBuilder(args)
-    .UseOrleans(silo =>
-    {
-        silo.AddMemoryGrainStorage("Default")
-            .AddMemoryStreams(AevatarCoreConstants.StreamProvider)
-            .AddMemoryGrainStorage("PubSubStore")
-            .AddLogStorageBasedLogConsistencyProvider()
-            .UseLocalhostClustering()
-            .Configure<SiloOptions>(options =>
-            {
-                options.SiloName = $"WorkshopSilo-{Guid.NewGuid().ToString("N")[..6]}";
-            })
-            .ConfigureLogging(logging => logging.AddConsole());
-    })
-    .UseConsoleLifetime();
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile("appsettings.secrets.json", optional: true)
+    .Build();
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .ReadFrom.Configuration(configuration)
+    .CreateLogger();
 
-builder.ConfigureServices((context, services) =>
+try
 {
-    services.AddPlacementDirector<SiloNamePatternPlacement, SiloNamePatternPlacementDirector>();
-    services.Configure<SystemLLMConfigOptions>(context.Configuration);
-    services.AddSemanticKernel();
-});
+    Log.Information("Starting Silo");
+    await CreateHostBuilder(args).RunConsoleAsync();
+    return 0;
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Host terminated unexpectedly!");
+    return 1;
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
-using var host = builder.Build();
-
-await host.RunAsync();
+static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureServices((_, services) => { services.AddApplication<WorkshopHostModule>(); })
+        .UseOrleansConfiguration()
+        .UseAutofac()
+        .UseSerilog();
