@@ -23,7 +23,7 @@ HOST_PID=$!
 echo "[Aevatar Workshop] Host started (PID: $HOST_PID), logs at host.log"
 
 # Step 3: Wait for Host to initialize (adjust seconds if needed)
-sleep 3
+sleep 10
 
 # Step 4: Start Client service (in background)
 echo "[Aevatar Workshop] Starting Client service..."
