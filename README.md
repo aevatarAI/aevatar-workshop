@@ -43,7 +43,7 @@ This demo shows the simplest event handler usage. The client sends a `GreetingEv
 
 **Run:**
 ```bash
-sh quickstart.sh 0 "Hello, Aevatar!"
+sh quickstart.sh 0 "Hello, Aevatar"
 ```
 - The second argument customizes the greeting message (optional).
 - Check `host.log` for output.
