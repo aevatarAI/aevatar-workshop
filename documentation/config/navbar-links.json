@@ -1,0 +1,19 @@
+{
+  "links": [
+    {
+      "to": "/docs/quick-start",
+      "label": "Quick Start",
+      "position": "left"
+    },
+    {
+      "to": "/docs/document",
+      "label": "Document",
+      "position": "left"
+    },
+    {
+      "href": "https://github.com/aevatarAI",
+      "label": "GitHub",
+      "position": "right"
+    }
+  ]
+}
