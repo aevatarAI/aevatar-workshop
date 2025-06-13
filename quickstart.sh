@@ -23,7 +23,15 @@ HOST_PID=$!
 echo "[Aevatar Workshop] Host started (PID: $HOST_PID), logs at host.log"
 
 # Step 3: Wait for Host to initialize (adjust seconds if needed)
-sleep 10
+printf "[Aevatar Workshop] Waiting for Host to initialize (10s countdown)... "
+for i in {10..1}; do
+  printf "%s " "$i"
+  sleep 1
+done
+printf "\n"
+
+# Set HOST_LOG_PATH environment variable for client
+export HOST_LOG_PATH="$WORKSHOP_ROOT/host.log"
 
 # Step 4: Start Client service (in background)
 echo "[Aevatar Workshop] Starting Client service..."
@@ -37,8 +45,16 @@ CLIENT_PID=$!
 echo "[Aevatar Workshop] Client started (PID: $CLIENT_PID), logs at client.log"
 
 # Step 5: Friendly tips
-echo "\n[Aevatar Workshop] 🚀 Aevatar Workshop Projects is up and running!"
+echo "[Aevatar Workshop] 🚀 Aevatar Workshop Projects is up and running!"
 echo "[Aevatar Workshop] Host logs: $WORKSHOP_ROOT/host.log"
 echo "[Aevatar Workshop] Client logs: $WORKSHOP_ROOT/client.log"
 echo "[Aevatar Workshop] To stop the services, run: kill $HOST_PID $CLIENT_PID"
-echo "[Aevatar Workshop] For port and access info, check the respective log files or console output." 
+echo "[Aevatar Workshop] For port and access info, check the respective log files or console output."
+
+if command -v open >/dev/null 2>&1; then
+  open http://localhost:5000
+elif command -v xdg-open >/dev/null 2>&1; then
+  xdg-open http://localhost:5000
+else
+  echo "[Aevatar Workshop] Please open http://localhost:5000 in your browser."
+fi 

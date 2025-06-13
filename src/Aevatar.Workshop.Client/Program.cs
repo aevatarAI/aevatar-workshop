@@ -53,6 +53,17 @@ app.MapGet("/run", async (HttpContext context) =>
     }
 });
 
+// API endpoint to get last 100 lines of host.log
+app.MapGet("/hostlog", async (HttpContext context) =>
+{
+    var logPath = Environment.GetEnvironmentVariable("HOST_LOG_PATH") ?? "host.log";
+    if (!File.Exists(logPath))
+        return Results.Text($"host.log not found at {logPath}");
+    var lines = await File.ReadAllLinesAsync(logPath);
+    var lastLines = string.Join("\n", lines.Skip(Math.Max(0, lines.Length - 100)));
+    return Results.Text(lastLines, "text/plain");
+});
+
 // Launch browser on startup
 const string url = "http://localhost:5000";
 app.Urls.Add(url);

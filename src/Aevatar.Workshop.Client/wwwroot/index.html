@@ -3,6 +3,10 @@
 <head>
   <meta charset='UTF-8'>
   <title>Aevatar Workshop Demos</title>
+  <style>
+    #hostLogBox { display:none; border:1px solid #ccc; padding:10px; margin-top:20px; background:#f9f9f9; white-space:pre; max-height:300px; overflow:auto; }
+    #showHostLogBtn { margin-top:20px; }
+  </style>
 </head>
 <body>
 <h1>Aevatar Workshop Demos</h1>
@@ -19,6 +23,10 @@
   <button type='submit'>Run Demo</button>
 </form>
 <pre id='result'></pre>
+
+<button id='showHostLogBtn'>Show Host Log</button>
+<div id='hostLogBox'></div>
+
 <script>
 document.getElementById('demoForm').onsubmit = async function(e) {
   e.preventDefault();
@@ -30,6 +38,29 @@ document.getElementById('demoForm').onsubmit = async function(e) {
   const resp = await fetch(url);
   document.getElementById('result').textContent = await resp.text();
 };
+
+const showHostLogBtn = document.getElementById('showHostLogBtn');
+const hostLogBox = document.getElementById('hostLogBox');
+let hostLogInterval = null;
+
+showHostLogBtn.onclick = function() {
+  if (hostLogBox.style.display === 'none') {
+    hostLogBox.style.display = 'block';
+    showHostLogBtn.textContent = 'Hide Host Log';
+    fetchHostLog();
+    hostLogInterval = setInterval(fetchHostLog, 5000);
+  } else {
+    hostLogBox.style.display = 'none';
+    showHostLogBtn.textContent = 'Show Host Log';
+    clearInterval(hostLogInterval);
+  }
+};
+
+async function fetchHostLog() {
+  hostLogBox.textContent = 'Loading...';
+  const resp = await fetch('/hostlog');
+  hostLogBox.textContent = await resp.text();
+}
 </script>
 </body>
 </html> 

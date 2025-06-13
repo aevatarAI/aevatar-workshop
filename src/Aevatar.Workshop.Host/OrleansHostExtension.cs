@@ -17,7 +17,7 @@ public static class OrleansHostExtension
                     .AddMemoryStreams(AevatarCoreConstants.StreamProvider)
                     .AddMemoryGrainStorage("PubSubStore")
                     .AddLogStorageBasedLogConsistencyProvider()
-                    .ConfigureLogging(logging => { logging.SetMinimumLevel(LogLevel.Debug).AddConsole(); })
+                    .ConfigureLogging(logging => { logging.SetMinimumLevel(LogLevel.Information).AddConsole(); })
                     .UseAevatar()
                     ;
             })
