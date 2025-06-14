@@ -106,6 +106,20 @@
       font-weight: bold;
       margin-bottom: 8px;
     }
+    .refresh-btn {
+      margin-bottom: 8px;
+      width: 120px;
+      padding: 6px 0;
+      border-radius: 5px;
+      border: none;
+      background: #fbbf24;
+      color: #222;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .refresh-btn:hover {
+      background: #f59e42;
+    }
     .log-btn {
       margin-bottom: 8px;
       width: 120px;
@@ -151,11 +165,13 @@
     <div id="logs-container">
       <div class="log-panel">
         <div class="log-title">Host Log</div>
+        <button class="refresh-btn" id="refreshHostLogBtn">Refresh Host Log</button>
         <button class="log-btn" id="showHostLogBtn">Show Host Log</button>
         <div class="log-box" id="hostLogBox"></div>
       </div>
       <div class="log-panel">
         <div class="log-title">Client Log</div>
+        <button class="refresh-btn" id="refreshClientLogBtn">Refresh Client Log</button>
         <button class="log-btn" id="showClientLogBtn">Show Client Log</button>
         <div class="log-box" id="clientLogBox"></div>
       </div>
@@ -185,19 +201,20 @@ function updateFormUI() {
 modeSelect.addEventListener('change', updateFormUI);
 window.onload = updateFormUI;
 
-function setupLogPanel(boxId, api) {
+function setupManualLogPanel(boxId, btnId, api) {
   const box = document.getElementById(boxId);
+  const btn = document.getElementById(btnId);
   async function fetchLog() {
     box.textContent = 'Loading...';
     const resp = await fetch(api);
     box.textContent = await resp.text();
   }
-  fetchLog();
-  setInterval(fetchLog, 5000);
+  btn.onclick = fetchLog;
+  fetchLog(); // Initial load
 }
 
-setupLogPanel('hostLogBox', '/hostlog');
-setupLogPanel('clientLogBox', '/clientlog');
+setupManualLogPanel('hostLogBox', 'refreshHostLogBtn', '/hostlog');
+setupManualLogPanel('clientLogBox', 'refreshClientLogBtn', '/clientlog');
 </script>
 </body>
 </html>

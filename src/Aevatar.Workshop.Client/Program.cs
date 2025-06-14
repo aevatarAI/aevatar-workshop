@@ -33,13 +33,13 @@ app.MapGet("/run", async (HttpContext context) =>
         {
             case 0:
                 await EventHandlerDemo.RunAsync(gAgentFactory, greeting);
-                return Results.Text($"EventHandlerDemo completed with greeting: {greeting}");
+                return Results.Text($"EventHandlerDemo completed with greeting: {greeting}\nYou can refresh host's log to see the event handling details.");
             case 1:
                 await MultiGAgentDemo.RunAsync(gAgentFactory);
-                return Results.Text("MultiGAgentDemo completed.");
+                return Results.Text("MultiGAgentDemo completed.\nYou can refresh host's log to see the event handling details.");
             case 2:
                 await RouterDemo.RunAsync(gAgentFactory);
-                return Results.Text("RouterDemo completed.");
+                return Results.Text("RouterDemo completed.\nYou can refresh host's log to see the event handling details.\nRefresh client's log to see the final report.");
             case 3:
                 await YourOwnDemo.RunAsync(gAgentFactory);
                 return Results.Text("YourOwnDemo completed.");
