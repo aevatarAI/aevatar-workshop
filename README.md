@@ -33,7 +33,11 @@ The `quickstart.sh` script will:
 
 ## 2. Using the Web Interface
 
-After running `quickstart.sh`, visit [http://localhost:5000](http://localhost:5000) (should open automatically). The web interface allows you to:
+After running `quickstart.sh`, visit [http://localhost:5000](http://localhost:5000) (should open automatically).
+
+> **All demo instructions and usage tips are now shown directly in the web interface. You do not need to refer to this README for running or understanding the demos.**
+
+The web interface allows you to:
 - Select and run any of the provided demos (EventHandlerDemo, MultiGAgentDemo, RouterDemo, YourOwnDemo)
 - Input parameters (e.g. greeting for EventHandlerDemo)
 - View real-time logs for both Host and Client (with manual refresh)
@@ -45,30 +49,12 @@ After running `quickstart.sh`, visit [http://localhost:5000](http://localhost:50
 
 ## 3. Running the Demos (via Web UI)
 
-### EventHandlerDemo
-- Select "EventHandlerDemo" in the web UI.
-- Optionally enter a custom greeting.
-- Click "Run Demo".
-- Check the Host Log for event handling details.
+> **See the web interface for detailed instructions and scenario descriptions for each demo.**
 
-### MultiGAgentDemo
-- Select "MultiGAgentDemo" in the web UI.
-- **Scenario:** This demo is a multi-agent number guessing game. Alice secretly picks a number (default: 42), and Bob tries to guess it by interacting with Alice through events. The conversation and guesses are recorded and displayed in the MultiGAgentDemo Chat Messages panel.
-- The chat panel will appear and auto-refresh every 5 seconds, showing the conversation between Alice and Bob.
-- **Customizing the number:** By default, Alice's number is set to 42. Developers can change this number by editing the following line in `src/Aevatar.Workshop.Client/MultiGAgentDemo.cs`:
-  ```csharp
-  await alice.PrepareAsync(42); // Change 42 to any number between 1 and 100
-  ```
-  Please ensure the number is between 1 and 100.
-- **Note:** This demo may require additional configuration for agent state or dependencies. See code comments for details.
-
-### RouterDemo
-- Select "RouterDemo" in the web UI.
-- A yellow tip will remind you to configure your API key as described in the Quickstart documentation.
-- Check the Host Log for orchestration details and the Client Log for the final report.
-
-### YourOwnDemo
-- Select "YourOwnDemo" in the web UI to run your custom demo logic.
+- **EventHandlerDemo:** Event-driven GAgent collaboration. Optionally enter a greeting, run the demo, and check Host Log for details.
+- **MultiGAgentDemo:** Multi-agent number guessing game. Alice picks a number (default 42), Bob guesses. Chat and guesses shown in the chat panel. You can customize the number in `MultiGAgentDemo.cs`.
+- **RouterDemo:** AI routing and multi-agent orchestration. Requires API key configuration. Host Log shows orchestration, Client Log shows the final report.
+- **YourOwnDemo:** Run your own custom demo logic. Extend in `YourOwnDemo.cs`.
 
 ---
 

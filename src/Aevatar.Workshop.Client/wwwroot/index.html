@@ -174,7 +174,26 @@
   <div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:400px;text-align:center;">
       <div style="font-size:1.15rem;font-weight:bold;color:#b91c1c;margin-bottom:18px;">API key not configured</div>
-      <div style="font-size:1rem;margin-bottom:18px;">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set <b>SystemLLMConfigs section.</b>.<br><br>You can click Restart Services button after saving configuration.</div>
+      <div style="font-size:1rem;margin-bottom:18px;">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set the <b>SystemLLMConfigs.OpenAI.ApiKey</b> value.<br><br>After saving the configuration, you can click the Restart Services button below.</div>
+      <details style="text-align:left;margin-bottom:18px;">
+        <summary style="cursor:pointer;font-weight:bold;color:#2563eb;">What is SystemLLMConfigs? How to configure?</summary>
+        <div style="font-size:0.98rem;margin-top:10px;">
+          <b>SystemLLMConfigs</b> is the section in <code>appsettings.json</code> where you configure your LLM (Large Language Model) provider.<br><br>
+          <ul style="margin-left:0.5em;">
+            <li><b>ProviderEnum</b>: The provider type, e.g. <code>OpenAI</code> or <code>Azure</code>.</li>
+            <li><b>ModelIdEnum</b>: The model identifier, e.g. <code>OpenAI</code> or your provider's model ID.</li>
+            <li><b>ModelName</b>: The name of the model to use, e.g. <code>gpt-4o</code> or <code>gpt-3.5-turbo</code>.</li>
+            <li><b>Endpoint</b>: The API endpoint URL for your LLM provider.</li>
+            <li><b>ApiKey</b>: Your secret API key for accessing the LLM service.</li>
+          </ul>
+          <div style="margin-top:8px;">
+            <b>How to get these values?</b><br>
+            - For <b>OpenAI</b>: <a href="https://platform.openai.com/account/api-keys" target="_blank">Get your API key here</a>.<br>
+            - For <b>Azure OpenAI</b>: <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource" target="_blank">See Azure OpenAI setup guide</a>.<br>
+            - For more details, see <a href="https://github.com/aevatarAI/aevatar-workshop#4-multigagentdemo-configuration" target="_blank">Aevatar Workshop Configuration Docs</a>.
+          </div>
+        </div>
+      </details>
       <button id="modalRestartBtn" style="background:#ef4444;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;">Restart Services</button>
       <button id="modalCloseBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;">Close</button>
     </div>
@@ -182,6 +201,7 @@
   <button id="restartBtn" style="margin-top:24px;margin-bottom:16px;font-size:1.1rem;padding:10px 28px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Restart Services</button>
   <span id="restartMsg" style="margin-left:16px;color:#b91c1c;font-weight:bold;"></span>
   <h1>Aevatar Workshop Demos</h1>
+  <div style="margin-bottom:18px;color:#2563eb;font-weight:bold;font-size:1.08rem;">All demo instructions are now shown here—no need to check the README for usage.</div>
   <div id="main-content">
     <form id='demoForm'>
       <label>Choose Demo:</label>
@@ -200,6 +220,7 @@
       </div>
       <button type='submit'>Run Demo</button>
     </form>
+    <div id="demo-desc" style="background:#f1f5f9;border-radius:8px;padding:18px 22px;margin-bottom:18px;max-width:600px;font-size:1.01rem;color:#222;"></div>
     <pre id='result'></pre>
     <div id="multichat-panel">
       <div id="multichat-title">AI Interaction Messages</div>
@@ -283,7 +304,7 @@ function updateFormUI() {
   }
 }
 modeSelect.addEventListener('change', updateFormUI);
-window.onload = updateFormUI;
+window.onload = function() { updateFormUI(); updateDemoDesc(); };
 
 function setupManualLogPanel(boxId, btnId, api) {
   const box = document.getElementById(boxId);
@@ -324,6 +345,40 @@ restartBtn.onclick = async function() {
   }
   setTimeout(() => { window.location.reload(); }, 8000);
 };
+
+const demoDesc = document.getElementById('demo-desc');
+const demoDescriptions = [
+  `<b>EventHandlerDemo</b><br>
+  <ul style='margin-top:4px;'>
+    <li>Demonstrates event-driven GAgent collaboration.</li>
+    <li>You can enter a custom greeting. After clicking "Run Demo", check the Host Log for event handling details.</li>
+    <li>Great for beginners to experience Aevatar's event flow.</li>
+  </ul>`,
+  `<b>MultiGAgentDemo</b><br>
+  <ul style='margin-top:4px;'>
+    <li>Multi-agent "Guess the Number" game: Alice picks a number (default 42), Bob tries to guess it via events.</li>
+    <li>All conversations and guesses are shown in the chat panel below, auto-refreshing every 5 seconds.</li>
+    <li>To customize the number, edit <code>await alice.PrepareAsync(42)</code> in <code>src/Aevatar.Workshop.Client/MultiGAgentDemo.cs</code> (range: 1-100).</li>
+    <li>Experience multi-agent collaboration and message flow.</li>
+  </ul>`,
+  `<b>RouterDemo</b><br>
+  <ul style='margin-top:4px;'>
+    <li>Demonstrates AI-powered routing and multi-agent orchestration.</li>
+    <li>You must configure your API key in <code>src/Aevatar.Workshop.Host/appsettings.json</code> before running.</li>
+    <li>Host Log shows orchestration details, Client Log shows the final report.</li>
+    <li>Great for exploring AI-driven agent workflows.</li>
+  </ul>`,
+  `<b>YourOwnDemo</b><br>
+  <ul style='margin-top:4px;'>
+    <li>Run your own custom demo logic.</li>
+    <li>Implement your own GAgent interactions in <code>src/Aevatar.Workshop.Client/YourOwnDemo.cs</code>.</li>
+    <li>Perfect for advanced users to extend and experiment.</li>
+  </ul>`
+];
+function updateDemoDesc() {
+  demoDesc.innerHTML = demoDescriptions[modeSelect.value] || '';
+}
+modeSelect.addEventListener('change', updateDemoDesc);
 </script>
 </body>
 </html>
