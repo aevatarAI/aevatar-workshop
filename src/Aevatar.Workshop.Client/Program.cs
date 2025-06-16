@@ -75,6 +75,25 @@ app.MapGet("/clientlog", async (HttpContext _) =>
     return Results.Text(lastLines, "text/plain");
 });
 
+// API endpoint to get MultiGAgentDemo chat messages
+app.MapGet("/multichat", async (HttpContext context) =>
+{
+    try
+    {
+        if (Common.Recorder == null)
+            return Results.Text("No recorder available.");
+        var state = await Common.Recorder.GetStateAsync();
+        if (state?.ChatMessages == null)
+            return Results.Text("No chat records.");
+        var messages = string.Join("\n", state.ChatMessages);
+        return Results.Text(messages, "text/plain");
+    }
+    catch (Exception ex)
+    {
+        return Results.Text($"Error: {ex.Message}\n{ex.StackTrace}");
+    }
+});
+
 // Launch browser on startup
 const string url = "http://localhost:5000";
 app.Urls.Add(url);

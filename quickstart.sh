@@ -5,6 +5,28 @@ set -e
 WORKSHOP_ROOT=$(cd "$(dirname "$0")" && pwd)
 cd "$WORKSHOP_ROOT"
 
+# Always shut down any running host/client before starting
+echo "[Aevatar Workshop] Searching for running Host and Client processes..."
+
+HOST_PIDS=$(ps aux | grep 'Aevatar.Workshop.Host' | grep -v grep | awk '{print $2}')
+CLIENT_PIDS=$(ps aux | grep 'Aevatar.Workshop.Client' | grep -v grep | awk '{print $2}')
+
+if [ -z "$HOST_PIDS" ] && [ -z "$CLIENT_PIDS" ]; then
+  echo "[Aevatar Workshop] No Host or Client processes found."
+fi
+
+if [ -n "$HOST_PIDS" ]; then
+  echo "[Aevatar Workshop] Host PIDs: $HOST_PIDS"
+  kill -9 $HOST_PIDS
+  echo "[Aevatar Workshop] Killed Host process(es)."
+fi
+
+if [ -n "$CLIENT_PIDS" ]; then
+  echo "[Aevatar Workshop] Client PIDs: $CLIENT_PIDS"
+  kill -9 $CLIENT_PIDS
+  echo "[Aevatar Workshop] Killed Client process(es)."
+fi
+
 # Parse arguments for Client
 MODE=${1:-0}
 GREETING=${2:-}
@@ -52,13 +74,4 @@ echo "[Aevatar Workshop] Client logs: $WORKSHOP_ROOT/client.log"
 echo "[Aevatar Workshop] To stop the services, run: kill $HOST_PID $CLIENT_PID"
 echo "[Aevatar Workshop] Or run: sh shutdown.sh"
 echo "[Aevatar Workshop] For port and access info, check the respective log files or console output."
-
-sleep 3
-
-if command -v open >/dev/null 2>&1; then
-  open http://localhost:5000
-elif command -v xdg-open >/dev/null 2>&1; then
-  xdg-open http://localhost:5000
-else
-  echo "[Aevatar Workshop] Please open http://localhost:5000 in your browser."
-fi 
+echo "[Aevatar Workshop] Please open http://localhost:5000 in your browser."

@@ -3,6 +3,7 @@ using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AIGAgent.Agent;
 using Aevatar.GAgents.Router.GEvents;
 using Aevatar.Workshop.AIRouterWorkflowGAgent.Events;
+using Aevatar.Workshop.GAgent;
 using Microsoft.Extensions.Logging;
 
 namespace Aevatar.Workshop.AIRouterWorkflowGAgent.Researcher;
@@ -11,7 +12,6 @@ public interface IResearcherGAgent : IAIGAgent, IGAgent
 {
     Task<string> GetResultAsync();
 }
-
 
 [Description("Research agent")]
 public class ResearcherGAgent : AIGAgentBase<ResearcherState, ResearcherStateLogEvent>, IResearcherGAgent
@@ -26,8 +26,12 @@ public class ResearcherGAgent : AIGAgentBase<ResearcherState, ResearcherStateLog
     {
         Logger.LogInformation("Handle research event.");
 
-        var promt = ResearchPromptTemplate.Prompt.Replace("{CONTENT}", @event.Content);
-        var chatResult = await ChatWithHistory(promt);
+        var prompt = ResearchPromptTemplate.Prompt.Replace("{CONTENT}", @event.Content);
+        await PublishAsync(new RecordEvent
+        {
+            Message = $"[Prompt for Researcher]: \n{prompt}",
+        });
+        var chatResult = await ChatWithHistory(prompt);
         var researchResult = chatResult?[0].Content;
 
         RaiseEvent(new SetResearchResultStateLogEvent
@@ -39,6 +43,10 @@ public class ResearcherGAgent : AIGAgentBase<ResearcherState, ResearcherStateLog
         await PublishAsync(new RouteNextGEvent
         {
             ProcessResult = researchResult
+        });
+        await PublishAsync(new RecordEvent
+        {
+            Message = researchResult
         });
     }
 
