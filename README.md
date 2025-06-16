@@ -13,7 +13,7 @@ Aevatar is a framework for building distributed, event-driven systems using agen
 
 ---
 
-## 1. Clone and Build the Project
+## 1. Clone, Build, and Launch the Web Interface
 
 ```bash
 git clone git@github.com:aevatarAI/aevatar-workshop.git
@@ -25,49 +25,58 @@ The `quickstart.sh` script will:
 - Build all projects
 - Start the Host service in the background (logs: `host.log`)
 - Start the Client service in the background (logs: `client.log`)
+- **Automatically open the client web interface in your browser** (http://localhost:5000)
 
-> **Tip:** To stop the services, use the `kill` command shown at the end of the script output.
+> **Tip:** To stop the services, use the `kill` command shown at the end of the script output, or run `./shutdown.sh`.
 
 ---
 
-## 2. Running the Demos
+## 2. Using the Web Interface
 
-The Client project supports three demos, each demonstrating a different aspect of GAgent collaboration. You can specify which demo to run by passing a mode parameter to `quickstart.sh`:
+After running `quickstart.sh`, visit [http://localhost:5000](http://localhost:5000) (should open automatically). The web interface allows you to:
+- Select and run any of the provided demos (EventHandlerDemo, MultiGAgentDemo, RouterDemo, YourOwnDemo)
+- Input parameters (e.g. greeting for EventHandlerDemo)
+- View real-time logs for both Host and Client (with manual refresh)
+- For MultiGAgentDemo, view the live chat messages between agents in a dedicated output area
 
-- **EventHandlerDemo** (mode 0, default): Basic event handler
-- **MultiGAgentDemo** (mode 1): Two GAgents communicating
-- **RouterDemo** (mode 2): Complex AI agent scenario
+**No need to use command-line arguments for demo selection—everything is available via the website!**
 
-### 2.1 EventHandlerDemo (mode 0)
-This demo shows the simplest event handler usage. The client sends a `GreetingEvent` to a GAgent, which logs the greeting.
+---
 
-**Run:**
-```bash
-sh quickstart.sh 0 "Hello, Aevatar"
-```
-- The second argument customizes the greeting message (optional).
-- Check `host.log` for output.
+## 3. Running the Demos (via Web UI)
 
-### 2.2 MultiGAgentDemo (mode 1)
-This demo demonstrates two GAgents (Alice and Bob) communicating via events:
-- The client sends a `GreetingEvent` to Alice.
-- Alice handles the event and sends a `ReplyEvent` to Bob.
-- Bob logs the reply.
+### EventHandlerDemo
+- Select "EventHandlerDemo" in the web UI.
+- Optionally enter a custom greeting.
+- Click "Run Demo".
+- Check the Host Log for event handling details.
 
-**Run:**
-```bash
-sh quickstart.sh 1
-```
-- Check `host.log` for the collaboration log between Alice and Bob.
+### MultiGAgentDemo
+- Select "MultiGAgentDemo" in the web UI.
+- **Scenario:** This demo is a multi-agent number guessing game. Alice secretly picks a number (default: 42), and Bob tries to guess it by interacting with Alice through events. The conversation and guesses are recorded and displayed in the MultiGAgentDemo Chat Messages panel.
+- The chat panel will appear and auto-refresh every 5 seconds, showing the conversation between Alice and Bob.
+- **Customizing the number:** By default, Alice's number is set to 42. Developers can change this number by editing the following line in `src/Aevatar.Workshop.Client/MultiGAgentDemo.cs`:
+  ```csharp
+  await alice.PrepareAsync(42); // Change 42 to any number between 1 and 100
+  ```
+  Please ensure the number is between 1 and 100.
+- **Note:** This demo may require additional configuration for agent state or dependencies. See code comments for details.
 
-### 2.3 RouterDemo (mode 2)
-This demo showcases a more complex scenario with AI agents:
-- A router agent coordinates a researcher and a writer agent.
-- The researcher gathers information, and the writer generates a report.
-- The process is fully automated and demonstrates multi-agent orchestration.
+### RouterDemo
+- Select "RouterDemo" in the web UI.
+- A yellow tip will remind you to configure your API key as described in the Quickstart documentation.
+- Check the Host Log for orchestration details and the Client Log for the final report.
 
-**Run:**
-- Configure: Open Host's configuration file (src/Aevatar.Workshop.Host/appsettings.json) and configure the SystemLLMConfigs section. Here we have used Azure OpenAI. Please configure your Endpoint and ApiKey.
+### YourOwnDemo
+- Select "YourOwnDemo" in the web UI to run your custom demo logic.
+
+---
+
+## 4. MultiGAgentDemo Configuration
+
+If you want to use advanced features in MultiGAgentDemo (such as AI agents or persistent state), you may need to configure additional settings or provide API keys.
+
+Open Host's configuration file (`src/Aevatar.Workshop.Host/appsettings.json`) and configure the SystemLLMConfigs section. Here we have used Azure OpenAI. Please configure your Endpoint and ApiKey.
 
 ```json
 {
@@ -83,31 +92,31 @@ This demo showcases a more complex scenario with AI agents:
 }
 ```
 
-- Run the demo.
-```bash
-sh quickstart.sh 2
+---
+
+## 5. RouterDemo Configuration
+
+Before running RouterDemo, you must configure your API key and endpoint:
+
+Open Host's configuration file (`src/Aevatar.Workshop.Host/appsettings.json`) and configure the SystemLLMConfigs section. Here we have used Azure OpenAI. Please configure your Endpoint and ApiKey.
+
+```json
+{
+  "SystemLLMConfigs": {
+    "OpenAI": {
+      "ProviderEnum": "Azure",
+      "ModelIdEnum": "OpenAI",
+      "ModelName": "gpt-4o",
+      "Endpoint": "",
+      "ApiKey": ""
+    }
+  }
+}
 ```
-- Check `host.log` for the research and report output.
 
 ---
 
-## 3. Understanding the Demos
-
-### EventHandlerDemo
-- Shows how a GAgent can handle events using event handler methods.
-- Demonstrates the basic event-driven programming model in Aevatar.
-
-### MultiGAgentDemo
-- Illustrates how multiple GAgents can collaborate by sending and handling events.
-- Alice and Bob are both ordinary GAgents, but the same pattern applies to AI agents.
-
-### RouterDemo
-- Demonstrates advanced orchestration with AI agents.
-- Shows how to build workflows where agents have specialized roles and interact to complete a task.
-
----
-
-## 4. Creating Your Own GAgent
+## 6. Creating Your Own GAgent
 
 You can easily define your own GAgent and use it in the client. Here's how:
 
@@ -157,14 +166,14 @@ await publisher.PublishEventAsync(new MyEvent { Message = "Hello from my custom 
 
 ---
 
-## 5. Where to Look for Output
+## 7. Where to Look for Output
 - **host.log**: Logs from the Host service (agent backend)
 - **client.log**: Logs from the Client (demo execution, agent collaboration)
-- **Console**: If you run the client directly, output will also appear in your terminal
+- **Website**: All demo results, logs, and agent chat messages are visible in the web interface
 
 ---
 
-## 6. Next Steps
+## 8. Next Steps
 - Try modifying the demos or creating your own GAgent and event types
 - Explore the `src/Aevatar.Workshop.GAgent/` and `src/Aevatar.Workshop.Client/` directories for more examples
 - Read the other docs in the `docs/` directory for deeper dives into GAgent architecture and event handling

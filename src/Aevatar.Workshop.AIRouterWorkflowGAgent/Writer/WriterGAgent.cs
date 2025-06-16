@@ -3,6 +3,7 @@ using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AIGAgent.Agent;
 using Aevatar.GAgents.Router.GEvents;
 using Aevatar.Workshop.AIRouterWorkflowGAgent.Events;
+using Aevatar.Workshop.GAgent;
 using Microsoft.Extensions.Logging;
 
 namespace Aevatar.Workshop.AIRouterWorkflowGAgent.Writer;
@@ -24,28 +25,36 @@ public class WriterGAgent : AIGAgentBase<WriterState, WriterStateLogEvent>, IWri
     {
         return State.Article;
     }
-    
+
     [EventHandler]
     public async Task HandleEventAsync(WriteEvent @event)
     {
         Logger.LogInformation("Handle write event.");
-        
-        var promt = WriterPromptTemplate.Prompt.Replace("{CONTENT}", @event.Content);
-        var chatResult = await ChatWithHistory(promt);
+
+        var prompt = WriterPromptTemplate.Prompt.Replace("{CONTENT}", @event.Content);
+        await PublishAsync(new RecordEvent
+        {
+            Message = $"[Prompt for Writer]: \n{prompt}",
+        });
+        var chatResult = await ChatWithHistory(prompt);
         var article = chatResult?[0].Content;
-        
+
         RaiseEvent(new SetArticleStateLogEvent
         {
             Article = article
         });
         await ConfirmEvents();
-        
+
         await PublishAsync(new RouteNextGEvent
         {
             ProcessResult = "Writing is done."
         });
+        await PublishAsync(new RecordEvent
+        {
+            Message = article
+        });
     }
-    
+
     protected override void AIGAgentTransitionState(WriterState state,
         StateLogEventBase<WriterStateLogEvent> @event)
     {

@@ -15,4 +15,8 @@
         <PackageReference Include="Aevatar.GAgents.Router" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
+    </ItemGroup>
+
 </Project>

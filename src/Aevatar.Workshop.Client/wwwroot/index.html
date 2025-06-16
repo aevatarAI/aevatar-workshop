@@ -139,6 +139,35 @@
       font-family: monospace;
       border-radius: 5px;
     }
+    #multichat-panel {
+      display: none;
+      margin-top: 32px;
+      width: 100%;
+      max-width: 900px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 16px;
+      text-align: left;
+    }
+    #multichat-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    #multichatBox {
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #f9f9f9;
+      white-space: pre-wrap;
+      width: 100%;
+      font-size: 0.95rem;
+      font-family: monospace;
+      border-radius: 5px;
+      margin-top: 8px;
+      text-align: left;
+      overflow: visible;
+      height: auto;
+    }
   </style>
 </head>
 <body>
@@ -162,6 +191,10 @@
       <button type='submit'>Run Demo</button>
     </form>
     <pre id='result'></pre>
+    <div id="multichat-panel">
+      <div id="multichat-title">AI Interaction Messages</div>
+      <div id="multichatBox">Loading...</div>
+    </div>
     <div id="logs-container">
       <div class="log-panel">
         <div class="log-title">Host Log</div>
@@ -184,7 +217,7 @@ document.getElementById('demoForm').onsubmit = async function(e) {
   const greeting = document.getElementById('greeting').value;
   let url = `/run?mode=${mode}`;
   if (mode == '0') url += `&greeting=${encodeURIComponent(greeting)}`;
-  document.getElementById('result').textContent = 'Running...Check host log for working details, check client log for final report.';
+  document.getElementById('result').textContent = 'Running...';
   const resp = await fetch(url);
   document.getElementById('result').textContent = await resp.text();
 };
@@ -192,11 +225,28 @@ document.getElementById('demoForm').onsubmit = async function(e) {
 const modeSelect = document.getElementById('mode');
 const greetingGroup = document.getElementById('greeting-group');
 const routerTip = document.getElementById('router-tip');
+const multichatPanel = document.getElementById('multichat-panel');
+const multichatBox = document.getElementById('multichatBox');
+let multichatInterval = null;
 
 function updateFormUI() {
   const mode = modeSelect.value;
   greetingGroup.style.display = (mode === '0') ? 'block' : 'none';
   routerTip.style.display = (mode === '2') ? 'block' : 'none';
+
+  if (mode === '1' || mode === '2') {
+    multichatPanel.style.display = 'block';
+    fetchMultichat();
+    if (!multichatInterval) {
+      multichatInterval = setInterval(fetchMultichat, 5000);
+    }
+  } else {
+    multichatPanel.style.display = 'none';
+    if (multichatInterval) {
+      clearInterval(multichatInterval);
+      multichatInterval = null;
+    }
+  }
 }
 modeSelect.addEventListener('change', updateFormUI);
 window.onload = updateFormUI;
@@ -215,6 +265,15 @@ function setupManualLogPanel(boxId, btnId, api) {
 
 setupManualLogPanel('hostLogBox', 'refreshHostLogBtn', '/hostlog');
 setupManualLogPanel('clientLogBox', 'refreshClientLogBtn', '/clientlog');
+
+async function fetchMultichat() {
+  multichatBox.textContent = 'Loading...';
+  const resp = await fetch('/multichat');
+  let text = await resp.text();
+  // Highlight sender in red: 【Sender】: message
+  text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
+  multichatBox.innerHTML = text;
+}
 </script>
 </body>
 </html>

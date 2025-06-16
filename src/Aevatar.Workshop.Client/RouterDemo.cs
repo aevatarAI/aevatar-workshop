@@ -4,6 +4,7 @@ using Aevatar.GAgents.Router.GAgents;
 using Aevatar.GAgents.Router.GEvents;
 using Aevatar.Workshop.AIRouterWorkflowGAgent.Researcher;
 using Aevatar.Workshop.AIRouterWorkflowGAgent.Writer;
+using Aevatar.Workshop.GAgent;
 
 namespace Aevatar.Workshop.Client;
 
@@ -36,11 +37,13 @@ public static class RouterDemo
         var writerGAgentEvents = await writerGAgent.GetAllSubscribedEventsAsync();
         await routerGAgent.AddAgentDescription(writerGAgent.GetType(), writerGAgentEvents);
 
+        Common.Recorder = await gAgentFactory.GetGAgentAsync<IStateGAgent<RecorderGAgentState>>();
+
         var publisher = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>(Guid.NewGuid());
         await publisher.PublishEventAsync(new BeginTaskGEvent
         {
             TaskDescription = "Research AI agent and write a brief report about it."
-        }, routerGAgent, researcherGAgent, writerGAgent);
+        }, routerGAgent, researcherGAgent, writerGAgent, Common.Recorder);
 
         var researchResult = string.Empty;
         while (researchResult.IsNullOrWhiteSpace())
