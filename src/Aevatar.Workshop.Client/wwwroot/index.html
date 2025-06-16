@@ -174,7 +174,7 @@
   <div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:400px;text-align:center;">
       <div style="font-size:1.15rem;font-weight:bold;color:#b91c1c;margin-bottom:18px;">API key not configured</div>
-      <div style="font-size:1rem;margin-bottom:18px;">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set the <b>SystemLLMConfigs.OpenAI.ApiKey</b> value.<br><br>After saving the configuration, you can click the Restart Services button below.</div>
+      <div style="font-size:1rem;margin-bottom:18px;">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>.<br><br>After saving the configuration, you can click the Restart Services button below.</div>
       <details style="text-align:left;margin-bottom:18px;">
         <summary style="cursor:pointer;font-weight:bold;color:#2563eb;">What is SystemLLMConfigs? How to configure?</summary>
         <div style="font-size:0.98rem;margin-top:10px;">
@@ -352,6 +352,7 @@ const demoDescriptions = [
   <ul style='margin-top:4px;'>
     <li>Demonstrates event-driven GAgent collaboration.</li>
     <li>You can enter a custom greeting. After clicking "Run Demo", check the Host Log for event handling details.</li>
+    <li>Search the log "New greeting event received by ExecuteAsync" on Host Log.</li>
     <li>Great for beginners to experience Aevatar's event flow.</li>
   </ul>`,
   `<b>MultiGAgentDemo</b><br>

@@ -40,12 +40,12 @@ public class AliceGAgent : AIGAgentBase<AliceGAgentState, AliceStateLogEvent>,
 {
     private const string Prompt =
         """
-        You are Alice, and you know that the secret number is {SECRET_NUMBER}(don't say it).
-        When Bob submits an integer guess between 1-100, please provide feedback according to the following rules:
-        - Guessing number is greater than Secret numbers -> "high"
-        - Guessing number is lower than secret number -> 'low'
-        - Guessing number equals secret number -> 'correct'
-        - If the submitted integer is not 1-100 -> 'invalid guessing'
+        You are Alice. You know that the secret number is {SECRET_NUMBER}(don't say it).
+        When Bob submits a number as input, provide feedback according to the following rules:
+        - When input number is greater than secret number, output "high"
+        - When input number is lower than secret number, output "low"
+        - When input number equals to secret number, output "correct"
+        - If the submitted integer is not in the range of 1 to 100, output "invalid guessing"
 
         Apart from these feedbacks, no other information is provided.
         """;

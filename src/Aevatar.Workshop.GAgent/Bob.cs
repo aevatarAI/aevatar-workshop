@@ -10,6 +10,7 @@ namespace Aevatar.Workshop.GAgent;
 public class BobGAgentState : AIGAgentStateBase
 {
     [Id(0)] public List<ChatMessage> ChatMessages { get; set; } = [];
+    [Id(1)] public List<string> PreviousGuessedNumbers { get; set; } = [];
 }
 
 [GenerateSerializer]
@@ -19,6 +20,12 @@ public class BobStateLogEvent : StateLogEventBase<BobStateLogEvent>;
 public class NewBobChatStateLogEvent : BobStateLogEvent
 {
     [Id(0)] public ChatMessage ChatMessage { get; set; }
+}
+
+[GenerateSerializer]
+public class NewGuessStateLogEvent : BobStateLogEvent
+{
+    [Id(0)] public string Guess { get; set; }
 }
 
 public interface IBobGAgent : IAIGAgent, IGAgent
@@ -41,7 +48,7 @@ public class BobGAgent : AIGAgentBase<BobGAgentState, BobStateLogEvent>, IBobGAg
         3. Narrow down the range based on feedback and do not guess numbers beyond the current possible range
         When you receive 'correct', you win.
 
-        Please begin your first guess:
+        Please begin your guess:
         """;
 
     public override Task<string> GetDescriptionAsync()
@@ -61,6 +68,10 @@ public class BobGAgent : AIGAgentBase<BobGAgentState, BobStateLogEvent>, IBobGAg
             var firstMessage = chatResult[0].Content;
             Logger.LogInformation($"Bob's initial guess: {firstMessage}");
             await PublishAsync(firstMessage);
+            RaiseEvent(new NewGuessStateLogEvent
+            {
+                Guess = firstMessage
+            });
             RaiseEvent(new NewBobChatStateLogEvent
             {
                 ChatMessage = new ChatMessage
@@ -99,8 +110,12 @@ public class BobGAgent : AIGAgentBase<BobGAgentState, BobStateLogEvent>, IBobGAg
             Content = message,
             ChatRole = ChatRole.User
         }]).ToList();
-        var chatResult = await ChatWithHistory(Prompt, history);
-        await PublishAsync(chatResult[0].Content);
+        var prompt = $"{Prompt}.\nNumbers you guessed before: {string.Join(", ", State.PreviousGuessedNumbers)}.\n" +
+                      $"Current chat history:\n{string.Join("\n", history.Select(m => $"{m.ChatRole}: {m.Content}"))}\n" +
+                      "Now, please guess the number again:";
+        var chatResult = await ChatWithHistory(prompt);
+        var guess = chatResult[0].Content;
+        await PublishAsync(guess);
         RaiseEvent(new NewBobChatStateLogEvent
         {
             ChatMessage = new ChatMessage
@@ -108,6 +123,10 @@ public class BobGAgent : AIGAgentBase<BobGAgentState, BobStateLogEvent>, IBobGAg
                 Content = message,
                 ChatRole = ChatRole.User
             }
+        });
+        RaiseEvent(new NewGuessStateLogEvent
+        {
+            Guess = guess
         });
         RaiseEvent(new NewBobChatStateLogEvent
         {
@@ -129,6 +148,10 @@ public class BobGAgent : AIGAgentBase<BobGAgentState, BobStateLogEvent>, IBobGAg
         {
             case NewBobChatStateLogEvent newBobChatStateLogEvent:
                 state.ChatMessages.Add(newBobChatStateLogEvent.ChatMessage);
+                break;
+            case NewGuessStateLogEvent newGuessStateLogEvent:
+                state.PreviousGuessedNumbers.Add(newGuessStateLogEvent.Guess);
+                Logger.LogInformation("Bob guessed: {Guess}", newGuessStateLogEvent.Guess);
                 break;
             default:
                 Logger.LogWarning("Unhandled event type: {EventType}", @event.GetType().Name);
