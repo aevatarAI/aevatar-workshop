@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Aevatar.Core.Abstractions;
 using Aevatar.Workshop.Client;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,6 +92,56 @@ app.MapGet("/multichat", async (HttpContext context) =>
     catch (Exception ex)
     {
         return Results.Text($"Error: {ex.Message}\n{ex.StackTrace}");
+    }
+});
+
+// API endpoint to restart services via quickstart.sh
+app.MapPost("/restart", async (HttpContext context) =>
+{
+    try
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "/bin/bash",
+            ArgumentList = { "-c", "nohup sh quickstart.sh > restart.log 2>&1 &" },
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+        Process.Start(psi);
+        return Results.Text("Restart triggered. Services will restart in a few seconds.");
+    }
+    catch (Exception ex)
+    {
+        return Results.Text($"Failed to restart: {ex.Message}");
+    }
+});
+
+// API endpoint to check if OpenAI ApiKey is configured
+app.MapGet("/check-config", async (HttpContext context) =>
+{
+    try
+    {
+        var configPath = Path.Combine(Directory.GetCurrentDirectory(), "../Aevatar.Workshop.Host/appsettings.json");
+        if (!File.Exists(configPath))
+            return Results.Json(new { ok = false, error = "Config file not found" });
+        var json = await File.ReadAllTextAsync(configPath);
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        if (root.TryGetProperty("SystemLLMConfigs", out var llmConfigs) &&
+            llmConfigs.TryGetProperty("OpenAI", out var openai) &&
+            openai.TryGetProperty("ApiKey", out var apiKey))
+        {
+            var key = apiKey.GetString();
+            if (!string.IsNullOrWhiteSpace(key))
+                return Results.Json(new { ok = true });
+        }
+        return Results.Json(new { ok = false });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { ok = false, error = ex.Message });
     }
 });
 

@@ -58,20 +58,9 @@ public class BobGAgent : AIGAgentBase<BobGAgentState, BobStateLogEvent>, IBobGAg
         var chatResult = await ChatWithHistory(Prompt);
         if (chatResult is { Count: > 0 })
         {
-            RaiseEvent(new NewBobChatStateLogEvent
-            {
-                ChatMessage = chatResult[0]
-            });
             var firstMessage = chatResult[0].Content;
             Logger.LogInformation($"Bob's initial guess: {firstMessage}");
-            await PublishAsync(new ChatEvent
-            {
-                Content = firstMessage
-            });
-            await PublishAsync(new RecordEvent
-            {
-                Message = firstMessage
-            });
+            await PublishAsync(firstMessage);
             RaiseEvent(new NewBobChatStateLogEvent
             {
                 ChatMessage = new ChatMessage
@@ -88,11 +77,30 @@ public class BobGAgent : AIGAgentBase<BobGAgentState, BobStateLogEvent>, IBobGAg
         }
     }
 
+    private async Task PublishAsync(string content)
+    {
+        await PublishAsync(new ChatEvent
+        {
+            Content = content
+        });
+        await PublishAsync(new RecordEvent
+        {
+            Message = content
+        });
+    }
+
     [EventHandler]
     public async Task GuessNumberAsync(ChatEvent chatEvent)
     {
         var message = $"Alice's reply: {chatEvent.Content}";
         Logger.LogInformation($"Bob received message: {message}");
+        var history = State.ChatMessages.Concat([new ChatMessage
+        {
+            Content = message,
+            ChatRole = ChatRole.User
+        }]).ToList();
+        var chatResult = await ChatWithHistory(Prompt, history);
+        await PublishAsync(chatResult[0].Content);
         RaiseEvent(new NewBobChatStateLogEvent
         {
             ChatMessage = new ChatMessage
@@ -100,15 +108,6 @@ public class BobGAgent : AIGAgentBase<BobGAgentState, BobStateLogEvent>, IBobGAg
                 Content = message,
                 ChatRole = ChatRole.User
             }
-        });
-        var chatResult = await ChatWithHistory(Prompt, State.ChatMessages);
-        await PublishAsync(new ChatEvent
-        {
-            Content = chatResult[0].Content
-        });
-        await PublishAsync(new RecordEvent
-        {
-            Message = chatResult[0].Content
         });
         RaiseEvent(new NewBobChatStateLogEvent
         {

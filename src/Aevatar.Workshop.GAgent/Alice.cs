@@ -112,6 +112,11 @@ public class AliceGAgent : AIGAgentBase<AliceGAgentState, AliceStateLogEvent>,
     {
         var message = $"Now, Bob's input is: {chatEvent.Content}";
         Logger.LogInformation(message);
+        var history = State.ChatMessages.Concat([new ChatMessage
+        {
+            Content = message,
+            ChatRole = ChatRole.User
+        }]).ToList();
         RaiseEvent(new NewAliceChatStateLogEvent
         {
             ChatMessage = new ChatMessage
@@ -122,7 +127,7 @@ public class AliceGAgent : AIGAgentBase<AliceGAgentState, AliceStateLogEvent>,
         });
         await ConfirmEvents();
 
-        var chatResult = await ChatWithHistory(GetPrompt(), State.ChatMessages);
+        var chatResult = await ChatWithHistory(GetPrompt(), history);
         await PublishAsync(new ChatEvent
         {
             Content = chatResult[0].Content
