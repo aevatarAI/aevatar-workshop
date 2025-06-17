@@ -83,14 +83,18 @@ app.MapGet("/clientlog", async (HttpContext _) =>
     return Results.Text(lastLines, "text/plain");
 });
 
-// API endpoint to get MultiGAgentDemo chat messages
-app.MapGet("/multichat", async (HttpContext context) =>
+// API endpoint to get chat messages for any demo by key
+app.MapGet("/chat", async (HttpContext context) =>
 {
     try
     {
-        if (Common.Recorder == null)
+        var demo = context.Request.Query["demo"].ToString();
+        if (string.IsNullOrWhiteSpace(demo))
+            return Results.Text("Missing demo key.");
+        var recorder = Common.GetRecorder(demo);
+        if (recorder == null)
             return Results.Text("No recorder available.");
-        var state = await Common.Recorder.GetStateAsync();
+        var state = await recorder.GetStateAsync();
         if (state?.ChatMessages == null)
             return Results.Text("No chat records.");
         var messages = string.Join("\n", state.ChatMessages);

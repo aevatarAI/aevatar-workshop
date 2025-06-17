@@ -37,13 +37,14 @@ public static class RouterDemo
         var writerGAgentEvents = await writerGAgent.GetAllSubscribedEventsAsync();
         await routerGAgent.AddAgentDescription(writerGAgent.GetType(), writerGAgentEvents);
 
-        Common.Recorder = await gAgentFactory.GetGAgentAsync<IStateGAgent<RecorderGAgentState>>();
+        var recorder = await gAgentFactory.GetGAgentAsync<IStateGAgent<RecorderGAgentState>>();
+        Common.SetRecorder("RouterDemo", recorder);
 
         var publisher = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>(Guid.NewGuid());
         await publisher.PublishEventAsync(new BeginTaskGEvent
         {
             TaskDescription = "Research AI agent and write a brief report about it."
-        }, routerGAgent, researcherGAgent, writerGAgent, Common.Recorder);
+        }, routerGAgent, researcherGAgent, writerGAgent, recorder);
 
         var researchResult = string.Empty;
         while (researchResult.IsNullOrWhiteSpace())

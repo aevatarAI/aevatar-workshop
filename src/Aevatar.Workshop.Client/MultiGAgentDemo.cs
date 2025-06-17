@@ -24,12 +24,13 @@ public static class MultiGAgentDemo
         });
 
         // Assign to static field
-        Common.Recorder = await gAgentFactory.GetGAgentAsync<IStateGAgent<RecorderGAgentState>>();
+        var recorder = await gAgentFactory.GetGAgentAsync<IStateGAgent<RecorderGAgentState>>();
+        Common.SetRecorder("MultiGAgentDemo", recorder);
 
         var publisher = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>();
         await publisher.RegisterAsync(alice);
         await publisher.RegisterAsync(bob);
-        await publisher.RegisterAsync(Common.Recorder);
+        await publisher.RegisterAsync(recorder);
 
         await alice.PrepareAsync(number);
         await bob.StartGuessingAsync();

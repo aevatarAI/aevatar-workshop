@@ -5,27 +5,77 @@
   <title>Aevatar Workshop Demos</title>
   <style>
     body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
+      margin: 0;
       font-family: Arial, sans-serif;
       background: #f4f6fa;
-      margin: 0;
+      display: flex;
+      min-height: 100vh;
     }
-    h1 {
-      margin-top: 40px;
-      margin-bottom: 24px;
+    #sidebar {
+      width: 220px;
+      background: #1e293b;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      padding-top: 32px;
+      min-height: 100vh;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.07);
+    }
+    #sidebar h2 {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0 0 24px 0;
+      text-align: center;
+      letter-spacing: 1px;
+      color: #38bdf8;
+    }
+    .sidebar-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      flex: 1;
+    }
+    .sidebar-item {
+      padding: 14px 32px;
+      cursor: pointer;
+      font-size: 1.05rem;
+      border-left: 4px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .sidebar-item.selected {
+      background: #0ea5e9;
+      color: #fff;
+      border-left: 4px solid #38bdf8;
+      font-weight: bold;
+    }
+    .sidebar-item:hover {
+      background: #334155;
     }
     #main-content {
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      width: 100%;
-      max-width: 900px;
+      padding: 40px 0 40px 0;
+      min-height: 100vh;
     }
-    form {
+    .demo-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #0ea5e9;
+    }
+    .demo-desc {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 18px;
+      max-width: 600px;
+      font-size: 1.01rem;
+      color: #222;
+    }
+    .demo-form {
       background: #fff;
       padding: 24px 32px;
       border-radius: 10px;
@@ -37,11 +87,11 @@
       flex-direction: column;
       align-items: center;
     }
-    label, select, input, button {
+    .demo-form label, .demo-form select, .demo-form input, .demo-form button {
       font-size: 1rem;
       margin-bottom: 12px;
     }
-    button {
+    .demo-form button {
       padding: 8px 20px;
       border-radius: 5px;
       border: none;
@@ -51,45 +101,8 @@
       font-weight: bold;
       margin-bottom: 0;
     }
-    button:hover {
+    .demo-form button:hover {
       background: #2563eb;
-    }
-    #result {
-      margin-top: 10px;
-      background: #f1f5f9;
-      border-radius: 5px;
-      padding: 10px;
-      min-height: 24px;
-      width: 100%;
-      max-width: 500px;
-      box-sizing: border-box;
-      font-family: monospace;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    #router-tip {
-      color: #b45309;
-      background: #fef9c3;
-      border: 1px solid #fde68a;
-      border-radius: 5px;
-      padding: 10px 16px;
-      margin-bottom: 12px;
-      display: none;
-      width: 100%;
-      max-width: 500px;
-      text-align: center;
-    }
-    #logs-container {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      gap: 32px;
-      width: 100%;
-      max-width: 1400px;
-      margin-top: 32px;
     }
     .log-panel {
       background: #fff;
@@ -101,10 +114,13 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      margin-bottom: 24px;
     }
     .log-title {
       font-weight: bold;
       margin-bottom: 8px;
+      color: #0ea5e9;
+      font-size: 1.15rem;
     }
     .refresh-btn {
       margin-bottom: 8px;
@@ -120,11 +136,6 @@
     .refresh-btn:hover {
       background: #f59e42;
     }
-    .log-btn {
-      margin-bottom: 8px;
-      width: 120px;
-      display: none;
-    }
     .log-box {
       display: block;
       border: 1px solid #ccc;
@@ -139,8 +150,10 @@
       font-family: monospace;
       border-radius: 5px;
     }
+    .green-highlight {
+      background: #bbf7d0;
+    }
     #multichat-panel {
-      display: none;
       margin-top: 32px;
       width: 100%;
       max-width: 900px;
@@ -155,6 +168,34 @@
       margin-bottom: 8px;
     }
     #multichatBox {
+      border: 1px solid #ccc;
+      padding: 10px;
+      background: #f9f9f9;
+      white-space: pre-wrap;
+      width: 100%;
+      font-size: 0.95rem;
+      font-family: monospace;
+      border-radius: 5px;
+      margin-top: 8px;
+      text-align: left;
+      overflow: visible;
+      height: auto;
+    }
+    .chat-panel {
+      margin-top: 32px;
+      width: 100%;
+      max-width: 900px;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      padding: 16px;
+      text-align: left;
+    }
+    .chat-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .chatBox {
       border: 1px solid #ccc;
       padding: 10px;
       background: #f9f9f9;
@@ -198,64 +239,329 @@
       <button id="modalCloseBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;">Close</button>
     </div>
   </div>
-  <button id="restartBtn" style="margin-top:24px;margin-bottom:16px;font-size:1.1rem;padding:10px 28px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Restart Services</button>
-  <span id="restartMsg" style="margin-left:16px;color:#b91c1c;font-weight:bold;"></span>
-  <h1>Aevatar Workshop Demos</h1>
-  <div style="margin-bottom:18px;color:#2563eb;font-weight:bold;font-size:1.08rem;">All demo instructions are now shown here—no need to check the README for usage.</div>
-  <div id="main-content">
-    <form id='demoForm'>
-      <label>Choose Demo:</label>
-      <select name='mode' id='mode'>
-        <option value='0'>EventHandlerDemo</option>
-        <option value='1'>MultiGAgentDemo</option>
-        <option value='2'>RouterDemo</option>
-        <option value='3'>YourOwnDemo</option>
-      </select>
-      <div id="router-tip">
-        ⚠️ For RouterDemo, please make sure you have configured your API key as described in the Quickstart documentation.
-      </div>
-      <div id="greeting-group">
-        <label>Greeting (for EventHandlerDemo):</label>
-        <input type='text' name='greeting' id='greeting' value='Hello, Aevatar!'>
-      </div>
-      <div id="number-group" style="display:none;">
-        <label>Secret Number (1-100, for MultiGAgentDemo):</label>
-        <input type='number' name='number' id='number' min='1' max='100' value='42' style='width:80px;'>
-      </div>
-      <div id="systemllm-group" style="display:none;">
-        <label>LLM System (for MultiGAgentDemo & RouterDemo):</label>
-        <select id="systemllm" name="systemllm" style="min-width:120px;"></select>
-      </div>
-      <button type='submit'>Run Demo</button>
-    </form>
-    <div id="demo-desc" style="background:#f1f5f9;border-radius:8px;padding:18px 22px;margin-bottom:18px;max-width:600px;font-size:1.01rem;color:#222;"></div>
-    <pre id='result'></pre>
-    <div id="multichat-panel">
-      <div id="multichat-title">AI Interaction Messages</div>
-      <div id="multichatBox">Loading...</div>
-    </div>
-    <div id="logs-container">
-      <div class="log-panel">
-        <div class="log-title">Host Log</div>
-        <button class="refresh-btn" id="refreshHostLogBtn">Refresh Host Log</button>
-        <button class="log-btn" id="showHostLogBtn">Show Host Log</button>
-        <div class="log-box" id="hostLogBox"></div>
-      </div>
-      <div class="log-panel">
-        <div class="log-title">Client Log</div>
-        <button class="refresh-btn" id="refreshClientLogBtn">Refresh Client Log</button>
-        <button class="log-btn" id="showClientLogBtn">Show Client Log</button>
-        <div class="log-box" id="clientLogBox"></div>
-      </div>
-    </div>
+  <div id="sidebar">
+    <button id="restartBtn" style="width:90%;margin:0 auto 24px auto;display:block;font-size:1.08rem;padding:12px 0;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Restart Services</button>
+    <span id="restartMsg" style="display:block;margin:0 auto 18px auto;color:#b91c1c;font-weight:bold;text-align:center;"></span>
+    <h2>Aevatar Demos</h2>
+    <ul class="sidebar-list" id="sidebar-list"></ul>
   </div>
+  <div id="main-content"></div>
 <script>
+// --- Demo definitions ---
+const demos = [
+  {
+    key: 'EventHandlerDemo',
+    name: 'EventHandlerDemo',
+    desc: `<ul><li>Demonstrates event-driven GAgent collaboration.</li><li>You can enter a custom greeting. After clicking "Run Demo", check the Host Log for event handling details.</li><li>Search the log "New greeting event received by ExecuteAsync" on Host Log.</li><li>Great for beginners to experience Aevatar's event flow.</li></ul>`,
+    form: [
+      { type: 'text', id: 'greeting', label: 'Greeting', default: 'Hello, Aevatar!' }
+    ]
+  },
+  {
+    key: 'MultiGAgentDemo',
+    name: 'MultiGAgentDemo',
+    desc: `<ul><li>Multi-agent "Guess the Number" game: Alice picks a secret number (default 42, you can choose 1-100), Bob tries to guess it via events.</li><li>Enter your secret number and select the LLM system before running the demo.</li><li>All conversations and guesses are shown in the chat panel below, auto-refreshing every 5 seconds.</li><li>Experience multi-agent collaboration and message flow.</li></ul>`,
+    form: [
+      { type: 'number', id: 'number', label: 'Secret Number (1-100)', default: 42, min: 1, max: 100 },
+      { type: 'llm', id: 'systemllm', label: 'LLM System' }
+    ]
+  },
+  {
+    key: 'RouterDemo',
+    name: 'RouterDemo',
+    desc: `<ul><li>Demonstrates AI-powered routing and multi-agent orchestration.</li><li>You must configure your API key in <code>src/Aevatar.Workshop.Host/appsettings.json</code> before running.</li><li>Select the LLM system before running the demo.</li><li>Host Log shows orchestration details, Client Log shows the final report.</li><li>Great for exploring AI-driven agent workflows.</li></ul>`,
+    form: [
+      { type: 'llm', id: 'systemllm', label: 'LLM System' }
+    ]
+  },
+  {
+    key: 'YourOwnDemo',
+    name: 'YourOwnDemo',
+    desc: `<ul><li>Run your own custom demo logic.</li><li>Implement your own GAgent interactions in <code>src/Aevatar.Workshop.Client/YourOwnDemo.cs</code>.</li><li>Perfect for advanced users to extend and experiment.</li></ul>`,
+    form: []
+  }
+];
+const logs = [
+  { key: 'HostLog', name: 'Host Log' },
+  { key: 'ClientLog', name: 'Client Log' }
+];
+
+// --- Sidebar rendering ---
+const sidebarList = document.getElementById('sidebar-list');
+const mainContent = document.getElementById('main-content');
+let selectedKey = demos[0].key;
+let logInterval = null;
+let multichatInterval = null;
+let routerchatInterval = null;
+
+function renderSidebar() {
+  sidebarList.innerHTML = '';
+  demos.forEach(demo => {
+    const li = document.createElement('li');
+    li.className = 'sidebar-item' + (selectedKey === demo.key ? ' selected' : '');
+    li.textContent = demo.name;
+    li.onclick = () => { selectSidebar(demo.key); };
+    sidebarList.appendChild(li);
+  });
+  // Divider between demos and logs
+  const divider = document.createElement('div');
+  divider.style.height = '1px';
+  divider.style.background = '#334155';
+  divider.style.margin = '18px 0 12px 0';
+  sidebarList.appendChild(divider);
+  logs.forEach(log => {
+    const li = document.createElement('li');
+    li.className = 'sidebar-item' + (selectedKey === log.key ? ' selected' : '');
+    li.textContent = log.name;
+    li.onclick = () => { selectSidebar(log.key); };
+    sidebarList.appendChild(li);
+  });
+}
+
+function selectSidebar(key) {
+  selectedKey = key;
+  renderSidebar();
+  renderMainContent();
+}
+
+// --- Main content rendering ---
+function renderMainContent() {
+  clearInterval(logInterval);
+  clearInterval(multichatInterval);
+  clearInterval(routerchatInterval);
+  mainContent.innerHTML = '';
+  if (selectedKey === 'HostLog' || selectedKey === 'ClientLog') {
+    renderLogPanel(selectedKey);
+    return;
+  }
+  const demo = demos.find(d => d.key === selectedKey);
+  if (!demo) return;
+  // Title
+  const title = document.createElement('div');
+  title.className = 'demo-title';
+  title.textContent = demo.name;
+  mainContent.appendChild(title);
+  // Description
+  const desc = document.createElement('div');
+  desc.className = 'demo-desc';
+  desc.innerHTML = demo.desc;
+  mainContent.appendChild(desc);
+  // Form
+  const form = document.createElement('form');
+  form.className = 'demo-form';
+  form.id = 'dynamicDemoForm';
+  let llmOptions = [];
+  let llmSelect = null;
+  let resultBox = null;
+  // Render form fields
+  demo.form.forEach(field => {
+    if (field.type === 'text') {
+      const label = document.createElement('label');
+      label.textContent = field.label + ':';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.id = field.id;
+      input.value = field.default;
+      form.appendChild(label);
+      form.appendChild(input);
+    } else if (field.type === 'number') {
+      const label = document.createElement('label');
+      label.textContent = field.label + ':';
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.id = field.id;
+      input.value = field.default;
+      input.min = field.min;
+      input.max = field.max;
+      input.style.width = '80px';
+      form.appendChild(label);
+      form.appendChild(input);
+    } else if (field.type === 'llm') {
+      const label = document.createElement('label');
+      label.textContent = field.label + ':';
+      llmSelect = document.createElement('select');
+      llmSelect.id = field.id;
+      llmSelect.style.minWidth = '120px';
+      form.appendChild(label);
+      form.appendChild(llmSelect);
+    }
+  });
+  // Result box
+  resultBox = document.createElement('pre');
+  resultBox.id = 'result';
+  resultBox.style.marginTop = '10px';
+  resultBox.style.background = '#f1f5f9';
+  resultBox.style.borderRadius = '5px';
+  resultBox.style.padding = '10px';
+  resultBox.style.minHeight = '24px';
+  resultBox.style.width = '100%';
+  resultBox.style.maxWidth = '500px';
+  resultBox.style.boxSizing = 'border-box';
+  resultBox.style.fontFamily = 'monospace';
+  resultBox.style.display = 'flex';
+  resultBox.style.justifyContent = 'center';
+  resultBox.style.alignItems = 'center';
+  form.appendChild(resultBox);
+  // Run Demo button
+  const runBtn = document.createElement('button');
+  runBtn.type = 'submit';
+  runBtn.textContent = 'Run Demo';
+  form.appendChild(runBtn);
+  mainContent.appendChild(form);
+  // LLM options
+  if (llmSelect) {
+    fetch('/llm-list').then(r => r.json()).then(arr => {
+      llmSelect.innerHTML = '';
+      arr.forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = key;
+        llmSelect.appendChild(opt);
+      });
+      if (arr.includes('OpenAI')) llmSelect.value = 'OpenAI';
+    });
+  }
+  // Form submit
+  form.onsubmit = async function(e) {
+    e.preventDefault();
+    let url = `/run?mode=${demos.findIndex(d => d.key === demo.key)}`;
+    for (const field of demo.form) {
+      if (field.type === 'text') {
+        const val = form.querySelector(`#${field.id}`).value;
+        url += `&${field.id}=${encodeURIComponent(val)}`;
+      } else if (field.type === 'number') {
+        const val = parseInt(form.querySelector(`#${field.id}`).value, 10);
+        if (isNaN(val) || val < field.min || val > field.max) {
+          resultBox.textContent = `Please enter a number between ${field.min} and ${field.max}.`;
+          return;
+        }
+        url += `&${field.id}=${val}`;
+      } else if (field.type === 'llm') {
+        const val = form.querySelector(`#${field.id}`).value;
+        if (!val) {
+          resultBox.textContent = 'Please select an LLM system.';
+          return;
+        }
+        url += `&systemLLM=${encodeURIComponent(val)}`;
+      }
+    }
+    resultBox.textContent = 'Running...';
+    const resp = await fetch(url);
+    resultBox.textContent = await resp.text();
+    // Only EventHandlerDemo auto-jumps to Host Log
+    if (demo.key === 'EventHandlerDemo') {
+      selectSidebar('HostLog');
+      // Real-time refresh
+      let hostLogBox = document.getElementById('hostLogBox');
+      if (hostLogBox) {
+        const fetchHostLog = async () => {
+          hostLogBox.textContent = 'Loading...';
+          const resp = await fetch('/hostlog');
+          let text = await resp.text();
+          text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
+          hostLogBox.innerHTML = text;
+        };
+        fetchHostLog();
+        clearInterval(logInterval);
+        logInterval = setInterval(fetchHostLog, 2000);
+      }
+    }
+  };
+  // MultiGAgentDemo chat panel
+  if (demo.key === 'MultiGAgentDemo') {
+    const chatPanel = document.createElement('div');
+    chatPanel.className = 'chat-panel';
+    const chatTitle = document.createElement('div');
+    chatTitle.className = 'chat-title';
+    chatTitle.textContent = 'MultiGAgentDemo AI Messages';
+    const chatBox = document.createElement('div');
+    chatBox.className = 'chatBox';
+    chatBox.textContent = 'Loading...';
+    chatPanel.appendChild(chatTitle);
+    chatPanel.appendChild(chatBox);
+    mainContent.appendChild(chatPanel);
+    // Auto-refresh chat
+    const fetchMultichat = async () => {
+      chatBox.textContent = 'Loading...';
+      const resp = await fetch('/chat?demo=MultiGAgentDemo');
+      let text = await resp.text();
+      text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
+      chatBox.innerHTML = text;
+    };
+    fetchMultichat();
+    multichatInterval = setInterval(fetchMultichat, 5000);
+  }
+  // RouterDemo chat panel
+  if (demo.key === 'RouterDemo') {
+    const chatPanel = document.createElement('div');
+    chatPanel.className = 'chat-panel';
+    const chatTitle = document.createElement('div');
+    chatTitle.className = 'chat-title';
+    chatTitle.textContent = 'RouterDemo AI Messages';
+    const chatBox = document.createElement('div');
+    chatBox.className = 'chatBox';
+    chatBox.textContent = 'Loading...';
+    chatPanel.appendChild(chatTitle);
+    chatPanel.appendChild(chatBox);
+    mainContent.appendChild(chatPanel);
+    // Auto-refresh chat
+    const fetchRouterchat = async () => {
+      chatBox.textContent = 'Loading...';
+      const resp = await fetch('/chat?demo=RouterDemo');
+      let text = await resp.text();
+      text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
+      chatBox.innerHTML = text;
+    };
+    fetchRouterchat();
+    routerchatInterval = setInterval(fetchRouterchat, 5000);
+  }
+}
+
+function renderLogPanel(logKey) {
+  clearInterval(logInterval);
+  const isHost = logKey === 'HostLog';
+  const panel = document.createElement('div');
+  panel.className = 'log-panel';
+  const title = document.createElement('div');
+  title.className = 'log-title';
+  title.textContent = isHost ? 'Host Log' : 'Client Log';
+  panel.appendChild(title);
+  const refreshBtn = document.createElement('button');
+  refreshBtn.className = 'refresh-btn';
+  refreshBtn.textContent = 'Refresh Log';
+  panel.appendChild(refreshBtn);
+  const logBox = document.createElement('div');
+  logBox.className = 'log-box';
+  logBox.id = isHost ? 'hostLogBox' : 'clientLogBox';
+  panel.appendChild(logBox);
+  mainContent.appendChild(panel);
+  // Fetch log
+  const fetchLog = async () => {
+    logBox.textContent = 'Loading...';
+    const resp = await fetch(isHost ? '/hostlog' : '/clientlog');
+    let text = await resp.text();
+    if (isHost) {
+      text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
+      logBox.innerHTML = text;
+    } else {
+      logBox.textContent = text;
+    }
+  };
+  refreshBtn.onclick = fetchLog;
+  fetchLog();
+  // Real-time refresh
+  logInterval = setInterval(fetchLog, 2000);
+}
+
+// Initial render
+renderSidebar();
+renderMainContent();
+
 const modeSelect = document.getElementById('mode');
 const greetingGroup = document.getElementById('greeting-group');
 const routerTip = document.getElementById('router-tip');
 const multichatPanel = document.getElementById('multichat-panel');
 const multichatBox = document.getElementById('multichatBox');
-let multichatInterval = null;
 
 const systemllmGroup = document.getElementById('systemllm-group');
 const systemllmSelect = document.getElementById('systemllm');
@@ -361,7 +667,7 @@ setupManualLogPanel('clientLogBox', 'refreshClientLogBtn', '/clientlog');
 
 async function fetchMultichat() {
   multichatBox.textContent = 'Loading...';
-  const resp = await fetch('/multichat');
+  const resp = await fetch('/chat?demo=MultiGAgentDemo');
   let text = await resp.text();
   // Highlight sender in red: 【Sender】: message
   text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
