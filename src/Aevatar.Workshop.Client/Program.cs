@@ -23,11 +23,18 @@ app.MapGet("/run", async (HttpContext context) =>
 {
     var modeStr = context.Request.Query["mode"].ToString();
     var greeting = context.Request.Query["greeting"].ToString();
+    var numberStr = context.Request.Query["number"].ToString();
+    var systemLLM = context.Request.Query["systemLLM"].ToString();
     int mode = 0;
     if (!string.IsNullOrEmpty(modeStr) && int.TryParse(modeStr, out var parsedMode))
         mode = parsedMode;
     if (string.IsNullOrEmpty(greeting))
         greeting = "Hello, Aevatar!";
+    int number = 42;
+    if (!string.IsNullOrEmpty(numberStr) && int.TryParse(numberStr, out var parsedNumber) && parsedNumber >= 1 && parsedNumber <= 100)
+        number = parsedNumber;
+    if (string.IsNullOrWhiteSpace(systemLLM))
+        systemLLM = "OpenAI";
     try
     {
         switch (mode)
@@ -36,10 +43,10 @@ app.MapGet("/run", async (HttpContext context) =>
                 await EventHandlerDemo.RunAsync(gAgentFactory, greeting);
                 return Results.Text($"EventHandlerDemo completed with greeting: {greeting}\nYou can refresh host's log to see the event handling details.");
             case 1:
-                await MultiGAgentDemo.RunAsync(gAgentFactory);
-                return Results.Text("MultiGAgentDemo completed.\nYou can refresh host's log to see the event handling details.");
+                await MultiGAgentDemo.RunAsync(gAgentFactory, number, systemLLM);
+                return Results.Text($"MultiGAgentDemo completed. Secret number was {number}.\nYou can refresh host's log to see the event handling details.");
             case 2:
-                await RouterDemo.RunAsync(gAgentFactory);
+                await RouterDemo.RunAsync(gAgentFactory, systemLLM);
                 return Results.Text("RouterDemo completed.\nYou can refresh host's log to see the event handling details.\nRefresh client's log to see the final report.");
             case 3:
                 await YourOwnDemo.RunAsync(gAgentFactory);
@@ -142,6 +149,31 @@ app.MapGet("/check-config", async (HttpContext context) =>
     catch (Exception ex)
     {
         return Results.Json(new { ok = false, error = ex.Message });
+    }
+});
+
+// API endpoint to get list of available LLM system keys
+app.MapGet("/llm-list", async (HttpContext context) =>
+{
+    Console.WriteLine(100);
+    try
+    {
+        var configPath = Path.Combine(Directory.GetCurrentDirectory(), "../Aevatar.Workshop.Host/appsettings.json");
+        if (!File.Exists(configPath))
+            return Results.Json(Array.Empty<string>());
+        var json = await File.ReadAllTextAsync(configPath);
+        using var doc = JsonDocument.Parse(json);
+        var root = doc.RootElement;
+        if (root.TryGetProperty("SystemLLMConfigs", out var llmConfigs) && llmConfigs.ValueKind == JsonValueKind.Object)
+        {
+            var keys = llmConfigs.EnumerateObject().Select(p => p.Name).ToArray();
+            return Results.Json(keys);
+        }
+        return Results.Json(Array.Empty<string>());
+    }
+    catch
+    {
+        return Results.Json(Array.Empty<string>());
     }
 });
 

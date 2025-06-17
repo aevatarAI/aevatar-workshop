@@ -218,6 +218,14 @@
         <label>Greeting (for EventHandlerDemo):</label>
         <input type='text' name='greeting' id='greeting' value='Hello, Aevatar!'>
       </div>
+      <div id="number-group" style="display:none;">
+        <label>Secret Number (1-100, for MultiGAgentDemo):</label>
+        <input type='number' name='number' id='number' min='1' max='100' value='42' style='width:80px;'>
+      </div>
+      <div id="systemllm-group" style="display:none;">
+        <label>LLM System (for MultiGAgentDemo & RouterDemo):</label>
+        <select id="systemllm" name="systemllm" style="min-width:120px;"></select>
+      </div>
       <button type='submit'>Run Demo</button>
     </form>
     <div id="demo-desc" style="background:#f1f5f9;border-radius:8px;padding:18px 22px;margin-bottom:18px;max-width:600px;font-size:1.01rem;color:#222;"></div>
@@ -242,17 +250,6 @@
     </div>
   </div>
 <script>
-document.getElementById('demoForm').onsubmit = async function(e) {
-  e.preventDefault();
-  const mode = document.getElementById('mode').value;
-  const greeting = document.getElementById('greeting').value;
-  let url = `/run?mode=${mode}`;
-  if (mode == '0') url += `&greeting=${encodeURIComponent(greeting)}`;
-  document.getElementById('result').textContent = 'Running...';
-  const resp = await fetch(url);
-  document.getElementById('result').textContent = await resp.text();
-};
-
 const modeSelect = document.getElementById('mode');
 const greetingGroup = document.getElementById('greeting-group');
 const routerTip = document.getElementById('router-tip');
@@ -260,10 +257,41 @@ const multichatPanel = document.getElementById('multichat-panel');
 const multichatBox = document.getElementById('multichatBox');
 let multichatInterval = null;
 
+const systemllmGroup = document.getElementById('systemllm-group');
+const systemllmSelect = document.getElementById('systemllm');
+
 const configModal = document.getElementById('configModal');
 const modalRestartBtn = document.getElementById('modalRestartBtn');
 const modalCloseBtn = document.getElementById('modalCloseBtn');
 let configChecked = false;
+
+const demoForm = document.getElementById('demoForm');
+demoForm.onsubmit = async function(e) {
+  e.preventDefault();
+  const mode = modeSelect.value;
+  const greeting = document.getElementById('greeting').value;
+  let url = `/run?mode=${mode}`;
+  if (mode == '0') url += `&greeting=${encodeURIComponent(greeting)}`;
+  if (mode == '1') {
+    const num = parseInt(document.getElementById('number').value, 10);
+    if (isNaN(num) || num < 1 || num > 100) {
+      document.getElementById('result').textContent = 'Please enter a number between 1 and 100.';
+      return;
+    }
+    url += `&number=${num}`;
+  }
+  if (mode == '1' || mode == '2') {
+    const llm = systemllmSelect.value;
+    if (!llm) {
+      document.getElementById('result').textContent = 'Please select an LLM system.';
+      return;
+    }
+    url += `&systemLLM=${encodeURIComponent(llm)}`;
+  }
+  document.getElementById('result').textContent = 'Running...';
+  const resp = await fetch(url);
+  document.getElementById('result').textContent = await resp.text();
+};
 
 async function checkConfigAndMaybeShowModal() {
   // Only check for RouterDemo (2) or MultiGAgentDemo (1)
@@ -286,6 +314,9 @@ modalRestartBtn.onclick = () => { configModal.style.display = 'none'; restartBtn
 function updateFormUI() {
   const mode = modeSelect.value;
   greetingGroup.style.display = (mode === '0') ? 'block' : 'none';
+  numberGroup = document.getElementById('number-group');
+  numberGroup.style.display = (mode === '1') ? 'block' : 'none';
+  systemllmGroup.style.display = (mode === '1' || mode === '2') ? 'block' : 'none';
   routerTip.style.display = (mode === '2') ? 'block' : 'none';
 
   if (mode === '1' || mode === '2') {
@@ -304,7 +335,7 @@ function updateFormUI() {
   }
 }
 modeSelect.addEventListener('change', updateFormUI);
-window.onload = function() { updateFormUI(); updateDemoDesc(); };
+window.onload = function() { populateLLMList(); updateFormUI(); updateDemoDesc(); };
 
 function setupManualLogPanel(boxId, btnId, api) {
   const box = document.getElementById(boxId);
@@ -357,15 +388,16 @@ const demoDescriptions = [
   </ul>`,
   `<b>MultiGAgentDemo</b><br>
   <ul style='margin-top:4px;'>
-    <li>Multi-agent "Guess the Number" game: Alice picks a number (default 42), Bob tries to guess it via events.</li>
+    <li>Multi-agent "Guess the Number" game: Alice picks a secret number (default 42, you can choose 1-100), Bob tries to guess it via events.</li>
+    <li>Enter your secret number and select the LLM system above before running the demo.</li>
     <li>All conversations and guesses are shown in the chat panel below, auto-refreshing every 5 seconds.</li>
-    <li>To customize the number, edit <code>await alice.PrepareAsync(42)</code> in <code>src/Aevatar.Workshop.Client/MultiGAgentDemo.cs</code> (range: 1-100).</li>
     <li>Experience multi-agent collaboration and message flow.</li>
   </ul>`,
   `<b>RouterDemo</b><br>
   <ul style='margin-top:4px;'>
     <li>Demonstrates AI-powered routing and multi-agent orchestration.</li>
     <li>You must configure your API key in <code>src/Aevatar.Workshop.Host/appsettings.json</code> before running.</li>
+    <li>Select the LLM system above before running the demo.</li>
     <li>Host Log shows orchestration details, Client Log shows the final report.</li>
     <li>Great for exploring AI-driven agent workflows.</li>
   </ul>`,
@@ -380,6 +412,21 @@ function updateDemoDesc() {
   demoDesc.innerHTML = demoDescriptions[modeSelect.value] || '';
 }
 modeSelect.addEventListener('change', updateDemoDesc);
+
+async function populateLLMList() {
+  try {
+    const resp = await fetch('/llm-list');
+    const arr = await resp.json();
+    systemllmSelect.innerHTML = '';
+    arr.forEach(key => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = key;
+      systemllmSelect.appendChild(opt);
+    });
+    if (arr.includes('OpenAI')) systemllmSelect.value = 'OpenAI';
+  } catch {}
+}
 </script>
 </body>
 </html>

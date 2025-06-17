@@ -36,6 +36,8 @@ The `quickstart.sh` script will:
 After running `quickstart.sh`, visit [http://localhost:5000](http://localhost:5000) (should open automatically).
 
 > **All demo instructions and usage tips are now shown directly in the web interface. You do not need to refer to this README for running or understanding the demos.**
+> 
+> **Tip:** For MultiGAgentDemo, you can now choose the secret number (1-100) directly in the web interface before running the demo.
 
 The web interface allows you to:
 - Select and run any of the provided demos (EventHandlerDemo, MultiGAgentDemo, RouterDemo, YourOwnDemo)
@@ -52,7 +54,7 @@ The web interface allows you to:
 > **See the web interface for detailed instructions and scenario descriptions for each demo.**
 
 - **EventHandlerDemo:** Event-driven GAgent collaboration. Optionally enter a greeting, run the demo, and check Host Log for details.
-- **MultiGAgentDemo:** Multi-agent number guessing game. Alice picks a number (default 42), Bob guesses. Chat and guesses shown in the chat panel. You can customize the number in `MultiGAgentDemo.cs`.
+- **MultiGAgentDemo:** Multi-agent number guessing game. Alice picks a secret number (default 42, you can choose 1-100 in the web UI), Bob guesses. Chat and guesses are shown in the chat panel. No need to edit code to change the number.
 - **RouterDemo:** AI routing and multi-agent orchestration. Requires API key configuration. Host Log shows orchestration, Client Log shows the final report.
 - **YourOwnDemo:** Run your own custom demo logic. Extend in `YourOwnDemo.cs`.
 

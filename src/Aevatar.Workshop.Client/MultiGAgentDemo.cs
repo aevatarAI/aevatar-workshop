@@ -6,8 +6,7 @@ namespace Aevatar.Workshop.Client;
 
 public static class MultiGAgentDemo
 {
-
-    public static async Task RunAsync(IGAgentFactory gAgentFactory, string systemLLM = "OpenAI")
+    public static async Task RunAsync(IGAgentFactory gAgentFactory, int number = 42, string systemLLM = "OpenAI")
     {
         // Create Alice and Bob
         var alice = await gAgentFactory.GetGAgentAsync<IAliceGAgent>();
@@ -32,7 +31,7 @@ public static class MultiGAgentDemo
         await publisher.RegisterAsync(bob);
         await publisher.RegisterAsync(Common.Recorder);
 
-        await alice.PrepareAsync(42);
+        await alice.PrepareAsync(number);
         await bob.StartGuessingAsync();
     }
 }
