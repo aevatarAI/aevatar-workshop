@@ -69,9 +69,9 @@
     .demo-desc {
       background: #f1f5f9;
       border-radius: 8px;
-      padding: 18px 22px;
-      margin-bottom: 18px;
-      max-width: 600px;
+      padding: 18px 0;
+      margin-bottom: 0;
+      width: 100%;
       font-size: 1.01rem;
       color: #222;
     }
@@ -209,6 +209,23 @@
       overflow: visible;
       height: auto;
     }
+    /* demo card */
+    .demo-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(30,41,59,0.10);
+      padding: 32px 36px 28px 36px;
+      margin-bottom: 32px;
+      max-width: 900px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: box-shadow 0.2s;
+    }
+    .demo-card:hover {
+      box-shadow: 0 8px 32px rgba(30,41,59,0.16);
+    }
   </style>
 </head>
 <body>
@@ -252,7 +269,7 @@ const demos = [
   {
     key: 'EventHandlerDemo',
     name: 'EventHandlerDemo',
-    desc: `<ul><li>Demonstrates event-driven GAgent collaboration.</li><li>You can enter a custom greeting. After clicking "Run Demo", check the Host Log for event handling details.</li><li>Search the log "New greeting event received by ExecuteAsync" on Host Log.</li><li>Great for beginners to experience Aevatar's event flow.</li></ul>`,
+    desc: 'demodesc/EventHandlerDemo.md',
     form: [
       { type: 'text', id: 'greeting', label: 'Greeting', default: 'Hello, Aevatar!' }
     ]
@@ -260,7 +277,7 @@ const demos = [
   {
     key: 'MultiGAgentDemo',
     name: 'MultiGAgentDemo',
-    desc: `<ul><li>Multi-agent "Guess the Number" game: Alice picks a secret number (default 42, you can choose 1-100), Bob tries to guess it via events.</li><li>Enter your secret number and select the LLM system before running the demo.</li><li>All conversations and guesses are shown in the chat panel below, auto-refreshing every 5 seconds.</li><li>Experience multi-agent collaboration and message flow.</li></ul>`,
+    desc: 'demodesc/MultiGAgentDemo.md',
     form: [
       { type: 'number', id: 'number', label: 'Secret Number (1-100)', default: 42, min: 1, max: 100 },
       { type: 'llm', id: 'systemllm', label: 'LLM System' }
@@ -269,7 +286,7 @@ const demos = [
   {
     key: 'RouterDemo',
     name: 'RouterDemo',
-    desc: `<ul><li>Demonstrates AI-powered routing and multi-agent orchestration.</li><li>You must configure your API key in <code>src/Aevatar.Workshop.Host/appsettings.json</code> before running.</li><li>Select the LLM system before running the demo.</li><li>Host Log shows orchestration details, Client Log shows the final report.</li><li>Great for exploring AI-driven agent workflows.</li></ul>`,
+    desc: 'demodesc/RouterDemo.md',
     form: [
       { type: 'llm', id: 'systemllm', label: 'LLM System' }
     ]
@@ -277,7 +294,7 @@ const demos = [
   {
     key: 'YourOwnDemo',
     name: 'YourOwnDemo',
-    desc: `<ul><li>Run your own custom demo logic.</li><li>Implement your own GAgent interactions in <code>src/Aevatar.Workshop.Client/YourOwnDemo.cs</code>.</li><li>Perfect for advanced users to extend and experiment.</li></ul>`,
+    desc: 'demodesc/YourOwnDemo.md',
     form: []
   }
 ];
@@ -293,6 +310,27 @@ let selectedKey = demos[0].key;
 let logInterval = null;
 let multichatInterval = null;
 let routerchatInterval = null;
+
+// markdown -> html
+function simpleMarkdownToHtml(md) {
+  let html = md
+    .replace(/^###### (.*$)/gim, '<h6>$1</h6>')
+    .replace(/^##### (.*$)/gim, '<h5>$1</h5>')
+    .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+    .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
+    .replace(/\*(.*?)\*/gim, '<i>$1</i>')
+    .replace(/`([^`]+)`/gim, '<code>$1</code>')
+    .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
+    .replace(/^\s*\n/gim, '<br>')
+    .replace(/\n/gim, '<br>');
+  // for list
+  html = html.replace(/<br>\s*[-*] (.*?)(?=<br>|$)/g, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
+  return html;
+}
 
 function renderSidebar() {
   sidebarList.innerHTML = '';
@@ -325,7 +363,7 @@ function selectSidebar(key) {
 }
 
 // --- Main content rendering ---
-function renderMainContent() {
+async function renderMainContent() {
   clearInterval(logInterval);
   clearInterval(multichatInterval);
   clearInterval(routerchatInterval);
@@ -336,16 +374,20 @@ function renderMainContent() {
   }
   const demo = demos.find(d => d.key === selectedKey);
   if (!demo) return;
-  // Title
-  const title = document.createElement('div');
-  title.className = 'demo-title';
-  title.textContent = demo.name;
-  mainContent.appendChild(title);
-  // Description
+  // description card
+  const descCard = document.createElement('div');
+  descCard.className = 'demo-card';
   const desc = document.createElement('div');
   desc.className = 'demo-desc';
-  desc.innerHTML = demo.desc;
-  mainContent.appendChild(desc);
+  desc.innerHTML = 'Loading...';
+  fetch(demo.desc).then(r => r.text()).then(md => {
+    desc.innerHTML = simpleMarkdownToHtml(md);
+  });
+  descCard.appendChild(desc);
+  mainContent.appendChild(descCard);
+  // content card
+  const card = document.createElement('div');
+  card.className = 'demo-card';
   // Form
   const form = document.createElement('form');
   form.className = 'demo-form';
@@ -407,7 +449,7 @@ function renderMainContent() {
   runBtn.type = 'submit';
   runBtn.textContent = 'Run Demo';
   form.appendChild(runBtn);
-  mainContent.appendChild(form);
+  card.appendChild(form);
   // LLM options
   if (llmSelect) {
     fetch('/llm-list').then(r => r.json()).then(arr => {
@@ -479,7 +521,7 @@ function renderMainContent() {
     chatBox.textContent = 'Loading...';
     chatPanel.appendChild(chatTitle);
     chatPanel.appendChild(chatBox);
-    mainContent.appendChild(chatPanel);
+    card.appendChild(chatPanel);
     // Auto-refresh chat
     const fetchMultichat = async () => {
       chatBox.textContent = 'Loading...';
@@ -503,7 +545,7 @@ function renderMainContent() {
     chatBox.textContent = 'Loading...';
     chatPanel.appendChild(chatTitle);
     chatPanel.appendChild(chatBox);
-    mainContent.appendChild(chatPanel);
+    card.appendChild(chatPanel);
     // Auto-refresh chat
     const fetchRouterchat = async () => {
       chatBox.textContent = 'Loading...';
@@ -515,6 +557,7 @@ function renderMainContent() {
     fetchRouterchat();
     routerchatInterval = setInterval(fetchRouterchat, 5000);
   }
+  mainContent.appendChild(card);
 }
 
 function renderLogPanel(logKey) {
