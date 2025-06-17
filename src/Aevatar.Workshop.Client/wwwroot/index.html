@@ -343,7 +343,14 @@ function setupManualLogPanel(boxId, btnId, api) {
   async function fetchLog() {
     box.textContent = 'Loading...';
     const resp = await fetch(api);
-    box.textContent = await resp.text();
+    let text = await resp.text();
+    if (boxId === 'hostLogBox') {
+      // Highlight the greeting event line in green
+      text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span style="background:#bbf7d0;">$1</span>');
+      box.innerHTML = text;
+    } else {
+      box.textContent = text;
+    }
   }
   btn.onclick = fetchLog;
   fetchLog(); // Initial load
