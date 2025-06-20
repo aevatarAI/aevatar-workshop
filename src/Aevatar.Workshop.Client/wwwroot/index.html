@@ -239,7 +239,7 @@
     }
   </style>
   <script src="/js/llm-configs.js"></script>
-  <script src="/js/restart-service.js"></script>
+  <script src="/js/restart-service.js?"></script>
 </head>
 <body>
   <div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
@@ -271,7 +271,6 @@
   </div>
   <div id="sidebar">
     <button id="restartBtn" style="width:90%;margin:0 auto 24px auto;display:block;font-size:1.08rem;padding:12px 0;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Restart Services</button>
-    <span id="restartMsg" style="display:block;margin:0 auto 18px auto;color:#b91c1c;font-weight:bold;text-align:center;"></span>
     <button id="configLlmBtn" style="width:90%;margin:0 auto 18px auto;display:block;font-size:1.08rem;padding:12px 0;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Config LLM</button>
     <h2>Aevatar Demos</h2>
     <ul class="sidebar-list" id="sidebar-list"></ul>
@@ -656,45 +655,6 @@ function renderLogPanel(logKey) {
 // Initial render
 renderSidebar();
 renderMainContent();
-
-// Setup restart button handler
-const restartBtn = document.getElementById('restartBtn');
-const restartMsg = document.getElementById('restartMsg');
-if (restartBtn && restartMsg) {
-  restartBtn.onclick = async function() {
-    console.log('DEBUG: Restart button clicked');
-    restartBtn.disabled = true;
-    restartBtn.style.background = '#f87171';
-    restartMsg.textContent = 'Restarting, please wait...';
-    try {
-      console.log('DEBUG: Sending restart request to /api/restart');
-      const resp = await fetch('/api/restart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}) // Send empty object as body
-      });
-      console.log('DEBUG: Restart response status:', resp.status);
-      if (resp.ok) {
-        const text = await resp.text();
-        console.log('DEBUG: Restart success:', text);
-        restartMsg.textContent = text + ' Refreshing in 8 seconds...';
-        setTimeout(() => {
-          window.location.reload();
-        }, 8000);
-      } else {
-        console.error('DEBUG: Restart failed with status:', resp.status);
-        restartMsg.textContent = 'Restart failed with status: ' + resp.status;
-        restartBtn.disabled = false;
-        restartBtn.style.background = '#ef4444';
-      }
-    } catch (e) {
-      console.error('DEBUG: Restart error:', e);
-      restartMsg.textContent = 'Failed to trigger restart: ' + e.message;
-      restartBtn.disabled = false;
-      restartBtn.style.background = '#ef4444';
-    }
-  };
-}
 
 const multichatBox = document.getElementById('multichatBox');
 const configModal = document.getElementById('configModal');

@@ -45,8 +45,8 @@ HOST_PID=$!
 echo "[Aevatar Workshop] Host started (PID: $HOST_PID), logs at host.log"
 
 # Step 3: Wait for Host to initialize (adjust seconds if needed)
-printf "[Aevatar Workshop] Waiting for Host to initialize (10s countdown)... "
-for i in {10..1}; do
+printf "[Aevatar Workshop] Waiting for Host to initialize (5s countdown)... "
+for i in {5..1}; do
   printf "%s " "$i"
   sleep 1
 done
