@@ -18,6 +18,8 @@
         <PackageReference Include="Microsoft.AspNetCore" />
         <PackageReference Include="Microsoft.AspNetCore.Hosting" />
         <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
+        <PackageReference Include="Newtonsoft.Json" />
     </ItemGroup>
 
     <ItemGroup>

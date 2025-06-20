@@ -151,7 +151,18 @@
       border-radius: 5px;
     }
     .green-highlight {
-      background: #bbf7d0;
+      background-color: #dcfce7;
+      color: #166534;
+    }
+    .error-highlight {
+      color: #b91c1c;
+      font-weight: bold;
+      background-color: #fee2e2;
+      padding: 10px;
+      border: 1px solid #fca5a5;
+      border-radius: 5px;
+      display: block;
+      white-space: pre-wrap;
     }
     #multichat-panel {
       margin-top: 32px;
@@ -227,6 +238,8 @@
       box-shadow: 0 8px 32px rgba(30,41,59,0.16);
     }
   </style>
+  <script src="/js/llm-configs.js"></script>
+  <script src="/js/restart-service.js"></script>
 </head>
 <body>
   <div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
@@ -259,11 +272,31 @@
   <div id="sidebar">
     <button id="restartBtn" style="width:90%;margin:0 auto 24px auto;display:block;font-size:1.08rem;padding:12px 0;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Restart Services</button>
     <span id="restartMsg" style="display:block;margin:0 auto 18px auto;color:#b91c1c;font-weight:bold;text-align:center;"></span>
+    <button id="configLlmBtn" style="width:90%;margin:0 auto 18px auto;display:block;font-size:1.08rem;padding:12px 0;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Config LLM</button>
     <h2>Aevatar Demos</h2>
     <ul class="sidebar-list" id="sidebar-list"></ul>
   </div>
   <div id="main-content"></div>
+  <!-- LLM Config Modal -->
+  <div id="llmConfigModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
+    <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:600px;text-align:left;min-width:340px;">
+      <div style="font-size:1.15rem;font-weight:bold;color:#2563eb;margin-bottom:18px;">Edit SystemLLMConfigs</div>
+      <div id="llmConfigForm"></div>
+      <div style="margin-top:18px;text-align:right;">
+        <button id="llmConfigSaveBtn" style="background:#22c55e;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;">Save</button>
+        <button id="llmConfigCancelBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;">Cancel</button>
+      </div>
+      <div id="llmConfigMsg" style="margin-top:12px;color:#b91c1c;font-weight:bold;"></div>
+    </div>
+  </div>
 <script>
+// LLM Config Modal global variables
+const llmConfigModal = document.getElementById('llmConfigModal');
+const llmConfigForm = document.getElementById('llmConfigForm');
+const llmConfigSaveBtn = document.getElementById('llmConfigSaveBtn');
+const llmConfigCancelBtn = document.getElementById('llmConfigCancelBtn');
+const llmConfigMsg = document.getElementById('llmConfigMsg');
+let llmConfigData = {};
 // --- Demo definitions ---
 const demos = [
   {
@@ -333,6 +366,7 @@ function simpleMarkdownToHtml(md) {
 }
 
 function renderSidebar() {
+  console.log('DEBUG: renderSidebar called');
   sidebarList.innerHTML = '';
   demos.forEach(demo => {
     const li = document.createElement('li');
@@ -354,6 +388,39 @@ function renderSidebar() {
     li.onclick = () => { selectSidebar(log.key); };
     sidebarList.appendChild(li);
   });
+  const configLlmBtn = document.getElementById('configLlmBtn');
+  if (configLlmBtn) {
+    configLlmBtn.onclick = async function() {
+      llmConfigMsg.textContent = '';
+      llmConfigForm.innerHTML = 'Loading...';
+      llmConfigModal.style.display = 'flex';
+      try {
+        const resp = await fetch('/api/llm-configs');
+        llmConfigData = await resp.json();
+        renderLlmConfigForm();
+      } catch {
+        llmConfigForm.innerHTML = '<span style="color:#b91c1c;">Failed to load config.</span>';
+      }
+      llmConfigCancelBtn.onclick = () => { llmConfigModal.style.display = 'none'; };
+      llmConfigSaveBtn.onclick = async function() {
+        llmConfigMsg.textContent = 'Saving...';
+        try {
+          const resp = await fetch('/api/llm-configs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(llmConfigData)
+          });
+          if (resp.ok) {
+            llmConfigMsg.textContent = 'Saved! Please run: sh quickstart.sh to restart services.';
+          } else {
+            llmConfigMsg.textContent = 'Save failed.';
+          }
+        } catch {
+          llmConfigMsg.textContent = 'Save failed.';
+        }
+      };
+    };
+  }
 }
 
 function selectSidebar(key) {
@@ -452,7 +519,7 @@ async function renderMainContent() {
   card.appendChild(form);
   // LLM options
   if (llmSelect) {
-    fetch('/llm-list').then(r => r.json()).then(arr => {
+    fetch('/api/llm-configs/list').then(r => r.json()).then(arr => {
       llmSelect.innerHTML = '';
       arr.forEach(key => {
         const opt = document.createElement('option');
@@ -466,49 +533,39 @@ async function renderMainContent() {
   // Form submit
   form.onsubmit = async function(e) {
     e.preventDefault();
-    let url = `/run?mode=${demos.findIndex(d => d.key === demo.key)}`;
+    resultBox.innerHTML = '<div class="spinner"></div>';
+    let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
     for (const field of demo.form) {
       if (field.type === 'text') {
-        const val = form.querySelector(`#${field.id}`).value;
-        url += `&${field.id}=${encodeURIComponent(val)}`;
-      } else if (field.type === 'number') {
-        const val = parseInt(form.querySelector(`#${field.id}`).value, 10);
-        if (isNaN(val) || val < field.min || val > field.max) {
-          resultBox.textContent = `Please enter a number between ${field.min} and ${field.max}.`;
-          return;
-        }
-        url += `&${field.id}=${val}`;
-      } else if (field.type === 'llm') {
-        const val = form.querySelector(`#${field.id}`).value;
-        if (!val) {
-          resultBox.textContent = 'Please select an LLM system.';
-          return;
-        }
-        url += `&systemLLM=${encodeURIComponent(val)}`;
+        url += `&${field.name}=${encodeURIComponent(document.getElementById(field.id).value)}`;
       }
     }
-    resultBox.textContent = 'Running...';
-    const resp = await fetch(url);
-    resultBox.textContent = await resp.text();
-    // Only EventHandlerDemo auto-jumps to Host Log
-    if (demo.key === 'EventHandlerDemo') {
-      selectSidebar('HostLog');
-      // Real-time refresh
-      let hostLogBox = document.getElementById('hostLogBox');
-      if (hostLogBox) {
-        const fetchHostLog = async () => {
-          hostLogBox.textContent = 'Loading...';
-          const resp = await fetch('/hostlog');
-          let text = await resp.text();
-          text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
-          hostLogBox.innerHTML = text;
-        };
-        fetchHostLog();
-        clearInterval(logInterval);
-        logInterval = setInterval(fetchHostLog, 2000);
+
+    try {
+      const resp = await fetch(url);
+      if (resp.ok) {
+        resultBox.textContent = await resp.text();
+      } else {
+        // The response is an error. We need to handle both JSON and Text responses.
+        // Clone the response so we can read it twice if needed.
+        const clonedResponse = resp.clone();
+        try {
+          const errorData = await resp.json();
+          resultBox.innerHTML = `<span class="error-highlight">${errorData.message || 'An unknown error occurred.'}</span>`;
+        } catch (jsonError) {
+          const errorText = await clonedResponse.text();
+          // Add diagnostic logging
+          console.error('Server returned a non-JSON error response.');
+          console.error('Status:', resp.status);
+          console.error('Body:', errorText);
+          resultBox.innerHTML = `<span class="error-highlight">${errorText || 'An unknown server error occurred (see console for details).'}</span>`;
+        }
       }
+    } catch (error) {
+      resultBox.innerHTML = `<span class="error-highlight">Network error: ${error.message}</span>`;
     }
   };
+  mainContent.appendChild(form);
   // MultiGAgentDemo chat panel
   if (demo.key === 'MultiGAgentDemo') {
     const chatPanel = document.createElement('div');
@@ -525,7 +582,7 @@ async function renderMainContent() {
     // Auto-refresh chat
     const fetchMultichat = async () => {
       chatBox.textContent = 'Loading...';
-      const resp = await fetch('/chat?demo=MultiGAgentDemo');
+      const resp = await fetch('/api/log/chat?demo=MultiGAgentDemo');
       let text = await resp.text();
       text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
       chatBox.innerHTML = text;
@@ -549,7 +606,7 @@ async function renderMainContent() {
     // Auto-refresh chat
     const fetchRouterchat = async () => {
       chatBox.textContent = 'Loading...';
-      const resp = await fetch('/chat?demo=RouterDemo');
+      const resp = await fetch('/api/log/chat?demo=RouterDemo');
       let text = await resp.text();
       text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
       chatBox.innerHTML = text;
@@ -581,7 +638,7 @@ function renderLogPanel(logKey) {
   // Fetch log
   const fetchLog = async () => {
     logBox.textContent = 'Loading...';
-    const resp = await fetch(isHost ? '/hostlog' : '/clientlog');
+    const resp = await fetch(isHost ? '/api/log/host' : '/api/log/client');
     let text = await resp.text();
     if (isHost) {
       text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
@@ -600,55 +657,55 @@ function renderLogPanel(logKey) {
 renderSidebar();
 renderMainContent();
 
-const modeSelect = document.getElementById('mode');
-const greetingGroup = document.getElementById('greeting-group');
-const routerTip = document.getElementById('router-tip');
-const multichatPanel = document.getElementById('multichat-panel');
+// Setup restart button handler
+const restartBtn = document.getElementById('restartBtn');
+const restartMsg = document.getElementById('restartMsg');
+if (restartBtn && restartMsg) {
+  restartBtn.onclick = async function() {
+    console.log('DEBUG: Restart button clicked');
+    restartBtn.disabled = true;
+    restartBtn.style.background = '#f87171';
+    restartMsg.textContent = 'Restarting, please wait...';
+    try {
+      console.log('DEBUG: Sending restart request to /api/restart');
+      const resp = await fetch('/api/restart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}) // Send empty object as body
+      });
+      console.log('DEBUG: Restart response status:', resp.status);
+      if (resp.ok) {
+        const text = await resp.text();
+        console.log('DEBUG: Restart success:', text);
+        restartMsg.textContent = text + ' Refreshing in 8 seconds...';
+        setTimeout(() => {
+          window.location.reload();
+        }, 8000);
+      } else {
+        console.error('DEBUG: Restart failed with status:', resp.status);
+        restartMsg.textContent = 'Restart failed with status: ' + resp.status;
+        restartBtn.disabled = false;
+        restartBtn.style.background = '#ef4444';
+      }
+    } catch (e) {
+      console.error('DEBUG: Restart error:', e);
+      restartMsg.textContent = 'Failed to trigger restart: ' + e.message;
+      restartBtn.disabled = false;
+      restartBtn.style.background = '#ef4444';
+    }
+  };
+}
+
 const multichatBox = document.getElementById('multichatBox');
-
-const systemllmGroup = document.getElementById('systemllm-group');
-const systemllmSelect = document.getElementById('systemllm');
-
 const configModal = document.getElementById('configModal');
 const modalRestartBtn = document.getElementById('modalRestartBtn');
 const modalCloseBtn = document.getElementById('modalCloseBtn');
 let configChecked = false;
 
-const demoForm = document.getElementById('demoForm');
-demoForm.onsubmit = async function(e) {
-  e.preventDefault();
-  const mode = modeSelect.value;
-  const greeting = document.getElementById('greeting').value;
-  let url = `/run?mode=${mode}`;
-  if (mode == '0') url += `&greeting=${encodeURIComponent(greeting)}`;
-  if (mode == '1') {
-    const num = parseInt(document.getElementById('number').value, 10);
-    if (isNaN(num) || num < 1 || num > 100) {
-      document.getElementById('result').textContent = 'Please enter a number between 1 and 100.';
-      return;
-    }
-    url += `&number=${num}`;
-  }
-  if (mode == '1' || mode == '2') {
-    const llm = systemllmSelect.value;
-    if (!llm) {
-      document.getElementById('result').textContent = 'Please select an LLM system.';
-      return;
-    }
-    url += `&systemLLM=${encodeURIComponent(llm)}`;
-  }
-  document.getElementById('result').textContent = 'Running...';
-  const resp = await fetch(url);
-  document.getElementById('result').textContent = await resp.text();
-};
-
 async function checkConfigAndMaybeShowModal() {
-  // Only check for RouterDemo (2) or MultiGAgentDemo (1)
-  const mode = modeSelect.value;
-  if (mode !== '1' && mode !== '2') return;
   if (configChecked) return;
   try {
-    const resp = await fetch('/check-config');
+    const resp = await fetch('/api/llm-configs/check');
     const data = await resp.json();
     if (!data.ok) {
       configModal.style.display = 'flex';
@@ -660,118 +717,62 @@ async function checkConfigAndMaybeShowModal() {
 modalCloseBtn.onclick = () => { configModal.style.display = 'none'; };
 modalRestartBtn.onclick = () => { configModal.style.display = 'none'; restartBtn.onclick(); };
 
-function updateFormUI() {
-  const mode = modeSelect.value;
-  greetingGroup.style.display = (mode === '0') ? 'block' : 'none';
-  numberGroup = document.getElementById('number-group');
-  numberGroup.style.display = (mode === '1') ? 'block' : 'none';
-  systemllmGroup.style.display = (mode === '1' || mode === '2') ? 'block' : 'none';
-  routerTip.style.display = (mode === '2') ? 'block' : 'none';
-
-  if (mode === '1' || mode === '2') {
-    multichatPanel.style.display = 'block';
-    fetchMultichat();
-    if (!multichatInterval) {
-      multichatInterval = setInterval(fetchMultichat, 5000);
-    }
-    checkConfigAndMaybeShowModal();
-  } else {
-    multichatPanel.style.display = 'none';
-    if (multichatInterval) {
-      clearInterval(multichatInterval);
-      multichatInterval = null;
-    }
-  }
-}
-modeSelect.addEventListener('change', updateFormUI);
-window.onload = function() { populateLLMList(); updateFormUI(); updateDemoDesc(); };
+window.onload = function() { 
+  checkConfigAndMaybeShowModal();
+};
 
 function setupManualLogPanel(boxId, btnId, api) {
   const box = document.getElementById(boxId);
   const btn = document.getElementById(btnId);
   async function fetchLog() {
     box.textContent = 'Loading...';
-    const resp = await fetch(api);
-    let text = await resp.text();
-    if (boxId === 'hostLogBox') {
-      // Highlight the greeting event line in green
-      text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span style="background:#bbf7d0;">$1</span>');
-      box.innerHTML = text;
-    } else {
-      box.textContent = text;
+    try {
+      const resp = await fetch(api);
+      const result = await handleFetchResponse(resp, box);
+      if (result && typeof result === 'string') {
+        let text = result;
+        if (boxId === 'hostLogBox') {
+          text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span style="background:#bbf7d0;">$1</span>');
+        }
+        box.innerHTML = text;
+      }
+    } catch (error) {
+      console.error('Error fetching log:', error);
+      box.innerHTML = `
+        <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px;">
+          An error occurred while fetching the logs. Please try again later.
+        </div>`;
     }
   }
   btn.onclick = fetchLog;
   fetchLog(); // Initial load
 }
 
-setupManualLogPanel('hostLogBox', 'refreshHostLogBtn', '/hostlog');
-setupManualLogPanel('clientLogBox', 'refreshClientLogBtn', '/clientlog');
+setupManualLogPanel('hostLogBox', 'refreshHostLogBtn', '/api/log/host');
+setupManualLogPanel('clientLogBox', 'refreshClientLogBtn', '/api/log/client');
 
 async function fetchMultichat() {
   multichatBox.textContent = 'Loading...';
-  const resp = await fetch('/chat?demo=MultiGAgentDemo');
-  let text = await resp.text();
-  // Highlight sender in red: 【Sender】: message
-  text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
-  multichatBox.innerHTML = text;
-}
-
-const restartBtn = document.getElementById('restartBtn');
-const restartMsg = document.getElementById('restartMsg');
-restartBtn.onclick = async function() {
-  restartBtn.disabled = true;
-  restartBtn.style.background = '#f87171';
-  restartMsg.textContent = 'Restarting, please wait...';
   try {
-    const resp = await fetch('/restart', { method: 'POST' });
-    const text = await resp.text();
-    restartMsg.textContent = text + ' Refreshing in 8 seconds...';
-  } catch (e) {
-    restartMsg.textContent = 'Failed to trigger restart.';
+    const resp = await fetch('/api/log/chat?demo=MultiGAgentDemo');
+    const result = await handleFetchResponse(resp, multichatBox);
+    if (result && typeof result === 'string') {
+      let text = result;
+      text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
+      multichatBox.innerHTML = text;
+    }
+  } catch (error) {
+    console.error('Error fetching multichat:', error);
+    multichatBox.innerHTML = `
+      <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px;">
+        An error occurred while processing your request. Please try again later.
+      </div>`;
   }
-  setTimeout(() => { window.location.reload(); }, 8000);
-};
-
-const demoDesc = document.getElementById('demo-desc');
-const demoDescriptions = [
-  `<b>EventHandlerDemo</b><br>
-  <ul style='margin-top:4px;'>
-    <li>Demonstrates event-driven GAgent collaboration.</li>
-    <li>You can enter a custom greeting. After clicking "Run Demo", check the Host Log for event handling details.</li>
-    <li>Search the log "New greeting event received by ExecuteAsync" on Host Log.</li>
-    <li>Great for beginners to experience Aevatar's event flow.</li>
-  </ul>`,
-  `<b>MultiGAgentDemo</b><br>
-  <ul style='margin-top:4px;'>
-    <li>Multi-agent "Guess the Number" game: Alice picks a secret number (default 42, you can choose 1-100), Bob tries to guess it via events.</li>
-    <li>Enter your secret number and select the LLM system above before running the demo.</li>
-    <li>All conversations and guesses are shown in the chat panel below, auto-refreshing every 5 seconds.</li>
-    <li>Experience multi-agent collaboration and message flow.</li>
-  </ul>`,
-  `<b>RouterDemo</b><br>
-  <ul style='margin-top:4px;'>
-    <li>Demonstrates AI-powered routing and multi-agent orchestration.</li>
-    <li>You must configure your API key in <code>src/Aevatar.Workshop.Host/appsettings.json</code> before running.</li>
-    <li>Select the LLM system above before running the demo.</li>
-    <li>Host Log shows orchestration details, Client Log shows the final report.</li>
-    <li>Great for exploring AI-driven agent workflows.</li>
-  </ul>`,
-  `<b>YourOwnDemo</b><br>
-  <ul style='margin-top:4px;'>
-    <li>Run your own custom demo logic.</li>
-    <li>Implement your own GAgent interactions in <code>src/Aevatar.Workshop.Client/YourOwnDemo.cs</code>.</li>
-    <li>Perfect for advanced users to extend and experiment.</li>
-  </ul>`
-];
-function updateDemoDesc() {
-  demoDesc.innerHTML = demoDescriptions[modeSelect.value] || '';
 }
-modeSelect.addEventListener('change', updateDemoDesc);
 
 async function populateLLMList() {
   try {
-    const resp = await fetch('/llm-list');
+    const resp = await fetch('/api/llm-configs/list');
     const arr = await resp.json();
     systemllmSelect.innerHTML = '';
     arr.forEach(key => {
@@ -782,6 +783,234 @@ async function populateLLMList() {
     });
     if (arr.includes('OpenAI')) systemllmSelect.value = 'OpenAI';
   } catch {}
+}
+
+const configLlmBtn = document.getElementById('configLlmBtn');
+function renderLlmConfigForm() {
+  const providerOptions = ['Azure', 'Google', 'OpenAI', 'DeepSeek'];
+  const modelIdOptions = {
+    Azure: ['OpenAI', 'DeepSeek'],
+    Google: ['Gemini'],
+    OpenAI: ['OpenAI'],
+    DeepSeek: ['DeepSeek']
+  };
+  const FIELD_ORDER = [
+    'ProviderEnum', 'ModelId', 'ModelName', 'Endpoint', 'ApiKey'
+  ];
+  for (const key in llmConfigData) {
+    FIELD_ORDER.forEach(f => {
+      if (!(f in llmConfigData[key])) {
+        llmConfigData[key][f] = '';
+      }
+    });
+    if (!llmConfigData[key]['ProviderEnum']) llmConfigData[key]['ProviderEnum'] = 'Azure';
+    const provider = llmConfigData[key]['ProviderEnum'];
+    const validModels = modelIdOptions[provider] || modelIdOptions['Azure'];
+    if (!validModels.includes(llmConfigData[key]['ModelId'])) {
+      llmConfigData[key]['ModelId'] = validModels[0];
+    }
+  }
+  let html = '';
+  let idx = 0;
+  for (const key in llmConfigData) {
+    const collapseId = `llm-collapse-${idx}`;
+    html += `<div style='margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:8px;'>`;
+    html += `<div style='display:flex;align-items:center;'>`;
+    html += `<button type='button' class='llm-collapse-btn' data-target='${collapseId}' style='margin-right:8px;font-size:1.1em;'>+</button>`;
+    html += `<label style='font-weight:bold;'>Key: <input type='text' value='${key}' data-key='${key}' class='llm-key' style='width:120px;margin-left:6px;'></label>`;
+    html += `<button type='button' class='llm-del-btn' data-key='${key}' style='margin-left:8px;color:#ef4444;background:none;border:none;cursor:pointer;'>Delete</button>`;
+    html += `</div>`;
+    html += `<div id='${collapseId}' class='llm-fields' style='display:none;margin-left:18px;margin-top:8px;'>`;
+    FIELD_ORDER.forEach(f => {
+      if (f === 'ProviderEnum') {
+        html += `<div style='margin-top:4px;'><label>${f}: <select data-key='${key}' data-field='${f}' class='llm-provider' style='width:180px;'>`;
+        providerOptions.forEach(opt => {
+          html += `<option value='${opt}'${llmConfigData[key][f]===opt?' selected':''}>${opt}</option>`;
+        });
+        html += `</select></label></div>`;
+      } else if (f === 'ModelId') {
+        const provider = llmConfigData[key]['ProviderEnum'] || 'Azure';
+        const models = modelIdOptions[provider] || modelIdOptions['Azure'];
+        html += `<div style='margin-top:4px;'><label>${f}: <select data-key='${key}' data-field='${f}' class='llm-modelid' style='width:180px;'>`;
+        models.forEach(opt => {
+          html += `<option value='${opt}'${llmConfigData[key][f]===opt?' selected':''}>${opt}</option>`;
+        });
+        html += `</select></label></div>`;
+      } else {
+        html += `<div style='margin-top:4px;'><label>${f}: <input type='text' value='${llmConfigData[key][f]||''}' data-key='${key}' data-field='${f}' class='llm-val' style='width:260px;'></label></div>`;
+      }
+    });
+    html += `</div>`;
+    html += `</div>`;
+    idx++;
+  }
+  html += `<button type='button' id='llmAddKeyBtn' style='margin-top:8px;background:#fbbf24;color:#222;padding:4px 14px;border:none;border-radius:5px;font-weight:bold;'>Add Key</button>`;
+  llmConfigForm.innerHTML = html;
+  llmConfigForm.querySelectorAll('.llm-del-btn').forEach(btn => {
+    btn.onclick = function() {
+      const k = btn.getAttribute('data-key');
+      delete llmConfigData[k];
+      renderLlmConfigForm();
+    };
+  });
+  llmConfigForm.querySelectorAll('.llm-key').forEach(inp => {
+    inp.onchange = function() {
+      const oldKey = inp.getAttribute('data-key');
+      const newKey = inp.value;
+      if (oldKey !== newKey && newKey) {
+        llmConfigData[newKey] = llmConfigData[oldKey];
+        delete llmConfigData[oldKey];
+        renderLlmConfigForm();
+      }
+    };
+  });
+  llmConfigForm.querySelectorAll('.llm-val').forEach(inp => {
+    inp.onchange = function() {
+      const k = inp.getAttribute('data-key');
+      const f = inp.getAttribute('data-field');
+      llmConfigData[k][f] = inp.value;
+    };
+  });
+  llmConfigForm.querySelectorAll('.llm-provider').forEach(sel => {
+    sel.onchange = function() {
+      const k = sel.getAttribute('data-key');
+      const f = sel.getAttribute('data-field');
+      const newProvider = sel.value;
+      llmConfigData[k][f] = newProvider;
+      const newModel = (modelIdOptions[newProvider]||['OpenAI'])[0];
+      llmConfigData[k]['ModelId'] = newModel;
+      const parent = sel.closest('.llm-fields');
+      if (parent) {
+        const modelSel = parent.querySelector('select.llm-modelid[data-key="'+k+'"]');
+        if (modelSel) {
+          while (modelSel.firstChild) modelSel.removeChild(modelSel.firstChild);
+          (modelIdOptions[newProvider]||['OpenAI']).forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt;
+            option.textContent = opt;
+            if (opt === newModel) option.selected = true;
+            modelSel.appendChild(option);
+          });
+        }
+      }
+    };
+  });
+  llmConfigForm.querySelectorAll('.llm-modelid').forEach(sel => {
+    sel.onchange = function() {
+      const k = sel.getAttribute('data-key');
+      const f = sel.getAttribute('data-field');
+      llmConfigData[k][f] = sel.value;
+    };
+  });
+  llmConfigForm.querySelectorAll('.llm-collapse-btn').forEach(btn => {
+    btn.onclick = function() {
+      const target = btn.getAttribute('data-target');
+      const fields = document.getElementById(target);
+      if (fields.style.display === 'none') {
+        fields.style.display = 'block';
+        btn.textContent = '-';
+      } else {
+        fields.style.display = 'none';
+        btn.textContent = '+';
+      }
+    };
+  });
+  document.getElementById('llmAddKeyBtn').onclick = function() {
+    let newKey = 'NewKey';
+    let idx = 1;
+    while (llmConfigData[newKey]) { newKey = 'NewKey'+(idx++); }
+    llmConfigData[newKey] = { ProviderEnum:'', ModelIdEnum:'', ModelName:'', Endpoint:'', ApiKey:'' };
+    renderLlmConfigForm();
+  };
+}
+
+// Global error handlers
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+  console.error('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+  return false;
+};
+
+window.addEventListener('unhandledrejection', function(event) {
+  console.error('Unhandled promise rejection:', event.reason);
+});
+
+// Add global error handler for fetch responses
+async function handleFetchResponse(response, errorBox) {
+  const text = await response.text();
+  try {
+    const data = JSON.parse(text);
+    if (data.error === 'AIHttpOperationException') {
+      errorBox.innerHTML = `
+        <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px; margin: 8px 0;">
+          ${data.message}
+        </div>`;
+      return null;
+    }
+    if (data.error) {
+      errorBox.innerHTML = `
+        <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px; margin: 8px 0;">
+          ${data.message}
+        </div>`;
+      return null;
+    }
+    return data;
+  } catch (e) {
+    // If it's not JSON, treat it as plain text
+    return text;
+  }
+}
+
+// Fetch and display logs
+async function fetchLog(logType) {
+    const logContent = document.getElementById(`${logType}LogContent`);
+    try {
+        const response = await fetch(`/api/log/${logType.toLowerCase()}`);
+        if (!response.ok) {
+            logContent.textContent = `Error fetching ${logType} log: ${response.statusText}`;
+            return;
+        }
+        const text = await response.text();
+        logContent.textContent = text;
+    } catch (error) {
+        logContent.textContent = `Error fetching ${logType} log: ${error}`;
+    }
+}
+
+// Fetch chat history for a demo
+async function fetchChat(demo) {
+    try {
+        const response = await fetch(`/api/log/chat?demo=${demo}`);
+        if (!response.ok) {
+            console.error('Failed to fetch chat log');
+            return '';
+        }
+        return await response.text();
+    } catch (error) {
+        console.error('Error fetching chat log:', error);
+        return '';
+    }
+}
+
+// Initial log fetch
+fetchLog('HostLog');
+fetchLog('ClientLog');
+
+function formatHostLog(text) {
+    const overdueBalanceRegex = /Microsoft\.SemanticKernel\.HttpOperationException:.*?The request failed because your account has an overdue balance\.( Request id: [a-zA-Z0-9]+)?/;
+    const match = text.match(overdueBalanceRegex);
+
+    if (match) {
+        const friendlyErrorRegex = /(The request failed because your account has an overdue balance\.( Request id: [a-zA-Z0-9]+)?)/;
+        const friendlyMatch = match[0].match(friendlyErrorRegex);
+        if (friendlyMatch && friendlyMatch[1]) {
+            return `<span class="error-highlight">${friendlyMatch[1]}</span>`;
+        }
+    }
+
+    // Apply other highlights if no critical error is found
+    text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
+    
+    return text.replace(/\n/g, '<br>');
 }
 </script>
 </body>

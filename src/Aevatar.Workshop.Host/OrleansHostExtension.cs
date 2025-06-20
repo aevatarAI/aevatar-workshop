@@ -2,6 +2,7 @@ using Aevatar.Core.Abstractions;
 using Aevatar.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Orleans.Serialization;
 
 namespace Aevatar.Workshop.Host;
 
@@ -17,6 +18,13 @@ public static class OrleansHostExtension
                     .AddMemoryStreams(AevatarCoreConstants.StreamProvider)
                     .AddMemoryGrainStorage("PubSubStore")
                     .AddLogStorageBasedLogConsistencyProvider()
+                    .Configure<ExceptionSerializationOptions>(options =>
+                    {
+                        options.SupportedNamespacePrefixes.Add("Volo.Abp");
+                        options.SupportedNamespacePrefixes.Add("Newtonsoft.Json");
+                        options.SupportedNamespacePrefixes.Add("Autofac.Core");
+                        options.SupportedNamespacePrefixes.Add("Aevatar");
+                    })
                     .ConfigureLogging(logging => { logging.SetMinimumLevel(LogLevel.Information).AddConsole(); })
                     .UseAevatar()
                     ;
