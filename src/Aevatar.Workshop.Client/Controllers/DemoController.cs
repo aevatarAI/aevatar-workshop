@@ -44,9 +44,6 @@ public class DemoController : ControllerBase
                     await RouterDemo.RunAsync(_gAgentFactory, systemLLM);
                     return Ok(
                         "RouterDemo completed.\nYou can refresh host's log to see the event handling details.\nRefresh client's log to see the final report.");
-                case 3:
-                    await YourOwnDemo.RunAsync(_gAgentFactory);
-                    return Ok("YourOwnDemo completed.");
                 default:
                     return BadRequest(new { error = "InvalidMode", message = $"Unknown mode: {mode}" });
             }

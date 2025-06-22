@@ -238,8 +238,7 @@
       box-shadow: 0 8px 32px rgba(30,41,59,0.16);
     }
   </style>
-  <script src="/js/llm-configs.js"></script>
-  <script src="/js/restart-service.js?"></script>
+  <script src="/js/restart-service.js?v=2"></script>
 </head>
 <body>
   <div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
@@ -312,7 +311,7 @@ const demos = [
     desc: 'demodesc/MultiGAgentDemo.md',
     form: [
       { type: 'number', id: 'number', label: 'Secret Number (1-100)', default: 42, min: 1, max: 100 },
-      { type: 'llm', id: 'systemllm', label: 'LLM System' }
+      { type: 'llm', id: 'systemLLM', label: 'LLM System' }
     ]
   },
   {
@@ -320,15 +319,9 @@ const demos = [
     name: 'RouterDemo',
     desc: 'demodesc/RouterDemo.md',
     form: [
-      { type: 'llm', id: 'systemllm', label: 'LLM System' }
+      { type: 'llm', id: 'systemLLM', label: 'LLM System' }
     ]
   },
-  {
-    key: 'YourOwnDemo',
-    name: 'YourOwnDemo',
-    desc: 'demodesc/YourOwnDemo.md',
-    form: []
-  }
 ];
 const logs = [
   { key: 'HostLog', name: 'Host Log' },
@@ -410,7 +403,11 @@ function renderSidebar() {
             body: JSON.stringify(llmConfigData)
           });
           if (resp.ok) {
-            llmConfigMsg.textContent = 'Saved! Please run: sh quickstart.sh to restart services.';
+            llmConfigMsg.textContent = 'Saved! Restarting services...';
+            setTimeout(() => {
+              llmConfigModal.style.display = 'none';
+              document.getElementById('restartBtn').click();
+            }, 1000);
           } else {
             llmConfigMsg.textContent = 'Save failed.';
           }
@@ -535,9 +532,10 @@ async function renderMainContent() {
     resultBox.innerHTML = '<div class="spinner"></div>';
     let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
     for (const field of demo.form) {
-      if (field.type === 'text') {
-        url += `&${field.name}=${encodeURIComponent(document.getElementById(field.id).value)}`;
-      }
+        const element = document.getElementById(field.id);
+        if (element) {
+            url += `&${field.id}=${encodeURIComponent(element.value)}`;
+        }
     }
 
     try {
@@ -682,34 +680,10 @@ window.onload = function() {
 };
 
 function setupManualLogPanel(boxId, btnId, api) {
-  const box = document.getElementById(boxId);
-  const btn = document.getElementById(btnId);
-  async function fetchLog() {
-    box.textContent = 'Loading...';
-    try {
-      const resp = await fetch(api);
-      const result = await handleFetchResponse(resp, box);
-      if (result && typeof result === 'string') {
-        let text = result;
-        if (boxId === 'hostLogBox') {
-          text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span style="background:#bbf7d0;">$1</span>');
-        }
-        box.innerHTML = text;
-      }
-    } catch (error) {
-      console.error('Error fetching log:', error);
-      box.innerHTML = `
-        <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px;">
-          An error occurred while fetching the logs. Please try again later.
-        </div>`;
-    }
-  }
-  btn.onclick = fetchLog;
-  fetchLog(); // Initial load
+  // This function is intentionally left empty to prevent runtime errors
+  // from legacy code. The log panel rendering is now handled by
+  // the 'renderLogPanel' function.
 }
-
-setupManualLogPanel('hostLogBox', 'refreshHostLogBtn', '/api/log/host');
-setupManualLogPanel('clientLogBox', 'refreshClientLogBtn', '/api/log/client');
 
 async function fetchMultichat() {
   multichatBox.textContent = 'Loading...';
@@ -728,21 +702,6 @@ async function fetchMultichat() {
         An error occurred while processing your request. Please try again later.
       </div>`;
   }
-}
-
-async function populateLLMList() {
-  try {
-    const resp = await fetch('/api/llm-configs/list');
-    const arr = await resp.json();
-    systemllmSelect.innerHTML = '';
-    arr.forEach(key => {
-      const opt = document.createElement('option');
-      opt.value = key;
-      opt.textContent = key;
-      systemllmSelect.appendChild(opt);
-    });
-    if (arr.includes('OpenAI')) systemllmSelect.value = 'OpenAI';
-  } catch {}
 }
 
 const configLlmBtn = document.getElementById('configLlmBtn');
