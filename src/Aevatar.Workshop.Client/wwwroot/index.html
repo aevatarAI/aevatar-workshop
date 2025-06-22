@@ -241,13 +241,17 @@
   <script src="/js/restart-service.js?v=2"></script>
 </head>
 <body>
+  <div id="lang-switcher" style="position: fixed; top: 10px; right: 20px; z-index: 10000; background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px;">
+    <button id="lang-en" style="background:none;border:none;cursor:pointer;font-weight:bold;">EN</button> |
+    <button id="lang-zh" style="background:none;border:none;cursor:pointer;">ZH</button>
+  </div>
   <div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:400px;text-align:center;">
-      <div style="font-size:1.15rem;font-weight:bold;color:#b91c1c;margin-bottom:18px;">API key not configured</div>
-      <div style="font-size:1rem;margin-bottom:18px;">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>.<br><br>After saving the configuration, you can click the Restart Services button below.</div>
+      <div style="font-size:1.15rem;font-weight:bold;color:#b91c1c;margin-bottom:18px;" data-i18n-key="api-key-not-configured">API key not configured</div>
+      <div style="font-size:1rem;margin-bottom:18px;" data-i18n-key="edit-appsettings-notice">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>.<br><br>After saving the configuration, you can click the Restart Services button below.</div>
       <details style="text-align:left;margin-bottom:18px;">
-        <summary style="cursor:pointer;font-weight:bold;color:#2563eb;">What is SystemLLMConfigs? How to configure?</summary>
-        <div style="font-size:0.98rem;margin-top:10px;">
+        <summary style="cursor:pointer;font-weight:bold;color:#2563eb;" data-i18n-key="what-is-systemllmconfigs">What is SystemLLMConfigs? How to configure?</summary>
+        <div style="font-size:0.98rem;margin-top:10px;" data-i18n-key="systemllmconfigs-desc">
           <b>SystemLLMConfigs</b> is the section in <code>appsettings.json</code> where you configure your LLM (Large Language Model) provider.<br><br>
           <ul style="margin-left:0.5em;">
             <li><b>ProviderEnum</b>: The provider type, e.g. <code>OpenAI</code> or <code>Azure</code>.</li>
@@ -264,30 +268,130 @@
           </div>
         </div>
       </details>
-      <button id="modalRestartBtn" style="background:#ef4444;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;">Restart Services</button>
-      <button id="modalCloseBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;">Close</button>
+      <button id="modalRestartBtn" style="background:#ef4444;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;" data-i18n-key="restart-services">Restart Services</button>
+      <button id="modalCloseBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;" data-i18n-key="close">Close</button>
     </div>
   </div>
   <div id="sidebar">
-    <button id="restartBtn" style="width:90%;margin:0 auto 24px auto;display:block;font-size:1.08rem;padding:12px 0;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Restart Services</button>
-    <button id="configLlmBtn" style="width:90%;margin:0 auto 18px auto;display:block;font-size:1.08rem;padding:12px 0;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;">Config LLM</button>
-    <h2>Aevatar Demos</h2>
+    <button id="restartBtn" style="width:90%;margin:0 auto 24px auto;display:block;font-size:1.08rem;padding:12px 0;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;" data-i18n-key="restart-services">Restart Services</button>
+    <button id="configLlmBtn" style="width:90%;margin:0 auto 18px auto;display:block;font-size:1.08rem;padding:12px 0;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;" data-i18n-key="config-llm">Config LLM</button>
+    <h2 data-i18n-key="aevatar-demos">Aevatar Demos</h2>
     <ul class="sidebar-list" id="sidebar-list"></ul>
   </div>
   <div id="main-content"></div>
   <!-- LLM Config Modal -->
   <div id="llmConfigModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:600px;text-align:left;min-width:340px;">
-      <div style="font-size:1.15rem;font-weight:bold;color:#2563eb;margin-bottom:18px;">Edit SystemLLMConfigs</div>
+      <div style="font-size:1.15rem;font-weight:bold;color:#2563eb;margin-bottom:18px;" data-i18n-key="edit-llm-configs">Edit SystemLLMConfigs</div>
       <div id="llmConfigForm"></div>
       <div style="margin-top:18px;text-align:right;">
-        <button id="llmConfigSaveBtn" style="background:#22c55e;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;">Save</button>
-        <button id="llmConfigCancelBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;">Cancel</button>
+        <button id="llmConfigSaveBtn" style="background:#22c55e;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;" data-i18n-key="save">Save</button>
+        <button id="llmConfigCancelBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;" data-i18n-key="cancel">Cancel</button>
       </div>
       <div id="llmConfigMsg" style="margin-top:12px;color:#b91c1c;font-weight:bold;"></div>
     </div>
   </div>
 <script>
+// --- I18n ---
+const translations = {
+  en: {
+    'restart-services': 'Restart Services',
+    'config-llm': 'Config LLM',
+    'aevatar-demos': 'Aevatar Demos',
+    'edit-llm-configs': 'Edit SystemLLMConfigs',
+    'save': 'Save',
+    'cancel': 'Cancel',
+    'api-key-not-configured': 'API key not configured',
+    'edit-appsettings-notice': 'Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>.<br><br>After saving the configuration, you can click the Restart Services button below.',
+    'close': 'Close',
+    'what-is-systemllmconfigs': 'What is SystemLLMConfigs? How to configure?',
+    'systemllmconfigs-desc': `
+      <b>SystemLLMConfigs</b> is the section in <code>appsettings.json</code> where you configure your LLM (Large Language Model) provider.<br><br>
+      <ul style="margin-left:0.5em;">
+        <li><b>ProviderEnum</b>: The provider type, e.g. <code>OpenAI</code> or <code>Azure</code>.</li>
+        <li><b>ModelIdEnum</b>: The model identifier, e.g. <code>OpenAI</code> or your provider's model ID.</li>
+        <li><b>ModelName</b>: The name of the model to use, e.g. <code>gpt-4o</code> or <code>gpt-3.5-turbo</code>.</li>
+        <li><b>Endpoint</b>: The API endpoint URL for your LLM provider.</li>
+        <li><b>ApiKey</b>: Your secret API key for accessing the LLM service.</li>
+      </ul>
+      <div style="margin-top:8px;">
+        <b>How to get these values?</b><br>
+        - For <b>OpenAI</b>: <a href="https://platform.openai.com/account/api-keys" target="_blank">Get your API key here</a>.<br>
+        - For <b>Azure OpenAI</b>: <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource" target="_blank">See Azure OpenAI setup guide</a>.<br>
+        - For more details, see <a href="https://github.com/aevatarAI/aevatar-workshop#4-multigagentdemo-configuration" target="_blank">Aevatar Workshop Configuration Docs</a>.
+      </div>`,
+    'loading': 'Loading...',
+    'failed-to-load-config': 'Failed to load config.',
+    'saving': 'Saving...',
+    'saved-restarting': 'Saved! Restarting services...',
+    'save-failed': 'Save failed.',
+    'run-demo': 'Run Demo',
+    'host-log': 'Host Log',
+    'client-log': 'Client Log',
+    'refresh-log': 'Refresh Log',
+    'multigagent-messages': 'MultiGAgentDemo AI Messages',
+    'router-messages': 'RouterDemo AI Messages'
+  },
+  zh: {
+    'restart-services': '重启服务',
+    'config-llm': '配置 LLM',
+    'aevatar-demos': 'Aevatar 演示',
+    'edit-llm-configs': '编辑 SystemLLMConfigs',
+    'save': '保存',
+    'cancel': '取消',
+    'api-key-not-configured': 'API 密钥未配置',
+    'edit-appsettings-notice': '请编辑 <b>src/Aevatar.Workshop.Host/appsettings.json</b> 并在 <b>SystemLLMConfigs 部分</b>设置值。<br><br>保存配置后，您可以点击下方的"重启服务"按钮。',
+    'close': '关闭',
+    'what-is-systemllmconfigs': '什么是 SystemLLMConfigs？如何配置？',
+    'systemllmconfigs-desc': `
+      <b>SystemLLMConfigs</b> 是 <code>appsettings.json</code> 中的一个部分，您可以在其中配置您的 LLM（大型语言模型）提供商。<br><br>
+      <ul style="margin-left:0.5em;">
+        <li><b>ProviderEnum</b>：提供商类型，例如 <code>OpenAI</code> 或 <code>Azure</code>。</li>
+        <li><b>ModelIdEnum</b>：模型标识符，例如 <code>OpenAI</code> 或您的提供商的模型 ID。</li>
+        <li><b>ModelName</b>：要使用的模型名称，例如 <code>gpt-4o</code> 或 <code>gpt-3.5-turbo</code>。</li>
+        <li><b>Endpoint</b>：您的 LLM 提供商的 API 端点 URL。</li>
+        <li><b>ApiKey</b>：用于访问 LLM 服务的秘密 API 密钥。</li>
+      </ul>
+      <div style="margin-top:8px;">
+        <b>如何获取这些值？</b><br>
+        - 对于 <b>OpenAI</b>：<a href="https://platform.openai.com/account/api-keys" target="_blank">在此处获取您的 API 密钥</a>。<br>
+        - 对于 <b>Azure OpenAI</b>：<a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource" target="_blank">请参阅 Azure OpenAI 设置指南</a>。<br>
+        - 更多详情，请参阅 <a href="https://github.com/aevatarAI/aevatar-workshop#4-multigagentdemo-configuration" target="_blank">Aevatar Workshop 配置文档</a>。
+      </div>`,
+    'loading': '加载中...',
+    'failed-to-load-config': '加载配置失败。',
+    'saving': '保存中...',
+    'saved-restarting': '已保存！正在重启服务...',
+    'save-failed': '保存失败。',
+    'run-demo': '运行演示',
+    'host-log': '主机日志',
+    'client-log': '客户端日志',
+    'refresh-log': '刷新日志',
+    'multigagent-messages': 'MultiGAgentDemo AI 消息',
+    'router-messages': 'RouterDemo AI 消息'
+  }
+};
+let currentLanguage = localStorage.getItem('language') || 'en';
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n-key]').forEach(el => {
+    const key = el.getAttribute('data-i18n-key');
+    if (translations[currentLanguage] && translations[currentLanguage][key]) {
+      el.innerHTML = translations[currentLanguage][key];
+    }
+  });
+}
+
+function setLanguage(lang) {
+  currentLanguage = lang;
+  localStorage.setItem('language', lang);
+  document.getElementById('lang-en').style.fontWeight = lang === 'en' ? 'bold' : 'normal';
+  document.getElementById('lang-zh').style.fontWeight = lang === 'zh' ? 'bold' : 'normal';
+  applyTranslations();
+  renderSidebar();
+  renderMainContent();
+}
+
 // LLM Config Modal global variables
 const llmConfigModal = document.getElementById('llmConfigModal');
 const llmConfigForm = document.getElementById('llmConfigForm');
@@ -299,27 +403,27 @@ let llmConfigData = {};
 const demos = [
   {
     key: 'EventHandlerDemo',
-    name: 'EventHandlerDemo',
-    desc: 'demodesc/EventHandlerDemo.md',
+    name: { en: 'EventHandler Demo', zh: 'EventHandler Demo' },
+    desc: { en: 'demodesc/EventHandlerDemo.md', zh: 'demodesc/EventHandlerDemo.zh.md' },
     form: [
-      { type: 'text', id: 'greeting', label: 'Greeting', default: 'Hello, Aevatar!' }
+      { type: 'text', id: 'greeting', label: { en: 'Greeting', zh: '问候语' }, default: 'Hello, Aevatar!' }
     ]
   },
   {
     key: 'MultiGAgentDemo',
-    name: 'MultiGAgentDemo',
-    desc: 'demodesc/MultiGAgentDemo.md',
+    name: { en: 'Multi-GAgent Demo', zh: 'Multi-GAgent Demo' },
+    desc: { en: 'demodesc/MultiGAgentDemo.md', zh: 'demodesc/MultiGAgentDemo.zh.md' },
     form: [
-      { type: 'number', id: 'number', label: 'Secret Number (1-100)', default: 42, min: 1, max: 100 },
-      { type: 'llm', id: 'systemLLM', label: 'LLM System' }
+      { type: 'number', id: 'number', label: { en: 'Secret Number (1-100)', zh: '神秘数字 (1-100)' }, default: 42, min: 1, max: 100 },
+      { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
     ]
   },
   {
     key: 'RouterDemo',
-    name: 'RouterDemo',
-    desc: 'demodesc/RouterDemo.md',
+    name: { en: 'Router Demo', zh: 'Router Demo' },
+    desc: { en: 'demodesc/RouterDemo.md', zh: 'demodesc/RouterDemo.zh.md' },
     form: [
-      { type: 'llm', id: 'systemLLM', label: 'LLM System' }
+      { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
     ]
   },
 ];
@@ -363,7 +467,7 @@ function renderSidebar() {
   demos.forEach(demo => {
     const li = document.createElement('li');
     li.className = 'sidebar-item' + (selectedKey === demo.key ? ' selected' : '');
-    li.textContent = demo.name;
+    li.textContent = demo.name[currentLanguage] || demo.name['en'];
     li.onclick = () => { selectSidebar(demo.key); };
     sidebarList.appendChild(li);
   });
@@ -384,18 +488,22 @@ function renderSidebar() {
   if (configLlmBtn) {
     configLlmBtn.onclick = async function() {
       llmConfigMsg.textContent = '';
-      llmConfigForm.innerHTML = 'Loading...';
+      llmConfigForm.innerHTML = `<span data-i18n-key="loading">Loading...</span>`;
+      setLanguage(currentLanguage);
       llmConfigModal.style.display = 'flex';
       try {
         const resp = await fetch('/api/llm-configs');
         llmConfigData = await resp.json();
         renderLlmConfigForm();
       } catch {
-        llmConfigForm.innerHTML = '<span style="color:#b91c1c;">Failed to load config.</span>';
+        llmConfigForm.innerHTML = `<span style="color:#b91c1c;" data-i18n-key="failed-to-load-config">Failed to load config.</span>`;
+        setLanguage(currentLanguage);
       }
       llmConfigCancelBtn.onclick = () => { llmConfigModal.style.display = 'none'; };
       llmConfigSaveBtn.onclick = async function() {
+        llmConfigMsg.setAttribute('data-i18n-key', 'saving');
         llmConfigMsg.textContent = 'Saving...';
+        setLanguage(currentLanguage);
         try {
           const resp = await fetch('/api/llm-configs', {
             method: 'POST',
@@ -403,16 +511,22 @@ function renderSidebar() {
             body: JSON.stringify(llmConfigData)
           });
           if (resp.ok) {
+            llmConfigMsg.setAttribute('data-i18n-key', 'saved-restarting');
             llmConfigMsg.textContent = 'Saved! Restarting services...';
+            setLanguage(currentLanguage);
             setTimeout(() => {
               llmConfigModal.style.display = 'none';
               document.getElementById('restartBtn').click();
             }, 1000);
           } else {
+            llmConfigMsg.setAttribute('data-i18n-key', 'save-failed');
             llmConfigMsg.textContent = 'Save failed.';
+            setLanguage(currentLanguage);
           }
         } catch {
+          llmConfigMsg.setAttribute('data-i18n-key', 'save-failed');
           llmConfigMsg.textContent = 'Save failed.';
+          setLanguage(currentLanguage);
         }
       };
     };
@@ -437,20 +551,37 @@ async function renderMainContent() {
   }
   const demo = demos.find(d => d.key === selectedKey);
   if (!demo) return;
+
+  const card = document.createElement('div');
+  card.className = 'demo-card';
+
   // description card
-  const descCard = document.createElement('div');
-  descCard.className = 'demo-card';
+  const descCard = document.createElement('details');
+  descCard.style.paddingTop = '10px';
+  descCard.style.paddingBottom = '10px';
+  descCard.open = true;
+
+  const summary = document.createElement('summary');
+  summary.style.cursor = 'pointer';
+  summary.style.fontWeight = 'bold';
+  summary.style.listStyle = 'inside';
+  summary.style.fontSize = '1.2rem';
+  summary.style.paddingBottom = '10px';
+  summary.textContent = demo.name[currentLanguage] || demo.name['en'];
+  
+  descCard.appendChild(summary);
+
   const desc = document.createElement('div');
   desc.className = 'demo-desc';
   desc.innerHTML = 'Loading...';
-  fetch(demo.desc).then(r => r.text()).then(md => {
-    desc.innerHTML = simpleMarkdownToHtml(md);
+  const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+  fetch(descPath).then(r => r.text()).then(md => {
+    const mdWithoutTitle = md.replace(/^# .*\n/, '');
+    desc.innerHTML = simpleMarkdownToHtml(mdWithoutTitle);
   });
   descCard.appendChild(desc);
-  mainContent.appendChild(descCard);
-  // content card
-  const card = document.createElement('div');
-  card.className = 'demo-card';
+  card.appendChild(descCard);
+
   // Form
   const form = document.createElement('form');
   form.className = 'demo-form';
@@ -462,7 +593,7 @@ async function renderMainContent() {
   demo.form.forEach(field => {
     if (field.type === 'text') {
       const label = document.createElement('label');
-      label.textContent = field.label + ':';
+      label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
       const input = document.createElement('input');
       input.type = 'text';
       input.id = field.id;
@@ -471,7 +602,7 @@ async function renderMainContent() {
       form.appendChild(input);
     } else if (field.type === 'number') {
       const label = document.createElement('label');
-      label.textContent = field.label + ':';
+      label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
       const input = document.createElement('input');
       input.type = 'number';
       input.id = field.id;
@@ -483,7 +614,7 @@ async function renderMainContent() {
       form.appendChild(input);
     } else if (field.type === 'llm') {
       const label = document.createElement('label');
-      label.textContent = field.label + ':';
+      label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
       llmSelect = document.createElement('select');
       llmSelect.id = field.id;
       llmSelect.style.minWidth = '120px';
@@ -510,6 +641,7 @@ async function renderMainContent() {
   // Run Demo button
   const runBtn = document.createElement('button');
   runBtn.type = 'submit';
+  runBtn.setAttribute('data-i18n-key', 'run-demo');
   runBtn.textContent = 'Run Demo';
   form.appendChild(runBtn);
   card.appendChild(form);
@@ -562,13 +694,13 @@ async function renderMainContent() {
       resultBox.innerHTML = `<span class="error-highlight">Network error: ${error.message}</span>`;
     }
   };
-  mainContent.appendChild(form);
   // MultiGAgentDemo chat panel
   if (demo.key === 'MultiGAgentDemo') {
     const chatPanel = document.createElement('div');
     chatPanel.className = 'chat-panel';
     const chatTitle = document.createElement('div');
     chatTitle.className = 'chat-title';
+    chatTitle.setAttribute('data-i18n-key', 'multigagent-messages');
     chatTitle.textContent = 'MultiGAgentDemo AI Messages';
     const chatBox = document.createElement('div');
     chatBox.className = 'chatBox';
@@ -593,6 +725,7 @@ async function renderMainContent() {
     chatPanel.className = 'chat-panel';
     const chatTitle = document.createElement('div');
     chatTitle.className = 'chat-title';
+    chatTitle.setAttribute('data-i18n-key', 'router-messages');
     chatTitle.textContent = 'RouterDemo AI Messages';
     const chatBox = document.createElement('div');
     chatBox.className = 'chatBox';
@@ -611,6 +744,7 @@ async function renderMainContent() {
     fetchRouterchat();
     routerchatInterval = setInterval(fetchRouterchat, 5000);
   }
+
   mainContent.appendChild(card);
 }
 
@@ -621,10 +755,12 @@ function renderLogPanel(logKey) {
   panel.className = 'log-panel';
   const title = document.createElement('div');
   title.className = 'log-title';
+  title.setAttribute('data-i18n-key', isHost ? 'host-log' : 'client-log');
   title.textContent = isHost ? 'Host Log' : 'Client Log';
   panel.appendChild(title);
   const refreshBtn = document.createElement('button');
   refreshBtn.className = 'refresh-btn';
+  refreshBtn.setAttribute('data-i18n-key', 'refresh-log');
   refreshBtn.textContent = 'Refresh Log';
   panel.appendChild(refreshBtn);
   const logBox = document.createElement('div');
@@ -653,6 +789,7 @@ function renderLogPanel(logKey) {
 // Initial render
 renderSidebar();
 renderMainContent();
+setLanguage(currentLanguage); // Apply initial language
 
 const multichatBox = document.getElementById('multichatBox');
 const configModal = document.getElementById('configModal');
@@ -674,6 +811,9 @@ async function checkConfigAndMaybeShowModal() {
 
 modalCloseBtn.onclick = () => { configModal.style.display = 'none'; };
 modalRestartBtn.onclick = () => { configModal.style.display = 'none'; restartBtn.onclick(); };
+
+document.getElementById('lang-en').onclick = () => setLanguage('en');
+document.getElementById('lang-zh').onclick = () => setLanguage('zh');
 
 window.onload = function() { 
   checkConfigAndMaybeShowModal();
