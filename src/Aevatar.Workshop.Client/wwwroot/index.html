@@ -237,7 +237,55 @@
     .demo-card:hover {
       box-shadow: 0 8px 32px rgba(30,41,59,0.16);
     }
+    /* Styles for rendered markdown in desc-content */
+    .desc-content h3 {
+        font-size: 1.4rem;
+        color: #1e293b;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 8px;
+        margin-top: 24px;
+        margin-bottom: 16px;
+    }
+    .desc-content p, .desc-content li {
+        font-size: 1.05rem;
+        line-height: 1.6;
+        color: #334155;
+    }
+    .desc-content code {
+        background-color: #f1f5f9;
+        color: #475569;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    .desc-content pre {
+        background-color: #282c34; /* atom-one-dark background */
+        color: #abb2bf;
+        padding: 1em;
+        border-radius: 8px;
+        overflow-x: auto;
+        white-space: pre;
+    }
+    .desc-content pre code.hljs {
+        padding: 0;
+        background: transparent;
+        color: inherit;
+    }
+    .desc-content blockquote {
+        border-left: 4px solid #94a3b8;
+        padding-left: 16px;
+        margin-left: 0;
+        color: #475569;
+        font-style: italic;
+    }
+    .desc-content ul {
+        padding-left: 20px;
+    }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script src="/js/restart-service.js?v=2"></script>
 </head>
 <body>
@@ -854,7 +902,7 @@ function renderLlmConfigForm() {
     DeepSeek: ['DeepSeek']
   };
   const FIELD_ORDER = [
-    'ProviderEnum', 'ModelId', 'ModelName', 'Endpoint', 'ApiKey'
+    'ProviderEnum', 'ModelIdEnum', 'ModelName', 'Endpoint', 'ApiKey'
   ];
   for (const key in llmConfigData) {
     FIELD_ORDER.forEach(f => {
@@ -865,8 +913,8 @@ function renderLlmConfigForm() {
     if (!llmConfigData[key]['ProviderEnum']) llmConfigData[key]['ProviderEnum'] = 'Azure';
     const provider = llmConfigData[key]['ProviderEnum'];
     const validModels = modelIdOptions[provider] || modelIdOptions['Azure'];
-    if (!validModels.includes(llmConfigData[key]['ModelId'])) {
-      llmConfigData[key]['ModelId'] = validModels[0];
+    if (!validModels.includes(llmConfigData[key]['ModelIdEnum'])) {
+      llmConfigData[key]['ModelIdEnum'] = validModels[0];
     }
   }
   let html = '';
@@ -887,7 +935,7 @@ function renderLlmConfigForm() {
           html += `<option value='${opt}'${llmConfigData[key][f]===opt?' selected':''}>${opt}</option>`;
         });
         html += `</select></label></div>`;
-      } else if (f === 'ModelId') {
+      } else if (f === 'ModelIdEnum') {
         const provider = llmConfigData[key]['ProviderEnum'] || 'Azure';
         const models = modelIdOptions[provider] || modelIdOptions['Azure'];
         html += `<div style='margin-top:4px;'><label>${f}: <select data-key='${key}' data-field='${f}' class='llm-modelid' style='width:180px;'>`;
@@ -937,7 +985,7 @@ function renderLlmConfigForm() {
       const newProvider = sel.value;
       llmConfigData[k][f] = newProvider;
       const newModel = (modelIdOptions[newProvider]||['OpenAI'])[0];
-      llmConfigData[k]['ModelId'] = newModel;
+      llmConfigData[k]['ModelIdEnum'] = newModel;
       const parent = sel.closest('.llm-fields');
       if (parent) {
         const modelSel = parent.querySelector('select.llm-modelid[data-key="'+k+'"]');
@@ -1070,6 +1118,44 @@ function formatHostLog(text) {
     text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
     
     return text.replace(/\n/g, '<br>');
+}
+
+function escapeHtml(text) {
+  return text.replace(/\n/g, '<br>');
+}
+
+function showDescription(demoKey, lang) {
+  const descriptionElement = document.querySelector('.desc-card');
+  const descriptionContent = descriptionElement.querySelector('.desc-content');
+  const descUrl = `demodesc/${demoKey}${lang === 'zh' ? '.zh' : ''}.md`;
+
+  descriptionElement.style.display = 'block';
+  descriptionContent.innerHTML = '<p>Loading...</p>'; // Show loading indicator
+
+  fetch(descUrl)
+    .then(response => {
+      if (response.ok) {
+        return response.text();
+      }
+      throw new Error('Network response was not ok.');
+    })
+    .then(mdContent => {
+      const cleanHtml = DOMPurify.sanitize(mdContent);
+      descriptionContent.innerHTML = marked.parse(cleanHtml);
+      descriptionContent.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block);
+      });
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+      descriptionContent.innerHTML = '<p style="color:red;">Failed to load description.</p>';
+    });
+}
+
+function hideDescription() {
+  // This function is intentionally left empty to prevent runtime errors
+  // from legacy code. The log panel rendering is now handled by
+  // the 'renderLogPanel' function.
 }
 </script>
 </body>
