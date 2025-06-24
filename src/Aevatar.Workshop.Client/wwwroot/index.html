@@ -69,11 +69,18 @@
     .demo-desc {
       background: #f1f5f9;
       border-radius: 8px;
-      padding: 18px 0;
+      padding: 24px 36px;
       margin-bottom: 0;
       width: 100%;
-      font-size: 1.01rem;
+      max-width: 820px;
+      font-size: 1.08rem;
       color: #222;
+      margin-left: auto;
+      margin-right: auto;
+      box-sizing: border-box;
+      text-align: left;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
+      line-height: 1.7;
     }
     .demo-form {
       background: #fff;
@@ -86,6 +93,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      margin-left: auto;
+      margin-right: auto;
     }
     .demo-form label, .demo-form select, .demo-form input, .demo-form button {
       font-size: 1rem;
@@ -100,6 +109,7 @@
       cursor: pointer;
       font-weight: bold;
       margin-bottom: 0;
+      align-self: center;
     }
     .demo-form button:hover {
       background: #2563eb;
@@ -201,6 +211,8 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.07);
       padding: 16px;
       text-align: left;
+      margin-left: auto;
+      margin-right: auto;
     }
     .chat-title {
       font-weight: bold;
@@ -280,6 +292,22 @@
     }
     .desc-content ul {
         padding-left: 20px;
+    }
+    pre#result {
+      margin-top: 10px;
+      background: #f1f5f9;
+      border-radius: 5px;
+      padding: 10px;
+      min-height: 24px;
+      width: 100%;
+      max-width: 500px;
+      box-sizing: border-box;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: auto;
+      margin-right: auto;
     }
   </style>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -455,6 +483,12 @@ const demos = [
     desc: { en: 'demodesc/EventHandlerDemo.md', zh: 'demodesc/EventHandlerDemo.zh.md' },
     form: [
       { type: 'text', id: 'greeting', label: { en: 'Greeting', zh: '问候语' }, default: 'Hello, Aevatar!' }
+    ],
+    notebookCells: [
+      { type: 'markdown', contentKey: 'desc' },
+      { type: 'input', fieldsKey: 'form' },
+      { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
+      { type: 'output' }
     ]
   },
   {
@@ -464,6 +498,13 @@ const demos = [
     form: [
       { type: 'number', id: 'number', label: { en: 'Secret Number (1-100)', zh: '神秘数字 (1-100)' }, default: 42, min: 1, max: 100 },
       { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
+    ],
+    notebookCells: [
+      { type: 'markdown', contentKey: 'desc' },
+      { type: 'input', fieldsKey: 'form' },
+      { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
+      { type: 'output' },
+      { type: 'chat', chatKey: 'MultiGAgentDemo' }
     ]
   },
   {
@@ -472,6 +513,13 @@ const demos = [
     desc: { en: 'demodesc/RouterDemo.md', zh: 'demodesc/RouterDemo.zh.md' },
     form: [
       { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
+    ],
+    notebookCells: [
+      { type: 'markdown', contentKey: 'desc' },
+      { type: 'input', fieldsKey: 'form' },
+      { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
+      { type: 'output' },
+      { type: 'chat', chatKey: 'RouterDemo' }
     ]
   },
 ];
@@ -600,200 +648,177 @@ async function renderMainContent() {
   const demo = demos.find(d => d.key === selectedKey);
   if (!demo) return;
 
-  const card = document.createElement('div');
-  card.className = 'demo-card';
-
-  // description card
-  const descCard = document.createElement('details');
-  descCard.style.paddingTop = '10px';
-  descCard.style.paddingBottom = '10px';
-  descCard.open = true;
-
-  const summary = document.createElement('summary');
-  summary.style.cursor = 'pointer';
-  summary.style.fontWeight = 'bold';
-  summary.style.listStyle = 'inside';
-  summary.style.fontSize = '1.2rem';
-  summary.style.paddingBottom = '10px';
-  summary.textContent = demo.name[currentLanguage] || demo.name['en'];
-  
-  descCard.appendChild(summary);
-
-  const desc = document.createElement('div');
-  desc.className = 'demo-desc';
-  desc.innerHTML = 'Loading...';
-  const descPath = demo.desc[currentLanguage] || demo.desc['en'];
-  fetch(descPath).then(r => r.text()).then(md => {
-    const mdWithoutTitle = md.replace(/^# .*\n/, '');
-    desc.innerHTML = simpleMarkdownToHtml(mdWithoutTitle);
-  });
-  descCard.appendChild(desc);
-  card.appendChild(descCard);
-
-  // Form
-  const form = document.createElement('form');
-  form.className = 'demo-form';
-  form.id = 'dynamicDemoForm';
-  let llmOptions = [];
-  let llmSelect = null;
-  let resultBox = null;
-  // Render form fields
-  demo.form.forEach(field => {
-    if (field.type === 'text') {
-      const label = document.createElement('label');
-      label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.id = field.id;
-      input.value = field.default;
-      form.appendChild(label);
-      form.appendChild(input);
-    } else if (field.type === 'number') {
-      const label = document.createElement('label');
-      label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
-      const input = document.createElement('input');
-      input.type = 'number';
-      input.id = field.id;
-      input.value = field.default;
-      input.min = field.min;
-      input.max = field.max;
-      input.style.width = '80px';
-      form.appendChild(label);
-      form.appendChild(input);
-    } else if (field.type === 'llm') {
-      const label = document.createElement('label');
-      label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
-      llmSelect = document.createElement('select');
-      llmSelect.id = field.id;
-      llmSelect.style.minWidth = '120px';
-      form.appendChild(label);
-      form.appendChild(llmSelect);
-    }
-  });
-  // Result box
-  resultBox = document.createElement('pre');
-  resultBox.id = 'result';
-  resultBox.style.marginTop = '10px';
-  resultBox.style.background = '#f1f5f9';
-  resultBox.style.borderRadius = '5px';
-  resultBox.style.padding = '10px';
-  resultBox.style.minHeight = '24px';
-  resultBox.style.width = '100%';
-  resultBox.style.maxWidth = '500px';
-  resultBox.style.boxSizing = 'border-box';
-  resultBox.style.fontFamily = 'monospace';
-  resultBox.style.display = 'flex';
-  resultBox.style.justifyContent = 'center';
-  resultBox.style.alignItems = 'center';
-  form.appendChild(resultBox);
-  // Run Demo button
-  const runBtn = document.createElement('button');
-  runBtn.type = 'submit';
-  runBtn.setAttribute('data-i18n-key', 'run-demo');
-  runBtn.textContent = 'Run Demo';
-  form.appendChild(runBtn);
-  card.appendChild(form);
-  // LLM options
-  if (llmSelect) {
-    fetch('/api/llm-configs/list').then(r => r.json()).then(arr => {
-      llmSelect.innerHTML = '';
-      arr.forEach(key => {
-        const opt = document.createElement('option');
-        opt.value = key;
-        opt.textContent = key;
-        llmSelect.appendChild(opt);
-      });
-      if (arr.includes('OpenAI')) llmSelect.value = 'OpenAI';
-    });
+  // notebook 状态
+  let notebookState = window.notebookState || {};
+  if (!notebookState[demo.key]) {
+    notebookState[demo.key] = { input: {}, output: '', running: false };
   }
-  // Form submit
-  form.onsubmit = async function(e) {
-    e.preventDefault();
-    resultBox.innerHTML = '<div class="spinner"></div>';
-    let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
-    for (const field of demo.form) {
-        const element = document.getElementById(field.id);
-        if (element) {
-            url += `&${field.id}=${encodeURIComponent(element.value)}`;
-        }
-    }
+  window.notebookState = notebookState;
+  const state = notebookState[demo.key];
 
-    try {
-      const resp = await fetch(url);
-      if (resp.ok) {
-        resultBox.textContent = await resp.text();
-      } else {
-        // The response is an error. We need to handle both JSON and Text responses.
-        // Clone the response so we can read it twice if needed.
-        const clonedResponse = resp.clone();
-        try {
-          const errorData = await resp.json();
-          resultBox.innerHTML = `<span class="error-highlight">${errorData.message || 'An unknown error occurred.'}</span>`;
-        } catch (jsonError) {
-          const errorText = await clonedResponse.text();
-          // Add diagnostic logging
-          console.error('Server returned a non-JSON error response.');
-          console.error('Status:', resp.status);
-          console.error('Body:', errorText);
-          resultBox.innerHTML = `<span class="error-highlight">${errorText || 'An unknown server error occurred (see console for details).'}</span>`;
+  // notebook 渲染
+  const notebook = document.createElement('div');
+  notebook.className = 'notebook';
+  for (const cell of (demo.notebookCells || [])) {
+    if (cell.type === 'markdown') {
+      const desc = document.createElement('div');
+      desc.className = 'demo-desc';
+      desc.innerHTML = 'Loading...';
+      const descPath = demo[cell.contentKey][currentLanguage] || demo[cell.contentKey]['en'];
+      fetch(descPath).then(r => r.text()).then(md => {
+        const mdWithoutTitle = md.replace(/^# .*\n/, '');
+        // 使用 marked 渲染 markdown，支持 fenced code block
+        desc.innerHTML = marked.parse(mdWithoutTitle, {
+          highlight: function(code, lang) {
+            if (window.hljs && lang && hljs.getLanguage(lang)) {
+              return hljs.highlight(code, { language: lang }).value;
+            }
+            return code;
+          }
+        });
+        // 渲染后高亮所有代码块
+        if (window.hljs) {
+          desc.querySelectorAll('pre code').forEach(block => {
+            hljs.highlightElement(block);
+          });
+        }
+      });
+      notebook.appendChild(desc);
+    } else if (cell.type === 'input') {
+      const form = document.createElement('form');
+      form.className = 'demo-form';
+      form.onsubmit = e => { e.preventDefault(); };
+      for (const field of demo[cell.fieldsKey]) {
+        if (field.type === 'text') {
+          const label = document.createElement('label');
+          label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.id = field.id;
+          input.value = state.input[field.id] ?? field.default;
+          input.oninput = e => { state.input[field.id] = e.target.value; };
+          form.appendChild(label);
+          form.appendChild(input);
+        } else if (field.type === 'number') {
+          const label = document.createElement('label');
+          label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
+          const input = document.createElement('input');
+          input.type = 'number';
+          input.id = field.id;
+          input.value = state.input[field.id] ?? field.default;
+          input.min = field.min;
+          input.max = field.max;
+          input.style.width = '80px';
+          input.oninput = e => { state.input[field.id] = e.target.value; };
+          form.appendChild(label);
+          form.appendChild(input);
+        } else if (field.type === 'llm') {
+          const label = document.createElement('label');
+          label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
+          const select = document.createElement('select');
+          select.id = field.id;
+          select.style.minWidth = '120px';
+          select.onchange = e => { state.input[field.id] = e.target.value; };
+          form.appendChild(label);
+          form.appendChild(select);
+          fetch('/api/llm-configs/list').then(r => r.json()).then(arr => {
+            select.innerHTML = '';
+            arr.forEach(key => {
+              const opt = document.createElement('option');
+              opt.value = key;
+              opt.textContent = key;
+              select.appendChild(opt);
+            });
+            select.value = state.input[field.id] ?? (arr.includes('OpenAI') ? 'OpenAI' : arr[0]);
+          });
         }
       }
-    } catch (error) {
-      resultBox.innerHTML = `<span class="error-highlight">Network error: ${error.message}</span>`;
+      notebook.appendChild(form);
+    } else if (cell.type === 'button') {
+      const btnWrapper = document.createElement('div');
+      btnWrapper.style.display = 'flex';
+      btnWrapper.style.justifyContent = 'center';
+      btnWrapper.style.width = '100%';
+      const runBtn = document.createElement('button');
+      runBtn.type = 'button';
+      runBtn.textContent = cell.label[currentLanguage] || cell.label['en'];
+      runBtn.style.display = 'block';
+      runBtn.style.margin = '0 auto';
+      runBtn.onclick = async function() {
+        state.running = true;
+        renderMainContent();
+        let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
+        for (const field of demo.form) {
+          const val = state.input[field.id] ?? field.default;
+          url += `&${field.id}=${encodeURIComponent(val)}`;
+        }
+        try {
+          const resp = await fetch(url);
+          if (resp.ok) {
+            state.output = await resp.text();
+          } else {
+            const clonedResponse = resp.clone();
+            try {
+              const errorData = await resp.json();
+              state.output = errorData.message || 'An unknown error occurred.';
+            } catch {
+              const errorText = await clonedResponse.text();
+              state.output = errorText || 'An unknown server error occurred.';
+            }
+          }
+        } catch (error) {
+          state.output = `Network error: ${error.message}`;
+        }
+        state.running = false;
+        renderMainContent();
+      };
+      runBtn.disabled = state.running;
+      btnWrapper.appendChild(runBtn);
+      notebook.appendChild(btnWrapper);
+    } else if (cell.type === 'output') {
+      const resultBox = document.createElement('pre');
+      resultBox.id = 'result';
+      resultBox.style.marginTop = '10px';
+      resultBox.style.background = '#f1f5f9';
+      resultBox.style.borderRadius = '5px';
+      resultBox.style.padding = '10px';
+      resultBox.style.minHeight = '24px';
+      resultBox.style.width = '100%';
+      resultBox.style.maxWidth = '500px';
+      resultBox.style.boxSizing = 'border-box';
+      resultBox.style.fontFamily = 'monospace';
+      resultBox.style.display = 'flex';
+      resultBox.style.justifyContent = 'center';
+      resultBox.style.alignItems = 'center';
+      resultBox.textContent = state.running ? 'Running...' : (state.output || '');
+      notebook.appendChild(resultBox);
+    } else if (cell.type === 'chat') {
+      const chatPanel = document.createElement('div');
+      chatPanel.className = 'chat-panel';
+      const chatTitle = document.createElement('div');
+      chatTitle.className = 'chat-title';
+      chatTitle.setAttribute('data-i18n-key', cell.chatKey === 'MultiGAgentDemo' ? 'multigagent-messages' : 'router-messages');
+      chatTitle.textContent = cell.chatKey === 'MultiGAgentDemo' ? 'MultiGAgentDemo AI Messages' : 'RouterDemo AI Messages';
+      const chatBox = document.createElement('div');
+      chatBox.className = 'chatBox';
+      chatBox.textContent = 'Loading...';
+      chatPanel.appendChild(chatTitle);
+      chatPanel.appendChild(chatBox);
+      notebook.appendChild(chatPanel);
+      // Auto-refresh chat
+      const fetchChat = async () => {
+        chatBox.textContent = 'Loading...';
+        const resp = await fetch(`/api/log/chat?demo=${cell.chatKey}`);
+        let text = await resp.text();
+        text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
+        chatBox.innerHTML = text;
+      };
+      fetchChat();
+      if (cell.chatKey === 'MultiGAgentDemo') multichatInterval = setInterval(fetchChat, 5000);
+      if (cell.chatKey === 'RouterDemo') routerchatInterval = setInterval(fetchChat, 5000);
     }
-  };
-  // MultiGAgentDemo chat panel
-  if (demo.key === 'MultiGAgentDemo') {
-    const chatPanel = document.createElement('div');
-    chatPanel.className = 'chat-panel';
-    const chatTitle = document.createElement('div');
-    chatTitle.className = 'chat-title';
-    chatTitle.setAttribute('data-i18n-key', 'multigagent-messages');
-    chatTitle.textContent = 'MultiGAgentDemo AI Messages';
-    const chatBox = document.createElement('div');
-    chatBox.className = 'chatBox';
-    chatBox.textContent = 'Loading...';
-    chatPanel.appendChild(chatTitle);
-    chatPanel.appendChild(chatBox);
-    card.appendChild(chatPanel);
-    // Auto-refresh chat
-    const fetchMultichat = async () => {
-      chatBox.textContent = 'Loading...';
-      const resp = await fetch('/api/log/chat?demo=MultiGAgentDemo');
-      let text = await resp.text();
-      text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
-      chatBox.innerHTML = text;
-    };
-    fetchMultichat();
-    multichatInterval = setInterval(fetchMultichat, 5000);
   }
-  // RouterDemo chat panel
-  if (demo.key === 'RouterDemo') {
-    const chatPanel = document.createElement('div');
-    chatPanel.className = 'chat-panel';
-    const chatTitle = document.createElement('div');
-    chatTitle.className = 'chat-title';
-    chatTitle.setAttribute('data-i18n-key', 'router-messages');
-    chatTitle.textContent = 'RouterDemo AI Messages';
-    const chatBox = document.createElement('div');
-    chatBox.className = 'chatBox';
-    chatBox.textContent = 'Loading...';
-    chatPanel.appendChild(chatTitle);
-    chatPanel.appendChild(chatBox);
-    card.appendChild(chatPanel);
-    // Auto-refresh chat
-    const fetchRouterchat = async () => {
-      chatBox.textContent = 'Loading...';
-      const resp = await fetch('/api/log/chat?demo=RouterDemo');
-      let text = await resp.text();
-      text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
-      chatBox.innerHTML = text;
-    };
-    fetchRouterchat();
-    routerchatInterval = setInterval(fetchRouterchat, 5000);
-  }
-
-  mainContent.appendChild(card);
+  mainContent.appendChild(notebook);
 }
 
 function renderLogPanel(logKey) {
