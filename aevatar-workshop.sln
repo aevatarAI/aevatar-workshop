@@ -130,6 +130,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		docs\.github\workflows\s3-staging.yml = docs\.github\workflows\s3-staging.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.Workshop.GAgentPlugin", "src\Aevatar.Workshop.GAgentPlugin\Aevatar.Workshop.GAgentPlugin.csproj", "{D5367D3A-AA4F-459A-AC1A-7873B76B3EF9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -160,6 +162,7 @@ Global
 		{AF309904-48F6-4547-87F0-853C6A34B394} = {0F2DA717-067B-4861-852B-A5F9D47021E2}
 		{1F474376-3680-40EF-A2E5-028753150A6E} = {BB370C57-8BFC-4062-917D-296D1BCA09DF}
 		{6B7DFE8F-0DB3-4B8D-BA3E-E0FE2516A4DB} = {1F474376-3680-40EF-A2E5-028753150A6E}
+		{D5367D3A-AA4F-459A-AC1A-7873B76B3EF9} = {DABA362F-0A8F-4B27-9F60-C92A4A442512}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -178,5 +181,9 @@ Global
 		{11605857-0959-406A-8563-DAB09E78772D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11605857-0959-406A-8563-DAB09E78772D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11605857-0959-406A-8563-DAB09E78772D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5367D3A-AA4F-459A-AC1A-7873B76B3EF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5367D3A-AA4F-459A-AC1A-7873B76B3EF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5367D3A-AA4F-459A-AC1A-7873B76B3EF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5367D3A-AA4F-459A-AC1A-7873B76B3EF9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

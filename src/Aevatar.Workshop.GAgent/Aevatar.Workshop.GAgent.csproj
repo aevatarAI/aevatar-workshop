@@ -15,4 +15,8 @@
         <PackageReference Include="Aevatar.GAgents.Basic" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Aevatar.Workshop.GAgentPlugin\Aevatar.Workshop.GAgentPlugin.csproj" />
+    </ItemGroup>
+
 </Project>
