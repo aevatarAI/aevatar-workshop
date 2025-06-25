@@ -46,6 +46,11 @@ public static class RouterDemo
             TaskDescription = "Research AI agent and write a brief report about it."
         }, routerGAgent, researcherGAgent, writerGAgent, recorder);
 
+        await publisher.PublishEventAsync(new RecordEvent
+        {
+            Message = $"Using API Key of: {systemLLM}.",
+        });
+
         var researchResult = string.Empty;
         while (researchResult.IsNullOrWhiteSpace())
         {

@@ -739,13 +739,31 @@ async function renderMainContent() {
       btnWrapper.style.display = 'flex';
       btnWrapper.style.justifyContent = 'center';
       btnWrapper.style.width = '100%';
+      btnWrapper.style.flexDirection = 'column';
       const runBtn = document.createElement('button');
       runBtn.type = 'button';
       runBtn.textContent = cell.label[currentLanguage] || cell.label['en'];
       runBtn.style.display = 'block';
       runBtn.style.margin = '0 auto';
+      // 新增 LLM System 状态提示
+      let llmStatus = null;
+      if (demo.key === 'MultiGAgentDemo' || demo.key === 'RouterDemo') {
+        llmStatus = document.createElement('div');
+        llmStatus.style.marginTop = '10px';
+        llmStatus.style.fontSize = '1rem';
+        llmStatus.style.color = '#0ea5e9';
+        llmStatus.style.textAlign = 'center';
+        llmStatus.style.fontWeight = 'bold';
+        llmStatus.style.minHeight = '22px';
+        btnWrapper.appendChild(llmStatus);
+      }
       runBtn.onclick = async function() {
         state.running = true;
+        // 运行前立即显示 LLM System
+        if (llmStatus) {
+          const llmVal = state.input['systemLLM'] || (demo.form.find(f => f.id === 'systemLLM')?.default ?? '');
+          llmStatus.textContent = llmVal ? `Using LLM System: ${llmVal}` : '';
+        }
         renderMainContent();
         let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
         for (const field of demo.form) {

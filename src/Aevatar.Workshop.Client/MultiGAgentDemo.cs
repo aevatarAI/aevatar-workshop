@@ -32,6 +32,11 @@ public static class MultiGAgentDemo
         await publisher.RegisterAsync(bob);
         await publisher.RegisterAsync(recorder);
 
+        await publisher.PublishEventAsync(new RecordEvent
+        {
+            Message = $"Using API Key of: {systemLLM}.",
+        });
+
         await alice.PrepareAsync(number);
         await bob.StartGuessingAsync();
     }
