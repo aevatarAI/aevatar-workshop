@@ -406,7 +406,8 @@ const translations = {
     'client-log': 'Client Log',
     'refresh-log': 'Refresh Log',
     'multigagent-messages': 'MultiGAgentDemo AI Messages',
-    'router-messages': 'RouterDemo AI Messages'
+    'router-messages': 'RouterDemo AI Messages',
+    'toolai-messages': 'ToolAIGAgent AI Messages'
   },
   zh: {
     'restart-services': '重启服务',
@@ -444,7 +445,8 @@ const translations = {
     'client-log': '客户端日志',
     'refresh-log': '刷新日志',
     'multigagent-messages': 'MultiGAgentDemo AI 消息',
-    'router-messages': 'RouterDemo AI 消息'
+    'router-messages': 'RouterDemo AI 消息',
+    'toolai-messages': 'ToolAIGAgent AI 消息'
   }
 };
 let currentLanguage = localStorage.getItem('language') || 'en';
@@ -520,6 +522,22 @@ const demos = [
       { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
       { type: 'output' },
       { type: 'chat', chatKey: 'RouterDemo' }
+    ]
+  },
+  {
+    key: 'ToolAIGAgentDemo',
+    name: { en: 'ToolAI GAgent Demo', zh: 'ToolAI GAgent 演示' },
+    desc: { en: 'demodesc/ToolAIGAgentDemo.md', zh: 'demodesc/ToolAIGAgentDemo.zh.md' },
+    form: [
+      { type: 'text', id: 'task', label: { en: 'Complex Task', zh: '复杂任务' }, default: 'Write a comprehensive report about artificial intelligence in 2024' },
+      { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
+    ],
+    notebookCells: [
+      { type: 'markdown', contentKey: 'desc' },
+      { type: 'input', fieldsKey: 'form' },
+      { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
+      { type: 'output' },
+      { type: 'chat', chatKey: 'ToolAIGAgentDemo' }
     ]
   },
 ];
@@ -747,7 +765,7 @@ async function renderMainContent() {
       runBtn.style.margin = '0 auto';
       // 新增 LLM System 状态提示
       let llmStatus = null;
-      if (demo.key === 'MultiGAgentDemo' || demo.key === 'RouterDemo') {
+      if (demo.key === 'MultiGAgentDemo' || demo.key === 'RouterDemo' || demo.key === 'ToolAIGAgentDemo') {
         llmStatus = document.createElement('div');
         llmStatus.style.marginTop = '10px';
         llmStatus.style.fontSize = '1rem';
@@ -815,8 +833,17 @@ async function renderMainContent() {
       chatPanel.className = 'chat-panel';
       const chatTitle = document.createElement('div');
       chatTitle.className = 'chat-title';
-      chatTitle.setAttribute('data-i18n-key', cell.chatKey === 'MultiGAgentDemo' ? 'multigagent-messages' : 'router-messages');
-      chatTitle.textContent = cell.chatKey === 'MultiGAgentDemo' ? 'MultiGAgentDemo AI Messages' : 'RouterDemo AI Messages';
+      let titleKey = 'router-messages';
+      let titleText = 'RouterDemo AI Messages';
+      if (cell.chatKey === 'MultiGAgentDemo') {
+        titleKey = 'multigagent-messages';
+        titleText = 'MultiGAgentDemo AI Messages';
+      } else if (cell.chatKey === 'ToolAIGAgentDemo') {
+        titleKey = 'toolai-messages';
+        titleText = 'ToolAIGAgent AI Messages';
+      }
+      chatTitle.setAttribute('data-i18n-key', titleKey);
+      chatTitle.textContent = titleText;
       const chatBox = document.createElement('div');
       chatBox.className = 'chatBox';
       chatBox.textContent = 'Loading...';
@@ -834,6 +861,7 @@ async function renderMainContent() {
       fetchChat();
       if (cell.chatKey === 'MultiGAgentDemo') multichatInterval = setInterval(fetchChat, 5000);
       if (cell.chatKey === 'RouterDemo') routerchatInterval = setInterval(fetchChat, 5000);
+      if (cell.chatKey === 'ToolAIGAgentDemo') routerchatInterval = setInterval(fetchChat, 5000);
     }
   }
   mainContent.appendChild(notebook);

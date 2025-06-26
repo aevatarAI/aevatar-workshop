@@ -165,9 +165,6 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
     }
 }
 
-/// <summary>
-/// GAgent 工具插件，为 Semantic Kernel 提供调用 GAgent 的能力
-/// </summary>
 public class GAgentToolPlugin
 {
     private readonly GAgentPluginStreams _gAgentPlugin;
@@ -182,13 +179,14 @@ public class GAgentToolPlugin
     [KernelFunction("call_gagent")]
     [Description("Call any GAgent in the system by its grain ID")]
     public async Task<string> CallGAgent(
-        [Description("The grain ID of the target GAgent")] string grainId,
-        [Description("The event data as JSON string")] string eventData)
+        [Description("The grain ID of the target GAgent")]
+        string grainId,
+        [Description("The event data as JSON string")]
+        string eventData)
     {
         try
         {
-            // 这里可以根据需要解析 eventData 为具体的事件类型
-            // 为简化示例，使用通用的 GreetingEvent
+            // TODO: Use reflection to know @event
             var @event = new GreetingEvent { Greeting = eventData };
             return await _gAgentPlugin.ExecuteGAgentEventHandler(GrainId.Parse(grainId), @event);
         }
@@ -197,58 +195,4 @@ public class GAgentToolPlugin
             return $"Error calling GAgent {grainId}: {ex.Message}";
         }
     }
-
-    [KernelFunction("research")]
-    [Description("Call ResearcherGAgent to perform research tasks")]
-    public async Task<string> CallResearcher(
-        [Description("The research query or topic")] string query)
-    {
-        try
-        {
-            var researcherGAgent = await _gAgentFactory.GetGAgentAsync("researcher", "demo");
-            var @event = new GreetingEvent { Greeting = $"Research: {query}" };
-            var grainId = researcherGAgent.GetGrainId();
-            return await _gAgentPlugin.ExecuteGAgentEventHandler(grainId, @event);
-        }
-        catch (Exception ex)
-        {
-            return $"Error calling ResearcherGAgent: {ex.Message}";
-        }
-    }
-
-    [KernelFunction("write")]
-    [Description("Call WriterGAgent to write content based on provided information")]
-    public async Task<string> CallWriter(
-        [Description("The content or information to write about")] string content)
-    {
-        try
-        {
-            var writerGAgent = await _gAgentFactory.GetGAgentAsync("writer", "demo");
-            var @event = new GreetingEvent { Greeting = $"Write: {content}" };
-            var grainId = writerGAgent.GetGrainId();
-            return await _gAgentPlugin.ExecuteGAgentEventHandler(grainId, @event);
-        }
-        catch (Exception ex)
-        {
-            return $"Error calling WriterGAgent: {ex.Message}";
-        }
-    }
-
-    [KernelFunction("record")]
-    [Description("Call RecorderGAgent to record a message")]
-    public async Task<string> CallRecorder(
-        [Description("The message to record")] string message)
-    {
-        try
-        {
-            var recorderGAgent = await _gAgentFactory.GetGAgentAsync("recorder", "demo");
-            var @event = new RecordEvent { Message = message };
-            var grainId = recorderGAgent.GetGrainId();
-            return await _gAgentPlugin.ExecuteGAgentEventHandler(grainId, @event);
-        }
-        catch (Exception ex)
-        {
-            return $"Error calling RecorderGAgent: {ex.Message}";
-        }
-    }
-} 
+}

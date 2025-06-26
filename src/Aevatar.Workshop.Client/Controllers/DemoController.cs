@@ -19,7 +19,7 @@ public class DemoController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> RunDemo([FromQuery] int mode, [FromQuery] string? greeting = null,
-        [FromQuery] int number = 42, [FromQuery] string? systemLLM = null)
+        [FromQuery] int number = 42, [FromQuery] string? systemLLM = null, [FromQuery] string? task = null)
     {
         if (string.IsNullOrEmpty(greeting))
             greeting = "Hello, Aevatar!";
@@ -27,6 +27,8 @@ public class DemoController : ControllerBase
             number = 42;
         if (string.IsNullOrWhiteSpace(systemLLM))
             systemLLM = "OpenAI";
+        if (string.IsNullOrWhiteSpace(task))
+            task = "Write a comprehensive report about artificial intelligence in 2024";
 
         try
         {
@@ -44,6 +46,10 @@ public class DemoController : ControllerBase
                     await RouterDemo.RunAsync(_gAgentFactory, systemLLM);
                     return Ok(
                         "RouterDemo completed.\nYou can refresh host's log to see the event handling details.\nRefresh client's log to see the final report.");
+                case 3:
+                    await ToolAIGAgentDemo.RunAsync(_gAgentFactory, task, systemLLM);
+                    return Ok(
+                        $"ToolAIGAgentDemo completed with task: {task}\nYou can refresh host's log to see the tool calling details and AI Messages to see the coordination process.");
                 default:
                     return BadRequest(new { error = "InvalidMode", message = $"Unknown mode: {mode}" });
             }
