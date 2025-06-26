@@ -1,17 +1,16 @@
-using System.ComponentModel;
+ using System.ComponentModel;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AI.Common;
 using Aevatar.GAgents.AIGAgent.Agent;
 using Aevatar.GAgents.AIGAgent.State;
-using Aevatar.Workshop.GAgentPlugin;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
+using System.Text.Json;
 
 namespace Aevatar.Workshop.GAgent;
 
 /// <summary>
-/// 抽象的工具 AI GAgent，集成 Semantic Kernel 和 GAgent Plugin，
-/// 允许 LLM 在思考过程中调用系统中的其他 GAgent
+/// 抽象的工具 AI GAgent，集成 GAgent Plugin，
+/// 允许 LLM 通过结构化输出调用系统中的其他 GAgent
 /// </summary>
 public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLogEvent>
     where TState : AIGAgentStateBase, new()
@@ -19,8 +18,7 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
 {
     private readonly IGAgentFactory _gAgentFactory;
     private readonly IClusterClient _clusterClient;
-    private GAgentPluginStreams? _gAgentPlugin;
-    private GAgentToolPlugin? _toolPlugin;
+    private Aevatar.Workshop.GAgentPlugin? _gAgentPlugin;
     private bool _isKernelInitialized = false;
 
     protected ToolAIGAgent(IGAgentFactory gAgentFactory, IClusterClient clusterClient)
@@ -30,7 +28,7 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
     }
 
     /// <summary>
-    /// 初始化 Kernel 和工具插件
+    /// 初始化 GAgent Plugin
     /// </summary>
     protected virtual async Task InitializeKernelAsync()
     {
@@ -39,23 +37,17 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
         try
         {
             // 初始化 GAgent Plugin
-            _gAgentPlugin = new GAgentPluginStreams(_gAgentFactory, _clusterClient);
-            
-            // 初始化工具插件
-            _toolPlugin = new GAgentToolPlugin(_gAgentPlugin, _gAgentFactory);
-            
-            // 注册工具插件到 Kernel - 通过 Semantic Kernel 的方式
-            // 由于我们继承自 AIGAgentBase，工具插件将在 ChatWithHistory 调用时自动可用
+            _gAgentPlugin = new Aevatar.Workshop.GAgentPlugin(_gAgentFactory, _clusterClient);
             
             // 注册自定义工具
             await RegisterCustomToolsAsync();
-            
+
             _isKernelInitialized = true;
-            Logger.LogInformation("ToolAIGAgent kernel initialized successfully with GAgent tools");
+            Logger.LogInformation("ToolAIGAgent initialized successfully with GAgent tools");
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to initialize ToolAIGAgent kernel");
+            Logger.LogError(ex, "Failed to initialize ToolAIGAgent");
             throw;
         }
     }
@@ -75,11 +67,11 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
     {
         var descriptions = new List<string>
         {
-            "Available GAgent Tools:",
-            "- call_gagent: Call any GAgent in the system by its identifier",
-            "- research: Call ResearcherGAgent for research tasks",
-            "- write: Call WriterGAgent for writing tasks",
-            "- record: Call RecorderGAgent to record messages"
+            "Available Tools (respond with JSON to call tools):",
+            "- call_gagent: {\"tool\": \"call_gagent\", \"alias\": \"gagent_alias\", \"namespace\": \"demo\", \"event_type\": \"GreetingEvent\", \"event_data\": {\"Greeting\": \"message\"}}",
+            "- research: {\"tool\": \"research\", \"query\": \"research topic\"}",
+            "- write: {\"tool\": \"write\", \"content\": \"content to write about\"}",
+            "- record: {\"tool\": \"record\", \"message\": \"message to record\"}"
         };
 
         // 添加自定义工具描述
@@ -88,6 +80,9 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
         {
             descriptions.Add(customDescriptions);
         }
+
+        descriptions.Add("");
+        descriptions.Add("IMPORTANT: If you want to use any tools, respond with valid JSON. If you just want to provide a direct answer, respond normally without JSON.");
 
         return string.Join("\n", descriptions);
     }
@@ -115,25 +110,143 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
         }
 
         var chatResult = await ChatWithHistory(enhancedPrompt);
-        return chatResult?[0]?.Content ?? string.Empty;
+        var response = chatResult?[0]?.Content ?? string.Empty;
+
+        // 尝试解析和执行工具调用
+        var toolResult = await TryExecuteToolCallAsync(response);
+        if (!string.IsNullOrEmpty(toolResult))
+        {
+            // 如果执行了工具调用，将结果反馈给LLM
+            var followUpPrompt = $"Tool execution result: {toolResult}\n\nPlease provide a comprehensive response based on this result.";
+            var finalResult = await ChatWithHistory(followUpPrompt);
+            return finalResult?[0]?.Content ?? toolResult;
+        }
+
+        return response;
     }
 
     /// <summary>
-    /// 使用工具增强的聊天方法（带历史记录）
+    /// 尝试解析和执行工具调用
     /// </summary>
-    protected async Task<string> ChatWithToolsAsync(string prompt, List<ChatMessage> history, bool includeToolsDescription = true)
+    private async Task<string> TryExecuteToolCallAsync(string response)
     {
-        await InitializeKernelAsync();
-
-        var enhancedPrompt = prompt;
-        if (includeToolsDescription)
+        try
         {
-            var toolsDescription = await GetAvailableToolsDescriptionAsync();
-            enhancedPrompt = $"{prompt}\n\n{toolsDescription}";
+            // 尝试解析JSON工具调用
+            if (response.Trim().StartsWith("{") && response.Trim().EndsWith("}"))
+            {
+                var toolCall = JsonSerializer.Deserialize<Dictionary<string, object>>(response);
+                if (toolCall != null && toolCall.ContainsKey("tool"))
+                {
+                    var toolName = toolCall["tool"].ToString();
+                    return await ExecuteToolAsync(toolName, toolCall);
+                }
+            }
+        }
+        catch (JsonException)
+        {
+            // 不是JSON，正常处理
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error executing tool call");
+            return $"Error executing tool: {ex.Message}";
         }
 
-        var chatResult = await ChatWithHistory(enhancedPrompt, history);
-        return chatResult?[0]?.Content ?? string.Empty;
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// 执行具体的工具调用
+    /// </summary>
+    private async Task<string> ExecuteToolAsync(string toolName, Dictionary<string, object> parameters)
+    {
+        switch (toolName.ToLower())
+        {
+            case "call_gagent":
+                return await ExecuteCallGAgentTool(parameters);
+            case "research":
+                return await ExecuteResearchTool(parameters);
+            case "write":
+                return await ExecuteWriteTool(parameters);
+            case "record":
+                return await ExecuteRecordTool(parameters);
+            default:
+                return $"Unknown tool: {toolName}";
+        }
+    }
+
+    /// <summary>
+    /// 执行call_gagent工具
+    /// </summary>
+    private async Task<string> ExecuteCallGAgentTool(Dictionary<string, object> parameters)
+    {
+        try
+        {
+            var alias = parameters["alias"].ToString();
+            var ns = parameters["namespace"].ToString();
+            var eventType = parameters["event_type"].ToString();
+            var eventData = parameters["event_data"];
+
+            // 创建事件
+            EventBase @event = eventType switch
+            {
+                "GreetingEvent" => new GreetingEvent { Greeting = GetStringFromObject(eventData, "Greeting") },
+                "RecordEvent" => new RecordEvent { Message = GetStringFromObject(eventData, "Message") },
+                _ => new GreetingEvent { Greeting = eventData?.ToString() ?? "" }
+            };
+
+            return await CallGAgentAsync(alias, ns, @event);
+        }
+        catch (Exception ex)
+        {
+            return $"Error calling GAgent: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// 执行research工具
+    /// </summary>
+    private async Task<string> ExecuteResearchTool(Dictionary<string, object> parameters)
+    {
+        var query = parameters["query"].ToString();
+        var researchEvent = new GreetingEvent { Greeting = $"Research: {query}" };
+        return await CallGAgentAsync("researcher", "demo", researchEvent);
+    }
+
+    /// <summary>
+    /// 执行write工具
+    /// </summary>
+    private async Task<string> ExecuteWriteTool(Dictionary<string, object> parameters)
+    {
+        var content = parameters["content"].ToString();
+        var writeEvent = new GreetingEvent { Greeting = $"Write: {content}" };
+        return await CallGAgentAsync("writer", "demo", writeEvent);
+    }
+
+    /// <summary>
+    /// 执行record工具
+    /// </summary>
+    private async Task<string> ExecuteRecordTool(Dictionary<string, object> parameters)
+    {
+        var message = parameters["message"].ToString();
+        var recordEvent = new RecordEvent { Message = message };
+        return await CallGAgentAsync("recorder", "demo", recordEvent);
+    }
+
+    /// <summary>
+    /// 从对象中获取字符串值
+    /// </summary>
+    private string GetStringFromObject(object obj, string key)
+    {
+        if (obj is JsonElement element && element.ValueKind == JsonValueKind.Object)
+        {
+            if (element.TryGetProperty(key, out var property))
+            {
+                return property.GetString() ?? "";
+            }
+        }
+        return obj?.ToString() ?? "";
     }
 
     /// <summary>
@@ -142,7 +255,7 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
     protected async Task<string> CallGAgentAsync(string grainId, EventBase @event)
     {
         await InitializeKernelAsync();
-        
+
         if (_gAgentPlugin == null)
             throw new InvalidOperationException("GAgent plugin not initialized");
 
@@ -155,44 +268,12 @@ public abstract class ToolAIGAgent<TState, TLogEvent> : AIGAgentBase<TState, TLo
     protected async Task<string> CallGAgentAsync(string alias, string @namespace, EventBase @event)
     {
         await InitializeKernelAsync();
-        
+
         if (_gAgentPlugin == null)
             throw new InvalidOperationException("GAgent plugin not initialized");
 
         var targetGAgent = await _gAgentFactory.GetGAgentAsync(alias, @namespace);
         var grainId = targetGAgent.GetGrainId();
         return await _gAgentPlugin.ExecuteGAgentEventHandler(grainId, @event);
-    }
-}
-
-public class GAgentToolPlugin
-{
-    private readonly GAgentPluginStreams _gAgentPlugin;
-    private readonly IGAgentFactory _gAgentFactory;
-
-    public GAgentToolPlugin(GAgentPluginStreams gAgentPlugin, IGAgentFactory gAgentFactory)
-    {
-        _gAgentPlugin = gAgentPlugin;
-        _gAgentFactory = gAgentFactory;
-    }
-
-    [KernelFunction("call_gagent")]
-    [Description("Call any GAgent in the system by its grain ID")]
-    public async Task<string> CallGAgent(
-        [Description("The grain ID of the target GAgent")]
-        string grainId,
-        [Description("The event data as JSON string")]
-        string eventData)
-    {
-        try
-        {
-            // TODO: Use reflection to know @event
-            var @event = new GreetingEvent { Greeting = eventData };
-            return await _gAgentPlugin.ExecuteGAgentEventHandler(GrainId.Parse(grainId), @event);
-        }
-        catch (Exception ex)
-        {
-            return $"Error calling GAgent {grainId}: {ex.Message}";
-        }
     }
 }

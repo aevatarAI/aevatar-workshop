@@ -1,4 +1,4 @@
-namespace Aevatar.Workshop.GAgentPlugin;
+namespace Aevatar.Workshop;
 
 public static class GAgentPluginConstants
 {

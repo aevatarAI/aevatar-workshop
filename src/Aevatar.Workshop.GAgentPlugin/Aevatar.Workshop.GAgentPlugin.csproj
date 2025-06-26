@@ -9,6 +9,7 @@
     <ItemGroup>
       <PackageReference Include="Aevatar.Core" />
       <PackageReference Include="Aevatar.Core.Abstractions" />
+      <PackageReference Include="Microsoft.SemanticKernel.Abstractions" />
     </ItemGroup>
 
 </Project>

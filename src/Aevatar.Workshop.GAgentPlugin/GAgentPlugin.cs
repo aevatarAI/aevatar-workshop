@@ -1,17 +1,25 @@
-﻿using Aevatar.Core.Abstractions;
+using Aevatar.Core.Abstractions;
 using Orleans.Streams;
-using System.Collections.Concurrent;
 
-namespace Aevatar.Workshop.GAgentPlugin;
+namespace Aevatar.Workshop;
+
+// Event to inform execution result.
+[GenerateSerializer]
+public class ExecutionCompletedEvent
+{
+    [Id(0)] public string ExecutionId { get; set; } = string.Empty;
+    [Id(1)] public string Result { get; set; } = string.Empty;
+}
 
 public class GAgentPlugin : IGAgentPlugin
 {
     private readonly IGAgentFactory _gAgentFactory;
-    private static readonly ConcurrentDictionary<string, TaskCompletionSource<string>> _pendingResults = new();
+    private readonly IClusterClient _clusterClient;
 
-    public GAgentPlugin(IGAgentFactory gAgentFactory)
+    public GAgentPlugin(IGAgentFactory gAgentFactory, IClusterClient clusterClient)
     {
         _gAgentFactory = gAgentFactory;
+        _clusterClient = clusterClient;
     }
 
     public async Task<string> ExecuteGAgentEventHandler(GrainId grainId, EventBase @event)
@@ -19,37 +27,37 @@ public class GAgentPlugin : IGAgentPlugin
         var targetGAgent = await _gAgentFactory.GetGAgentAsync(grainId);
         var resultGAgent = await _gAgentFactory.GetGAgentAsync<IResultGAgent>();
         var publishingGAgent = await _gAgentFactory.GetGAgentAsync<IPublishingGAgent>();
-        
-        // 生成唯一的执行 ID
+
         var executionId = Guid.NewGuid().ToString();
-        var taskCompletionSource = new TaskCompletionSource<string>();
-        _pendingResults[executionId] = taskCompletionSource;
-        
-        // 注册 ResultGAgent 的通知回调
-        ResultGAgent.RegisterCompletionCallback(executionId, (result) =>
+
+        var streamProvider = _clusterClient.GetStreamProvider(AevatarCoreConstants.StreamProvider);
+        var resultStream =
+            streamProvider.GetStream<ExecutionCompletedEvent>(GAgentPluginConstants.GAgentPluginStreamNamespace,
+                executionId);
+
+        var resultTask = new TaskCompletionSource<string>();
+        var subscription = await resultStream.SubscribeAsync((result, token) =>
         {
-            if (_pendingResults.TryRemove(executionId, out var tcs))
-            {
-                tcs.SetResult(result);
-            }
+            resultTask.SetResult(result.Result);
+            return Task.CompletedTask;
         });
-        
-        // 清理 ResultGAgent 的状态并设置执行 ID
-        await resultGAgent.ClearResultAsync();
-        await resultGAgent.SetExecutionIdAsync(executionId);
-        
-        // 发布事件
-        await publishingGAgent.PublishEventAsync(@event, targetGAgent, resultGAgent);
-        
-        // 等待结果，设置超时
+
         try
         {
-            return await taskCompletionSource.Task.WaitAsync(TimeSpan.FromMinutes(5));
+            await resultGAgent.SetExecutionContextAsync(executionId, AevatarCoreConstants.StreamProvider,
+                GAgentPluginConstants.GAgentPluginStreamNamespace);
+
+            await publishingGAgent.PublishEventAsync(@event, targetGAgent, resultGAgent);
+
+            return await resultTask.Task.WaitAsync(TimeSpan.FromMinutes(5));
         }
         catch (TimeoutException)
         {
-            _pendingResults.TryRemove(executionId, out _);
             throw new TimeoutException($"ExecuteGAgentEventHandler timeout for execution {executionId}");
+        }
+        finally
+        {
+            await subscription.UnsubscribeAsync();
         }
     }
 }

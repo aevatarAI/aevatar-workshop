@@ -1,64 +1,59 @@
 using Aevatar.Core;
 using Aevatar.Core.Abstractions;
-using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
+using Orleans.Streams;
 
-namespace Aevatar.Workshop.GAgentPlugin;
+namespace Aevatar.Workshop;
 
 [GenerateSerializer]
 public class ResultGAgentState : StateBase
 {
     [Id(0)] public string? Result { get; set; }
     [Id(1)] public string? ExecutionId { get; set; }
+    [Id(2)] public string? StreamProvider { get; set; }
+    [Id(3)] public string? StreamNamespace { get; set; }
 }
 
 [GenerateSerializer]
-public class ResultArrivedGAgentStateLogEvent : ResultStateLogEvent
+public class ResultArrivedStateLogEvent : ResultGAgentStateLogEvent
 {
     [Id(0)] public string Result { get; set; } = string.Empty;
 }
 
 [GenerateSerializer]
-public class ClearResultStateLogEvent : ResultStateLogEvent;
-
-[GenerateSerializer]
-public class SetExecutionIdStateLogEvent : ResultStateLogEvent
+public class SetExecutionContextGAgentStateLogEvent : ResultGAgentStateLogEvent
 {
     [Id(0)] public string ExecutionId { get; set; } = string.Empty;
+    [Id(1)] public string StreamProvider { get; set; } = string.Empty;
+    [Id(2)] public string StreamNamespace { get; set; } = string.Empty;
 }
 
 [GenerateSerializer]
-public class ResultStateLogEvent : StateLogEventBase<ResultStateLogEvent>;
+public class ResultGAgentStateLogEvent : StateLogEventBase<ResultGAgentStateLogEvent>;
 
 public interface IResultGAgent : IStateGAgent<ResultGAgentState>
 {
-    Task ClearResultAsync();
-    Task SetExecutionIdAsync(string executionId);
+    Task SetExecutionContextAsync(string executionId, string streamProvider, string streamNamespace);
 }
 
 [GAgent]
-public class ResultGAgent : GAgentBase<ResultGAgentState, ResultStateLogEvent>, IResultGAgent
+public class ResultGAgent : GAgentBase<ResultGAgentState, ResultGAgentStateLogEvent>,
+    IResultGAgent
 {
-    private static readonly ConcurrentDictionary<string, Action<string>> _completionCallbacks = new();
-
-    public static void RegisterCompletionCallback(string executionId, Action<string> callback)
-    {
-        _completionCallbacks[executionId] = callback;
-    }
-
     public override Task<string> GetDescriptionAsync()
     {
-        return Task.FromResult("This is a GAgent for collecting GAgent's event handler execution results.");
+        return Task.FromResult(
+            "This is a GAgent for collecting GAgent's event handler execution results with Streams support.");
     }
 
-    public async Task ClearResultAsync()
+    public async Task SetExecutionContextAsync(string executionId, string streamProvider, string streamNamespace)
     {
-        RaiseEvent(new ClearResultStateLogEvent());
-        await ConfirmEvents();
-    }
-
-    public async Task SetExecutionIdAsync(string executionId)
-    {
-        RaiseEvent(new SetExecutionIdStateLogEvent { ExecutionId = executionId });
+        RaiseEvent(new SetExecutionContextGAgentStateLogEvent
+        {
+            ExecutionId = executionId,
+            StreamProvider = streamProvider,
+            StreamNamespace = streamNamespace
+        });
         await ConfirmEvents();
     }
 
@@ -71,34 +66,49 @@ public class ResultGAgent : GAgentBase<ResultGAgentState, ResultStateLogEvent>, 
         }
 
         var result = typedWrapper.Event.ToString()!;
-        RaiseEvent(new ResultArrivedGAgentStateLogEvent
+        RaiseEvent(new ResultArrivedStateLogEvent
         {
             Result = result
         });
         await ConfirmEvents();
 
-        // 通知等待的 TaskCompletionSource
-        if (!string.IsNullOrEmpty(State.ExecutionId) && 
-            _completionCallbacks.TryRemove(State.ExecutionId, out var callback))
+        // Notify result to Orleans Streams
+        if (!string.IsNullOrEmpty(State.ExecutionId) &&
+            !string.IsNullOrEmpty(State.StreamProvider) &&
+            !string.IsNullOrEmpty(State.StreamNamespace))
         {
-            callback(result);
+            try
+            {
+                var streamProvider = this.GetStreamProvider(State.StreamProvider);
+                var resultStream =
+                    streamProvider.GetStream<ExecutionCompletedEvent>(State.StreamNamespace, State.ExecutionId);
+
+                await resultStream.OnNextAsync(new ExecutionCompletedEvent
+                {
+                    ExecutionId = State.ExecutionId,
+                    Result = result
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to send result through stream for execution {ExecutionId}",
+                    State.ExecutionId);
+            }
         }
     }
 
     protected override void GAgentTransitionState(ResultGAgentState state,
-        StateLogEventBase<ResultStateLogEvent> @event)
+        StateLogEventBase<ResultGAgentStateLogEvent> @event)
     {
         switch (@event)
         {
-            case ResultArrivedGAgentStateLogEvent resultEvent:
+            case ResultArrivedStateLogEvent resultEvent:
                 state.Result = resultEvent.Result;
                 break;
-            case ClearResultStateLogEvent:
-                state.Result = null;
-                state.ExecutionId = null;
-                break;
-            case SetExecutionIdStateLogEvent setExecutionIdEvent:
-                state.ExecutionId = setExecutionIdEvent.ExecutionId;
+            case SetExecutionContextGAgentStateLogEvent contextEvent:
+                state.ExecutionId = contextEvent.ExecutionId;
+                state.StreamProvider = contextEvent.StreamProvider;
+                state.StreamNamespace = contextEvent.StreamNamespace;
                 break;
         }
     }
