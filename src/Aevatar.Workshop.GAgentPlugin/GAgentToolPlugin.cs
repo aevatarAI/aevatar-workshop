@@ -6,12 +6,12 @@ namespace Aevatar.Workshop;
 
 public class GAgentToolPlugin
 {
-    private readonly GAgentPlugin _gAgentPlugin;
+    private readonly GAgentExecutor _gAgentExecutor;
     private readonly IGAgentFactory _gAgentFactory;
 
-    public GAgentToolPlugin(GAgentPlugin gAgentPlugin, IGAgentFactory gAgentFactory)
+    public GAgentToolPlugin(GAgentExecutor gAgentExecutor, IGAgentFactory gAgentFactory)
     {
-        _gAgentPlugin = gAgentPlugin;
+        _gAgentExecutor = gAgentExecutor;
         _gAgentFactory = gAgentFactory;
     }
 
@@ -31,7 +31,7 @@ public class GAgentToolPlugin
             var @event = DeserializeEvent(eventTypeName, eventJson);
             var targetGAgent = await _gAgentFactory.GetGAgentAsync(ns, alias);
             var grainId = targetGAgent.GetGrainId();
-            return await _gAgentPlugin.ExecuteGAgentEventHandler(grainId, @event);
+            return await _gAgentExecutor.ExecuteGAgentEventHandler(grainId, @event);
         }
         catch (Exception ex)
         {

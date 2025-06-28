@@ -7,7 +7,7 @@ namespace Aevatar.Workshop.GAgent;
 [GenerateSerializer]
 public class EventHandlerDemoGAgentState : StateBase
 {
-    [Id(0)]  public List<string> Content { get; set; }
+    [Id(0)] public List<string> Content { get; set; } = [];
 }
 
 public class EventHandlerDemoStateLogEvent : StateLogEventBase<EventHandlerDemoStateLogEvent>;
@@ -26,6 +26,7 @@ public class EventHandlerDemoGAgent : GAgentBase<EventHandlerDemoGAgentState, Ev
     {
         Logger.LogInformation("New greeting event received by HandleEventAsync: {EventDataGreeting}",
             eventData.Greeting);
+        State.Content.Add(eventData.Greeting);
         return Task.CompletedTask;
     }
 

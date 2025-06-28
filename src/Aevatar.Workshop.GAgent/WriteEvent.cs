@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Aevatar.Core.Abstractions;
 
-namespace Aevatar.Workshop.AIRouterWorkflowGAgent.Events;
+namespace Aevatar.Workshop.Events;
 
 [Description("Write something.")]
 [GenerateSerializer]

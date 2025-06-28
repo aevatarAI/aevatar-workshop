@@ -1,6 +1,7 @@
 using Aevatar.Core;
 using Aevatar.Core.Abstractions;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Orleans.Streams;
 
 namespace Aevatar.Workshop;
@@ -65,7 +66,7 @@ public class ResultGAgent : GAgentBase<ResultGAgentState, ResultGAgentStateLogEv
             return;
         }
 
-        var result = typedWrapper.Event.ToString()!;
+        var result = JsonConvert.SerializeObject(typedWrapper.Event);
         RaiseEvent(new ResultArrivedStateLogEvent
         {
             Result = result

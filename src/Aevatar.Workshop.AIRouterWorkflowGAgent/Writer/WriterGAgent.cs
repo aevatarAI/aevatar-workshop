@@ -2,7 +2,7 @@ using System.ComponentModel;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AIGAgent.Agent;
 using Aevatar.GAgents.Router.GEvents;
-using Aevatar.Workshop.AIRouterWorkflowGAgent.Events;
+using Aevatar.Workshop.Events;
 using Aevatar.Workshop.GAgent;
 using Microsoft.Extensions.Logging;
 
