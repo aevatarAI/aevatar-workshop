@@ -3,6 +3,8 @@ using Aevatar.Core;
 using Aevatar.Core.Abstractions;
 using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.Extensions;
+using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.SemanticKernel.Extensions;
 using Aevatar.PermissionManagement.Extensions;
 using Aevatar.Plugins;
 using Aevatar.Plugins.DbContexts;
@@ -94,6 +96,7 @@ public class ClusterFixture : IDisposable, ISingletonDependency
                             .Where(t => gAgentType.IsAssignableFrom(t) && t is { IsClass: true, IsAbstract: false });
                         gAgentTypes.AddRange(types);
                     }
+
                     var serviceProvider = services.BuildServiceProvider();
                     var grainTypeResolver = serviceProvider.GetRequiredService<GrainTypeResolver>();
                     foreach (var type in gAgentTypes)
@@ -104,15 +107,26 @@ public class ClusterFixture : IDisposable, ISingletonDependency
                             grainTypeMap = grainTypeMap.Add(grainType, type);
                         }
                     }
+
                     services.AddSingleton(grainTypeMap);
                     services.AddSingleton<IStateProjector, TestStateProjector>();
                     services.AddSingleton<IStateDispatcher, StateDispatcher>();
-                    
+
                     services.Configure<PluginGAgentLoadOptions>(services.GetConfiguration().GetSection("Plugins"));
                     services.AddTransient<ITenantPluginCodeRepository, TenantPluginCodeRepository>();
                     services.AddTransient<IPluginCodeStorageRepository, PluginCodeStorageRepository>();
                     services.AddTransient<TenantPluginCodeMongoDbContext>();
                     services.AddTransient<PluginCodeStorageMongoDbContext>();
+
+                    services.Configure<QdrantConfig>(configuration.GetSection("VectorStores:Qdrant"));
+                    services.Configure<AzureOpenAIEmbeddingsConfig>(
+                        configuration.GetSection("AIServices:AzureOpenAIEmbeddings"));
+                    services.Configure<RagConfig>(configuration.GetSection("Rag"));
+                    services.Configure<SystemLLMConfigOptions>(configuration);
+
+                    services.AddSemanticKernel()
+                        .AddQdrantVectorStore()
+                        .AddAzureOpenAITextEmbedding();
 
                     services.AddTransient<IGAgentExecutor, GAgentExecutor>();
                 })
