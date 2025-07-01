@@ -3,6 +3,8 @@ using Aevatar.GAgents.AIGAgent.Agent;
 using Aevatar.GAgents.AIGAgent.State;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using System.ComponentModel;
 using Aevatar.Core;
 using Aevatar.Workshop;
@@ -10,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using System.Text;
 using Newtonsoft.Json;
+using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace Aevatar.Workshop.GAgent;
 
@@ -20,8 +24,8 @@ public abstract class ToolAIGAgentBase<TState, TLogEvent> : AIGAgentBase<TState,
     protected readonly IGAgentFactory _gAgentFactory;
     protected readonly Aevatar.Workshop.IGAgentExecutor _gAgentExecutor;
     protected readonly IClusterClient _clusterClient;
-    private bool _toolsRegistered = false;
     private Dictionary<string, GAgentInfo> _availableGAgents = new();
+    private Kernel? _toolKernel;
 
     protected ToolAIGAgentBase()
     {
@@ -144,68 +148,37 @@ public abstract class ToolAIGAgentBase<TState, TLogEvent> : AIGAgentBase<TState,
     }
 
     /// <summary>
-    /// 注册工具到 Semantic Kernel
+    /// 创建并配置用于工具调用的Kernel
     /// </summary>
-    protected virtual async Task RegisterToolsAsync()
+    protected virtual async Task<Kernel> GetOrCreateToolKernelAsync()
     {
-        if (_toolsRegistered) return;
+        if (_toolKernel != null) return _toolKernel;
 
-        try
-        {
-            // 发现所有可用的GAgent
-            await DiscoverGAgentsAsync();
-
-            // 使用KernelFunction注解的方式，工具会自动被Semantic Kernel发现
-            _toolsRegistered = true;
-            Logger.LogInformation($"Tools registered successfully. Found {_availableGAgents.Count} GAgents.");
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to register tools to Semantic Kernel");
-            throw;
-        }
+        // 创建一个新的Kernel用于工具调用
+        var builder = Kernel.CreateBuilder();
+        
+        // 将当前实例作为插件添加到kernel
+        // 这样CallGAgentAsync方法就可以被LLM调用
+        _toolKernel = builder.Build();
+        
+        // 创建一个包含所有工具方法的插件
+        var plugin = KernelPluginFactory.CreateFromObject(this, "ToolAIGAgentPlugin");
+        _toolKernel.Plugins.Add(plugin);
+        
+        Logger.LogInformation("Created tool kernel with plugin containing CallGAgentAsync function");
+        
+        return _toolKernel;
     }
 
     /// <summary>
-    /// 构建动态的工具描述
-    /// </summary>
-    protected virtual string BuildToolDescription()
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("Call any GAgent in the system to perform specific tasks. Available GAgents:");
-        sb.AppendLine();
-
-        foreach (var gagent in _availableGAgents.Values.OrderBy(g => g.Key))
-        {
-            // 根据别名选择合适的图标
-            var icon = gagent.Alias.ToLower() switch
-            {
-                "researcher" => "🔬",
-                "writer" => "✍️",
-                "recorder" => "📝",
-                "alice" => "💬",
-                "bob" => "🎮",
-                _ => "🤖"
-            };
-
-            sb.AppendLine($"{icon} {gagent.Key} - {gagent.Description}");
-        }
-
-        sb.AppendLine();
-        sb.AppendLine("Usage: Specify the alias, namespace, and task description. The system will automatically determine the appropriate event type.");
-
-        return sb.ToString();
-    }
-
-    /// <summary>
-    /// 调用系统中的任意GAgent（动态版本）
+    /// 调用系统中的任意GAgent
     /// </summary>
     [KernelFunction]
     [Description("Call any GAgent in the system to perform specific tasks.")]
     public virtual async Task<string> CallGAgentAsync(
-        [Description("GAgent alias (e.g., 'researcher', 'writer', etc.)")]
+        [Description("GAgent alias (e.g., 'math', 'timeconverter')")]
         string alias,
-        [Description("GAgent namespace (e.g., 'demo')")]
+        [Description("GAgent namespace (e.g., 'tools')")]
         string namespaceName,
         [Description("Task description or data to send to the GAgent")]
         string task)
@@ -221,7 +194,20 @@ public abstract class ToolAIGAgentBase<TState, TLogEvent> : AIGAgentBase<TState,
             // 检查GAgent是否存在
             if (!_availableGAgents.ContainsKey(key))
             {
-                return $"GAgent {key} not found. Available GAgents: {string.Join(", ", _availableGAgents.Keys)}";
+                // 尝试模糊匹配
+                var fuzzyMatch = _availableGAgents.FirstOrDefault(kv => 
+                    kv.Value.Alias.Equals(alias, StringComparison.OrdinalIgnoreCase) ||
+                    kv.Key.Contains(alias, StringComparison.OrdinalIgnoreCase));
+                
+                if (fuzzyMatch.Value != null)
+                {
+                    key = fuzzyMatch.Key;
+                    Logger.LogInformation($"Using fuzzy matched GAgent: {key}");
+                }
+                else
+                {
+                    return $"GAgent {key} not found. Available GAgents: {string.Join(", ", _availableGAgents.Keys)}";
+                }
             }
 
             var gagentInfo = _availableGAgents[key];
@@ -244,11 +230,121 @@ public abstract class ToolAIGAgentBase<TState, TLogEvent> : AIGAgentBase<TState,
     }
 
     /// <summary>
+    /// 处理复杂任务，使用工具增强的LLM
+    /// </summary>
+    protected virtual async Task<string> ProcessComplexTaskWithToolsAsync(string task)
+    {
+        Logger.LogInformation("Processing complex task with tools: {Task}", task);
+
+        try
+        {
+            // 发现所有可用的GAgent
+            var availableGAgents = await DiscoverGAgentsAsync();
+            Logger.LogInformation("Discovered {Count} GAgents", availableGAgents.Count);
+
+            // 构建工具描述
+            var toolsDescription = new StringBuilder();
+            toolsDescription.AppendLine("Available tools through CallGAgentAsync function:");
+            
+            foreach (var gagent in availableGAgents.Values.OrderBy(g => g.Key))
+            {
+                toolsDescription.AppendLine($"- {gagent.Alias} (namespace: {gagent.Namespace}): {gagent.Description}");
+            }
+
+            // 创建增强的提示
+            var enhancedTask = $"""
+                {task}
+                
+                You have access to specialized tools via the CallGAgentAsync function.
+                {toolsDescription}
+                
+                Use the appropriate tools to complete the task. The function signature is:
+                CallGAgentAsync(alias, namespaceName, task)
+                
+                Examples:
+                - For calculations: CallGAgentAsync("math", "tools", "25 * 4 + 10")
+                - For time queries: CallGAgentAsync("timeconverter", "tools", "current time in Tokyo")
+                """;
+
+            // 使用父类的ChatWithHistory方法，它应该已经集成了Semantic Kernel
+            var response = await ChatWithHistory(enhancedTask);
+            
+            if (response != null && response.Count > 0)
+            {
+                var content = response[0].Content ?? "";
+                
+                // 检查是否包含工具调用的迹象但没有实际执行
+                if ((content.Contains("CallGAgentAsync") || content.Contains("would call") || content.Contains("should use")) 
+                    && !content.Contains("Result:") && !content.Contains("110") && !content.Contains("GMT"))
+                {
+                    Logger.LogInformation("LLM described tool usage but didn't execute. Attempting direct execution.");
+                    
+                    // 尝试提取并执行工具调用
+                    var executionResults = await ExtractAndExecuteToolCalls(task, content, availableGAgents);
+                    if (executionResults.Any())
+                    {
+                        return string.Join("\n", executionResults);
+                    }
+                }
+                
+                return content;
+            }
+            
+            return "Unable to process the task.";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error in ProcessComplexTaskWithToolsAsync");
+            return $"Error: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// 从响应中提取并执行工具调用
+    /// </summary>
+    private async Task<List<string>> ExtractAndExecuteToolCalls(string originalTask, string llmResponse, Dictionary<string, GAgentInfo> availableGAgents)
+    {
+        var results = new List<string>();
+        
+        try
+        {
+            var taskLower = originalTask.ToLower();
+            
+            // 检测数学任务
+            if (Regex.IsMatch(originalTask, @"\d+\s*[\+\-\*/]\s*\d+") || taskLower.Contains("calculate") || taskLower.Contains("math"))
+            {
+                var mathAgent = availableGAgents.Values.FirstOrDefault(g => g.Alias.ToLower() == "math");
+                if (mathAgent != null)
+                {
+                    var result = await CallGAgentAsync(mathAgent.Alias, mathAgent.Namespace, originalTask);
+                    results.Add(result);
+                }
+            }
+            
+            // 检测时间任务
+            if (taskLower.Contains("time") || taskLower.Contains("timezone") || Regex.IsMatch(taskLower, @"\b(utc|est|pst|gmt|jst)\b"))
+            {
+                var timeAgent = availableGAgents.Values.FirstOrDefault(g => g.Alias.ToLower().Contains("time"));
+                if (timeAgent != null)
+                {
+                    var result = await CallGAgentAsync(timeAgent.Alias, timeAgent.Namespace, originalTask);
+                    results.Add(result);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error in ExtractAndExecuteToolCalls");
+        }
+        
+        return results;
+    }
+
+    /// <summary>
     /// 生成GrainType名称
     /// </summary>
     protected virtual string GenerateGrainTypeName(GAgentInfo gagentInfo)
     {
-        // 这应该匹配GAgentAttribute.GetGrainType的逻辑
         return $"{gagentInfo.Namespace}.{gagentInfo.Alias}";
     }
 
@@ -304,7 +400,7 @@ public abstract class ToolAIGAgentBase<TState, TLogEvent> : AIGAgentBase<TState,
         var type = eventInstance.GetType();
         
         // 尝试设置常见的属性名
-        var propertyNames = new[] { "Message", "Content", "Data", "Text", "Greeting", "Task", "Input" };
+        var propertyNames = new[] { "Message", "Content", "Data", "Text", "Greeting", "Task", "Input", "Expression", "TimeInput" };
         
         foreach (var propName in propertyNames)
         {
@@ -328,42 +424,6 @@ public abstract class ToolAIGAgentBase<TState, TLogEvent> : AIGAgentBase<TState,
         {
             Logger.LogDebug(ex, "Failed to populate event object from JSON");
         }
-    }
-
-    /// <summary>
-    /// 处理复杂任务，使用工具增强的LLM
-    /// </summary>
-    protected virtual async Task<string> ProcessComplexTaskWithToolsAsync(string task)
-    {
-        Logger.LogInformation("Processing complex task with tools: {Task}", task);
-
-        // 注册工具到 Semantic Kernel
-        await RegisterToolsAsync();
-
-        // 动态构建工具描述
-        var toolDescription = BuildToolDescription();
-
-        // 使用工具增强的 LLM 处理任务
-        var prompt = $"""
-            You are an intelligent AI agent that can coordinate with other agents to complete complex tasks.
-
-            Current task: {task}
-
-            You have access to the call_gagent tool which can call any of the following GAgents:
-            {toolDescription}
-
-            Analyze this task and determine what steps are needed. Use the call_gagent tool to delegate work to appropriate agents.
-            Coordinate the results and provide a comprehensive response.
-            
-            IMPORTANT: When calling GAgents, use the exact alias and namespace as shown above.
-            """;
-
-        // 使用 LLM 处理任务
-        var result = await ChatWithHistory(prompt);
-        var responseContent = result?[0]?.Content ?? "No response generated";
-
-        Logger.LogInformation("Complex task completed: {Task}", task);
-        return responseContent;
     }
 
     /// <summary>

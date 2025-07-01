@@ -24,23 +24,18 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
     public async Task TestToolAIGAgent_ShouldRecognizeMathCalculation()
     {
         // Arrange
-        var testToolAI = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
-        await testToolAI.InitializeAsync(new InitializeDto
-        {
-            Instructions = "You are a Test ToolAI GAgent that can intelligently process complex instructions using math and time conversion tools",
-            LLMConfig = new LLMConfigDto { SystemLLM = "DeepSeek" }
-        });
-        
+        var gAgent = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
+
         // Initialize the AI agent
-        await InitializeAIGAgent(testToolAI);
+        await InitializeAIGAgent(gAgent);
 
         // Act
-        var result = await testToolAI.ProcessComplexInstructionAsync("Calculate 25 * 4 + 10");
+        var result = await gAgent.ProcessComplexInstructionAsync("Calculate 25 * 4 + 10");
 
         // Assert
         result.ShouldNotBeNullOrEmpty();
         _output.WriteLine($"Math calculation result: {result}");
-        
+
         // The result should contain "110" (25 * 4 + 10 = 110)
         result.ShouldContain("110");
     }
@@ -50,7 +45,7 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
     {
         // Arrange
         var testToolAI = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
-        
+
         // Initialize the AI agent
         await InitializeAIGAgent(testToolAI);
 
@@ -60,9 +55,9 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
         // Assert
         result.ShouldNotBeNullOrEmpty();
         _output.WriteLine($"Time conversion result: {result}");
-        
+
         // The result should contain time-related information
-        result.ShouldContain(":");  // Should contain time with colon
+        result.ShouldContain(":"); // Should contain time with colon
     }
 
     [Fact]
@@ -70,7 +65,7 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
     {
         // Arrange
         var testToolAI = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
-        
+
         // Initialize the AI agent
         await InitializeAIGAgent(testToolAI);
 
@@ -81,7 +76,7 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
         // Assert
         result.ShouldNotBeNullOrEmpty();
         _output.WriteLine($"Complex instruction result: {result}");
-        
+
         // The result should contain both time and calculation information
         result.Length.ShouldBeGreaterThan(50); // Expecting a substantial response
     }
@@ -101,7 +96,7 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
         simpleResult.ShouldBe(15);
         complexResult.ShouldBe(12); // 8 + 4
         trigResult.ShouldBe(1); // sin(0) = 0, cos(0) = 1
-        
+
         _output.WriteLine($"Simple: 10 + 5 = {simpleResult}");
         _output.WriteLine($"Complex: 2^3 + sqrt(16) = {complexResult}");
         _output.WriteLine($"Trig: sin(0) + cos(0) = {trigResult}");
@@ -116,7 +111,7 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
         // Act
         var utcTime = await timeConverter.GetTimeInZoneAsync("UTC");
         var tokyoTime = await timeConverter.GetTimeInZoneAsync("JST");
-        
+
         // Test conversion
         var conversionResult = await timeConverter.ConvertTimeAsync("15:00", "EST", "PST");
 
@@ -124,7 +119,7 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
         utcTime.ShouldNotBeNullOrEmpty();
         tokyoTime.ShouldNotBeNullOrEmpty();
         conversionResult.ShouldNotBeNullOrEmpty();
-        
+
         _output.WriteLine($"UTC Time: {utcTime}");
         _output.WriteLine($"Tokyo Time: {tokyoTime}");
         _output.WriteLine($"Conversion: 15:00 EST to PST = {conversionResult}");
@@ -136,7 +131,7 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
         // Arrange
         var testToolAI = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
         await InitializeAIGAgent(testToolAI);
-        
+
         var greetingEvent = new GreetingEvent
         {
             Greeting = "Calculate the square root of 144 and tell me what time it is in Paris"
@@ -154,17 +149,17 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
     public async Task ToolAIGAgent_ShouldDiscoverAvailableGAgents()
     {
         // Arrange
-        var testToolAI = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
-        await InitializeAIGAgent(testToolAI);
+        var gAgent = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
+        await InitializeAIGAgent(gAgent);
 
         // Act - Ask about available tools
-        var result = await testToolAI.ProcessComplexInstructionAsync(
+        var result = await gAgent.ProcessComplexInstructionAsync(
             "What tools do you have available? List them and give an example of using each.");
 
         // Assert
         result.ShouldNotBeNullOrEmpty();
         _output.WriteLine($"Available tools description: {result}");
-        
+
         // Should mention both math and time converter
         result.ToLower().ShouldContain("math");
         result.ToLower().ShouldContain("time");
@@ -174,44 +169,33 @@ public sealed class ToolAIGAgentTests : AevatarWorkshopTestBase
     public async Task ComplexScenario_PlanningWithCalculations()
     {
         // Arrange
-        var testToolAI = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
-        await InitializeAIGAgent(testToolAI);
+        var gAgent = await _gAgentFactory.GetGAgentAsync<ITestToolAIGAgent>();
+        await InitializeAIGAgent(gAgent);
 
         // Act - Complex scenario requiring multiple tool calls
         var instruction = @"I have a meeting at 2:30 PM EST. 
             How long do I have if it's currently 11:45 AM EST? 
             Also, if the meeting lasts 90 minutes, what time will it end in PST?";
-        
-        var result = await testToolAI.ProcessComplexInstructionAsync(instruction);
+
+        var result = await gAgent.ProcessComplexInstructionAsync(instruction);
 
         // Assert
         result.ShouldNotBeNullOrEmpty();
         _output.WriteLine($"Complex scenario result: {result}");
-        
+
         // Should contain time calculations and timezone conversions
         result.Length.ShouldBeGreaterThan(100);
     }
 
-    private async Task InitializeAIGAgent(object aiGAgent)
+    private async Task InitializeAIGAgent(ITestToolAIGAgent aiGAgent)
     {
-        // Use reflection to call InitializeAsync on the AI agent
-        var initMethod = aiGAgent.GetType().GetMethod("InitializeAsync");
-        if (initMethod != null)
+        await aiGAgent.InitializeAsync(new InitializeDto
         {
-            var initDto = new InitializeDto
+            Instructions = "You are a helpful AI assistant that can use specialized tools to solve problems.",
+            LLMConfig = new LLMConfigDto
             {
-                Instructions = "You are a helpful AI assistant that can use specialized tools to solve problems.",
-                LLMConfig = new LLMConfigDto 
-                { 
-                    SystemLLM = "OpenAI"
-                }
-            };
-            
-            var task = initMethod.Invoke(aiGAgent, new object[] { initDto }) as Task;
-            if (task != null)
-            {
-                await task;
+                SystemLLM = "DeepSeek"
             }
-        }
+        });
     }
-} 
+}

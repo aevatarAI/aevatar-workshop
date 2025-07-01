@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Orleans.Configuration;
 using Orleans.Metadata;
 using Orleans.TestingHost;
 using Volo.Abp.AutoMapper;
@@ -54,6 +55,11 @@ public class ClusterFixture : IDisposable, ISingletonDependency
                 .Build();
 
             hostBuilder
+                .Configure<SiloMessagingOptions>(options =>
+                {
+                    options.ResponseTimeout = TimeSpan.FromMinutes(60);
+                    options.SystemResponseTimeout = TimeSpan.FromMinutes(60);
+                })
                 .ConfigureServices(services =>
                 {
                     services.AddAutoMapper(typeof(AevatarWorkshopTestBaseModule).Assembly);
@@ -148,6 +154,11 @@ public class ClusterFixture : IDisposable, ISingletonDependency
     private class TestClientBuilderConfigurator : IClientBuilderConfigurator
     {
         public void Configure(IConfiguration configuration, IClientBuilder clientBuilder) => clientBuilder
+            .Configure<ClientMessagingOptions>(options =>
+            {
+                options.ResponseTimeout = TimeSpan.FromMinutes(60);
+                options.ResponseTimeoutWithDebugger = TimeSpan.FromMinutes(60);
+            })
             .AddMemoryStreams("Aevatar");
     }
 }

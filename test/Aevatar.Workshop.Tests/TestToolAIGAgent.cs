@@ -58,31 +58,8 @@ public class TestToolAIGAgent : ToolAIGAgentBase<TestToolAIGAgentState, TestTool
         });
         await ConfirmEvents();
 
-        // 构建增强的提示词，明确告知LLM可用的工具
-        var enhancedPrompt = $"""
-            You are an intelligent assistant with access to specialized tools. 
-            
-            Available tools:
-            1. **math.tools** - Mathematical calculation agent that can evaluate expressions and perform complex calculations
-               - Use this for any mathematical operations, calculations, or numeric expressions
-               - Example: "calculate 25 * 4 + 10", "what is the square root of 144"
-            
-            2. **timeconverter.tools** - Time conversion agent that can convert between time zones and perform time calculations
-               - Use this for timezone conversions, time differences, or getting current time in different zones
-               - Example: "convert 3pm EST to PST", "what time is it in Tokyo"
-            
-            Current task: {instruction}
-            
-            Analyze this task and determine if you need to use any of the specialized tools.
-            If the task involves mathematical calculations, use the math tool.
-            If the task involves time zones or time-related operations, use the timeconverter tool.
-            You can use multiple tools if needed.
-            
-            Important: When calling tools, provide the task description as a simple, clear instruction.
-            """;
-
-        // 使用基类的工具增强处理方法
-        var result = await ProcessComplexTaskWithToolsAsync(enhancedPrompt);
+        // 直接使用原始指令，让基类处理工具调用逻辑
+        var result = await ProcessComplexTaskWithToolsAsync(instruction);
 
         // 记录任务完成
         RaiseEvent(new TestTaskProcessedLogEvent
@@ -113,28 +90,7 @@ public class TestToolAIGAgent : ToolAIGAgentBase<TestToolAIGAgentState, TestTool
         }
     }
 
-    /// <summary>
-    /// 自定义工具描述构建，专门针对测试场景
-    /// </summary>
-    protected override string BuildToolDescription()
-    {
-        return """
-            Available specialized tools:
-            
-            🧮 math.tools - Mathematical calculation agent
-               Capabilities: Basic arithmetic, advanced functions (sqrt, sin, cos, log), expression evaluation
-               Usage: Send mathematical expressions or calculation requests
-            
-            🕐 timeconverter.tools - Time conversion agent  
-               Capabilities: Timezone conversion, time difference calculation, current time queries
-               Usage: Send time-related queries with timezone information
-            
-            Examples:
-            - "Calculate the compound interest on $1000 at 5% for 3 years"
-            - "What time will it be in Tokyo when it's 3pm in New York?"
-            - "Convert 2:30 PM PST to EST and then calculate how many hours until midnight"
-            """;
-    }
+
 
     /// <summary>
     /// 增强的事件创建方法，为测试场景优化
