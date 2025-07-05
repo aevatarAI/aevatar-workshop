@@ -1,0 +1,4 @@
+[submodule "gAgents"]
+	path = gAgents
+	url = aelf:aevatarAI/aevatar-gagents.git
+	branch = feature/tool-calling

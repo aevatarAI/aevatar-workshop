@@ -46,10 +46,6 @@ public class DemoController : ControllerBase
                     await RouterDemo.RunAsync(_gAgentFactory, systemLLM);
                     return Ok(
                         "RouterDemo completed.\nYou can refresh host's log to see the event handling details.\nRefresh client's log to see the final report.");
-                case 3:
-                    await ToolAIGAgentDemo.RunAsync(_gAgentFactory, task, systemLLM);
-                    return Ok(
-                        $"ToolAIGAgentDemo completed with task: {task}\nYou can refresh host's log to see the tool calling details and AI Messages to see the coordination process.");
                 default:
                     return BadRequest(new { error = "InvalidMode", message = $"Unknown mode: {mode}" });
             }

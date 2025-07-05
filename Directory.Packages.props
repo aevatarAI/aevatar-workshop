@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <AbpVersion>9.0.3</AbpVersion>
     <OrleansVersion>9.0.1</OrleansVersion>
-    <AevatarCoreVersion>1.5.1-alpha.2</AevatarCoreVersion>
+    <AevatarCoreVersion>1.5.2</AevatarCoreVersion>
     <AevatarGAgentVersion>1.5.0-workflow-2</AevatarGAgentVersion>
     <AevatarSignalRVersion>1.5.6-upgrade-core.0</AevatarSignalRVersion>
   </PropertyGroup>

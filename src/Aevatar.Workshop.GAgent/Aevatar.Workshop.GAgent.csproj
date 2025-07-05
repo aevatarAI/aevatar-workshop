@@ -16,7 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Aevatar.Workshop.GAgentPlugin\Aevatar.Workshop.GAgentPlugin.csproj" />
+      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.AIGAgent\Aevatar.GAgents.AIGAgent.csproj" />
     </ItemGroup>
 
 </Project>

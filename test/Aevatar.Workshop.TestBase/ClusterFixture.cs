@@ -4,6 +4,7 @@ using Aevatar.Core.Abstractions;
 using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.Extensions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.Executor;
 using Aevatar.GAgents.SemanticKernel.Extensions;
 using Aevatar.PermissionManagement.Extensions;
 using Aevatar.Plugins;

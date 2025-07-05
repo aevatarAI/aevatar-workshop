@@ -19,7 +19,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Aevatar.Workshop.GAgentPlugin\Aevatar.Workshop.GAgentPlugin.csproj" />
       <ProjectReference Include="..\..\src\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
       <ProjectReference Include="..\Aevatar.Workshop.TestBase\Aevatar.Workshop.TestBase.csproj" />
     </ItemGroup>
