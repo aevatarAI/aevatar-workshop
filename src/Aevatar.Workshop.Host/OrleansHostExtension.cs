@@ -1,5 +1,7 @@
 using Aevatar.Core.Abstractions;
 using Aevatar.Extensions;
+using Aevatar.GAgents.Executor;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Orleans.Serialization;
@@ -12,6 +14,8 @@ public static class OrleansHostExtension
     {
         return hostBuilder.UseOrleans((context, siloBuilder) =>
             {
+                siloBuilder.Services.AddTransient<IGAgentExecutor, GAgentExecutor>();
+                siloBuilder.Services.AddTransient<IGAgentService, GAgentService>();
                 siloBuilder
                     .UseLocalhostClustering()
                     .AddMemoryGrainStorage("Default")

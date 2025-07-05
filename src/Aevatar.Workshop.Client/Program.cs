@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Aevatar.Core.Abstractions;
 using Aevatar.Workshop.Client;
 using Microsoft.AspNetCore.Builder;
@@ -13,7 +12,8 @@ builder.Services.AddControllers();
 // Orleans client setup
 var serviceProvider = await Startup.RunAsync(args);
 
-// Register IGAgentFactory for dependency injection
+// Register Orleans services for dependency injection
+builder.Services.AddSingleton(serviceProvider.GetRequiredService<IClusterClient>());
 builder.Services.AddSingleton(serviceProvider.GetRequiredService<IGAgentFactory>());
 
 var app = builder.Build();
@@ -24,7 +24,9 @@ app.UseStaticFiles();
 app.UseRouting();
 
 // This will map all the endpoints defined in the controllers
-app.MapControllers();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // Launch browser on startup
 const string url = "http://localhost:5000";

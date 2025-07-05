@@ -10,12 +10,12 @@
         <PackageReference Include="Aevatar.Core.Abstractions"/>
         <PackageReference Include="Aevatar.Core"/>
         <PackageReference Include="Aevatar.EventSourcing.Core"/>
-        <PackageReference Include="Aevatar.GAgents.AI.Abstractions" />
-        <PackageReference Include="Aevatar.GAgents.Basic" />
-        <PackageReference Include="Aevatar.GAgents.Router" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.AI.Abstractions\Aevatar.GAgents.AI.Abstractions.csproj" />
+      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.Basic\Aevatar.GAgents.Basic.csproj" />
+      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.Router\Aevatar.GAgents.Router.csproj" />
       <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
     </ItemGroup>
 

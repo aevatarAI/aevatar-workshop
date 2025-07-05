@@ -4,7 +4,6 @@
     <AbpVersion>9.0.3</AbpVersion>
     <OrleansVersion>9.0.1</OrleansVersion>
     <AevatarCoreVersion>1.5.2</AevatarCoreVersion>
-    <AevatarGAgentVersion>1.5.0-workflow-2</AevatarGAgentVersion>
     <AevatarSignalRVersion>1.5.6-upgrade-core.0</AevatarSignalRVersion>
   </PropertyGroup>
   <ItemGroup>
@@ -12,11 +11,7 @@
     <PackageVersion Include="Aevatar.Core" Version="$(AevatarCoreVersion)" />
     <PackageVersion Include="Aevatar.Core.Abstractions" Version="$(AevatarCoreVersion)" />
     <PackageVersion Include="Aevatar.EventSourcing.Core" Version="$(AevatarCoreVersion)" />
-    <PackageVersion Include="Aevatar.GAgents.AIGAgent" Version="1.5.0-workflow-2" />
     <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarSignalRVersion)" />
-    <PackageVersion Include="Aevatar.GAgents.Basic" Version="$(AevatarGAgentVersion)" />
-    <PackageVersion Include="Aevatar.GAgents.Router" Version="$(AevatarGAgentVersion)" />
-    <PackageVersion Include="Aevatar.GAgents.AI.Abstractions" Version="$(AevatarGAgentVersion)" />
     <PackageVersion Include="Microsoft.Orleans.Server" Version="$(OrleansVersion)" />
     <PackageVersion Include="Microsoft.Orleans.Client" Version="$(OrleansVersion)" />
     <PackageVersion Include="Microsoft.Orleans.TestingHost" Version="$(OrleansVersion)" />
@@ -28,7 +23,8 @@
     <PackageVersion Include="Volo.Abp.AutoMapper" Version="$(AbpVersion)" />
     <PackageVersion Include="Volo.Abp.TestBase" Version="$(AbpVersion)" />
     <PackageVersion Include="Volo.Abp.Authorization" Version="$(AbpVersion)" />
-    
+    <PackageVersion Include="Volo.Abp.BlobStoring.Aws" Version="$(AbpVersion)" />
+
     <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />

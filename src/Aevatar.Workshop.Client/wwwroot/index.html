@@ -540,6 +540,12 @@ const demos = [
       { type: 'chat', chatKey: 'ToolAIGAgentDemo' }
     ]
   },
+  {
+    key: 'GAgentServiceDemo',
+    name: { en: 'GAgent Service Demo', zh: 'GAgent Service 演示' },
+    desc: { en: 'demodesc/GAgentServiceDemo.md', zh: 'demodesc/GAgentServiceDemo.zh.md' },
+    isCustom: true // Custom rendering flag
+  },
 ];
 const logs = [
   { key: 'HostLog', name: 'Host Log' },
@@ -665,6 +671,12 @@ async function renderMainContent() {
   }
   const demo = demos.find(d => d.key === selectedKey);
   if (!demo) return;
+  
+  // Handle custom demos
+  if (demo.isCustom && demo.key === 'GAgentServiceDemo') {
+    renderGAgentServiceDemo(demo);
+    return;
+  }
 
   // notebook 状态
   let notebookState = window.notebookState || {};
@@ -903,6 +915,354 @@ function renderLogPanel(logKey) {
   fetchLog();
   // Real-time refresh
   logInterval = setInterval(fetchLog, 2000);
+}
+
+// GAgent Service Demo rendering
+async function renderGAgentServiceDemo(demo) {
+  // Create demo card
+  const demoCard = document.createElement('div');
+  demoCard.className = 'demo-card';
+  demoCard.style.maxWidth = '1200px';
+  
+  // Title
+  const title = document.createElement('div');
+  title.className = 'demo-title';
+  title.textContent = demo.name[currentLanguage] || demo.name['en'];
+  demoCard.appendChild(title);
+  
+  // Description
+  const desc = document.createElement('div');
+  desc.className = 'demo-desc desc-content';
+  desc.innerHTML = 'Loading...';
+  const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+  fetch(descPath).then(r => r.text()).then(md => {
+    desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+    if (window.hljs) {
+      desc.querySelectorAll('pre code').forEach(block => {
+        hljs.highlightElement(block);
+      });
+    }
+  });
+  demoCard.appendChild(desc);
+  
+  // Interactive sections container
+  const sectionsContainer = document.createElement('div');
+  sectionsContainer.style.marginTop = '32px';
+  sectionsContainer.style.display = 'grid';
+  sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(400px, 1fr))';
+  sectionsContainer.style.gap = '24px';
+  
+  // 1. List All GAgents Section
+  const listSection = createGAgentSection(
+    currentLanguage === 'zh' ? '列出所有 GAgent' : 'List All GAgents',
+    async () => {
+      const resp = await fetch('/api/GAgentDemo/list');
+      return await resp.json();
+    },
+    (data) => {
+      if (!data.success) return `Error: ${data.error}`;
+      let html = `<div style="font-weight:bold;margin-bottom:8px;">Total GAgents: ${data.total}</div>`;
+      data.gAgents.forEach(g => {
+        html += `<details style="margin-bottom:8px;border:1px solid #e5e7eb;border-radius:4px;padding:8px;">`;
+        html += `<summary style="cursor:pointer;font-weight:bold;">${g.grainType} (${g.eventCount} events)</summary>`;
+        html += `<ul style="margin-top:8px;margin-left:20px;">`;
+        g.events.forEach(e => {
+          html += `<li>${e.name}</li>`;
+        });
+        html += `</ul></details>`;
+      });
+      return html;
+    }
+  );
+  sectionsContainer.appendChild(listSection);
+  
+  // 2. Get GAgent Details Section
+  const detailSection = createGAgentSection(
+    currentLanguage === 'zh' ? '获取 GAgent 详情' : 'Get GAgent Details',
+    async (grainType) => {
+      if (!grainType) throw new Error('Please enter a GrainType');
+      const resp = await fetch(`/api/GAgentDemo/info?grainType=${encodeURIComponent(grainType)}`);
+      return await resp.json();
+    },
+    (data) => {
+      if (!data.success) return `Error: ${data.error}`;
+      const info = data.info;
+      let html = `<div style="margin-bottom:8px;"><strong>GrainType:</strong> ${info.grainType}</div>`;
+      html += `<div style="margin-bottom:8px;"><strong>Description:</strong> ${info.description || 'N/A'}</div>`;
+      html += `<div style="margin-bottom:8px;"><strong>Configuration Type:</strong> ${info.configurationType || 'N/A'}</div>`;
+      html += `<div><strong>Supported Events:</strong></div>`;
+      html += `<ul style="margin-left:20px;">`;
+      info.supportedEvents.forEach(e => {
+        html += `<li>${e.name}</li>`;
+      });
+      html += `</ul>`;
+      return html;
+    },
+    { inputLabel: 'GrainType:', inputPlaceholder: 'e.g., gagent.alice' }
+  );
+  sectionsContainer.appendChild(detailSection);
+  
+  // 3. Find GAgents by Event Section
+  const findSection = createGAgentSection(
+    currentLanguage === 'zh' ? '按事件查找 GAgent' : 'Find GAgents by Event',
+    async (eventTypeName) => {
+      if (!eventTypeName) throw new Error('Please enter an event type name');
+      const resp = await fetch(`/api/GAgentDemo/find-by-event?eventTypeName=${encodeURIComponent(eventTypeName)}`);
+      return await resp.json();
+    },
+    (data) => {
+      if (!data.success) return `Error: ${data.error}`;
+      let html = `<div style="font-weight:bold;margin-bottom:8px;">Found ${data.total} GAgent(s)</div>`;
+      if (data.total === 0) {
+        html += '<div style="color:#6b7280;">No GAgents found supporting this event type.</div>';
+      } else {
+        data.gAgents.forEach(g => {
+          html += `<div style="margin-bottom:8px;padding:8px;background:#f3f4f6;border-radius:4px;">`;
+          html += `<div><strong>GrainType:</strong> ${g.grainType}</div>`;
+          html += `<div><strong>Event:</strong> ${g.eventType.name}</div>`;
+          html += `</div>`;
+        });
+      }
+      return html;
+    },
+    { inputLabel: 'Event Type Name:', inputPlaceholder: 'e.g., GreetingEvent' }
+  );
+  sectionsContainer.appendChild(findSection);
+  
+  // 4. Execute GAgent Section
+  const executeSection = createGAgentExecuteSection();
+  sectionsContainer.appendChild(executeSection);
+  
+  demoCard.appendChild(sectionsContainer);
+  mainContent.appendChild(demoCard);
+}
+
+// Helper function to create a GAgent section
+function createGAgentSection(title, fetchFn, renderFn, options = {}) {
+  const section = document.createElement('div');
+  section.style.background = '#fff';
+  section.style.padding = '20px';
+  section.style.borderRadius = '8px';
+  section.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  
+  const sectionTitle = document.createElement('h3');
+  sectionTitle.style.marginTop = '0';
+  sectionTitle.style.marginBottom = '16px';
+  sectionTitle.style.color = '#1e293b';
+  sectionTitle.textContent = title;
+  section.appendChild(sectionTitle);
+  
+  if (options.inputLabel) {
+    const inputGroup = document.createElement('div');
+    inputGroup.style.marginBottom = '12px';
+    
+    const label = document.createElement('label');
+    label.style.display = 'block';
+    label.style.marginBottom = '4px';
+    label.style.fontWeight = 'bold';
+    label.textContent = options.inputLabel;
+    inputGroup.appendChild(label);
+    
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.style.width = '100%';
+    input.style.padding = '8px';
+    input.style.border = '1px solid #d1d5db';
+    input.style.borderRadius = '4px';
+    input.placeholder = options.inputPlaceholder || '';
+    inputGroup.appendChild(input);
+    
+    section.appendChild(inputGroup);
+  }
+  
+  const button = document.createElement('button');
+  button.style.padding = '8px 16px';
+  button.style.background = '#3b82f6';
+  button.style.color = '#fff';
+  button.style.border = 'none';
+  button.style.borderRadius = '4px';
+  button.style.cursor = 'pointer';
+  button.style.fontWeight = 'bold';
+  button.textContent = currentLanguage === 'zh' ? '执行' : 'Execute';
+  section.appendChild(button);
+  
+  const resultDiv = document.createElement('div');
+  resultDiv.style.marginTop = '16px';
+  resultDiv.style.padding = '12px';
+  resultDiv.style.background = '#f9fafb';
+  resultDiv.style.borderRadius = '4px';
+  resultDiv.style.minHeight = '60px';
+  resultDiv.style.maxHeight = '300px';
+  resultDiv.style.overflow = 'auto';
+  resultDiv.innerHTML = '<span style="color:#6b7280;">Results will appear here...</span>';
+  section.appendChild(resultDiv);
+  
+  button.onclick = async () => {
+    try {
+      button.disabled = true;
+      resultDiv.innerHTML = '<span style="color:#6b7280;">Loading...</span>';
+      
+      const input = section.querySelector('input');
+      const data = await fetchFn(input ? input.value : undefined);
+      resultDiv.innerHTML = renderFn(data);
+    } catch (error) {
+      resultDiv.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+    } finally {
+      button.disabled = false;
+    }
+  };
+  
+  return section;
+}
+
+// Helper function to create Execute GAgent section with more complex UI
+function createGAgentExecuteSection() {
+  const section = document.createElement('div');
+  section.style.background = '#fff';
+  section.style.padding = '20px';
+  section.style.borderRadius = '8px';
+  section.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  section.style.gridColumn = '1 / -1'; // Span full width
+  
+  const sectionTitle = document.createElement('h3');
+  sectionTitle.style.marginTop = '0';
+  sectionTitle.style.marginBottom = '16px';
+  sectionTitle.style.color = '#1e293b';
+  sectionTitle.textContent = currentLanguage === 'zh' ? '执行 GAgent' : 'Execute GAgent';
+  section.appendChild(sectionTitle);
+  
+  // Form inputs
+  const formGrid = document.createElement('div');
+  formGrid.style.display = 'grid';
+  formGrid.style.gridTemplateColumns = '1fr 1fr';
+  formGrid.style.gap = '12px';
+  formGrid.style.marginBottom = '16px';
+  
+  // GrainType input
+  const grainTypeGroup = createInputGroup('GrainType:', 'e.g., gagent.alice');
+  formGrid.appendChild(grainTypeGroup);
+  
+  // EventTypeName input
+  const eventTypeGroup = createInputGroup('Event Type Name:', 'e.g., GreetingEvent');
+  formGrid.appendChild(eventTypeGroup);
+  
+  section.appendChild(formGrid);
+  
+  // Event Parameters textarea
+  const paramsGroup = document.createElement('div');
+  paramsGroup.style.marginBottom = '16px';
+  
+  const paramsLabel = document.createElement('label');
+  paramsLabel.style.display = 'block';
+  paramsLabel.style.marginBottom = '4px';
+  paramsLabel.style.fontWeight = 'bold';
+  paramsLabel.textContent = 'Event Parameters (JSON):';
+  paramsGroup.appendChild(paramsLabel);
+  
+  const paramsTextarea = document.createElement('textarea');
+  paramsTextarea.style.width = '100%';
+  paramsTextarea.style.minHeight = '100px';
+  paramsTextarea.style.padding = '8px';
+  paramsTextarea.style.border = '1px solid #d1d5db';
+  paramsTextarea.style.borderRadius = '4px';
+  paramsTextarea.style.fontFamily = 'monospace';
+  paramsTextarea.placeholder = '{\n  "message": "Hello World"\n}';
+  paramsTextarea.value = '{}';
+  paramsGroup.appendChild(paramsTextarea);
+  
+  section.appendChild(paramsGroup);
+  
+  // Execute button
+  const button = document.createElement('button');
+  button.style.padding = '10px 24px';
+  button.style.background = '#10b981';
+  button.style.color = '#fff';
+  button.style.border = 'none';
+  button.style.borderRadius = '4px';
+  button.style.cursor = 'pointer';
+  button.style.fontWeight = 'bold';
+  button.style.fontSize = '16px';
+  button.textContent = currentLanguage === 'zh' ? '执行事件' : 'Execute Event';
+  section.appendChild(button);
+  
+  // Result display
+  const resultDiv = document.createElement('div');
+  resultDiv.style.marginTop = '20px';
+  resultDiv.style.padding = '16px';
+  resultDiv.style.background = '#f9fafb';
+  resultDiv.style.borderRadius = '4px';
+  resultDiv.style.minHeight = '100px';
+  resultDiv.style.maxHeight = '400px';
+  resultDiv.style.overflow = 'auto';
+  resultDiv.innerHTML = '<span style="color:#6b7280;">Execution results will appear here...</span>';
+  section.appendChild(resultDiv);
+  
+  button.onclick = async () => {
+    try {
+      button.disabled = true;
+      resultDiv.innerHTML = '<span style="color:#6b7280;">Executing...</span>';
+      
+      const grainType = formGrid.querySelector('input').value;
+      const eventTypeName = formGrid.querySelectorAll('input')[1].value;
+      const eventParameters = paramsTextarea.value;
+      
+      if (!grainType || !eventTypeName) {
+        throw new Error('GrainType and Event Type Name are required');
+      }
+      
+      const resp = await fetch('/api/GAgentDemo/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          grainType,
+          eventTypeName,
+          eventParameters
+        })
+      });
+      
+      const data = await resp.json();
+      
+      if (data.success) {
+        resultDiv.innerHTML = `<div style="color:#059669;font-weight:bold;margin-bottom:8px;">✓ Execution Successful</div>`;
+        resultDiv.innerHTML += `<pre style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;overflow-x:auto;">${JSON.stringify(JSON.parse(data.result), null, 2)}</pre>`;
+      } else {
+        resultDiv.innerHTML = `<div style="color:#ef4444;font-weight:bold;">✗ Execution Failed</div>`;
+        resultDiv.innerHTML += `<div style="margin-top:8px;">${data.error}</div>`;
+        if (data.details) {
+          resultDiv.innerHTML += `<div style="margin-top:4px;color:#6b7280;font-size:0.9em;">${data.details}</div>`;
+        }
+      }
+    } catch (error) {
+      resultDiv.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+    } finally {
+      button.disabled = false;
+    }
+  };
+  
+  return section;
+}
+
+// Helper function to create input groups
+function createInputGroup(label, placeholder) {
+  const group = document.createElement('div');
+  
+  const labelEl = document.createElement('label');
+  labelEl.style.display = 'block';
+  labelEl.style.marginBottom = '4px';
+  labelEl.style.fontWeight = 'bold';
+  labelEl.textContent = label;
+  group.appendChild(labelEl);
+  
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.style.width = '100%';
+  input.style.padding = '8px';
+  input.style.border = '1px solid #d1d5db';
+  input.style.borderRadius = '4px';
+  input.placeholder = placeholder;
+  group.appendChild(input);
+  
+  return group;
 }
 
 // Initial render

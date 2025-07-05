@@ -7,6 +7,8 @@ using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.Modularity;
+using Aevatar.Workshop.GAgent;
+using Aevatar.Workshop.AIRouterWorkflowGAgent.Researcher;
 
 namespace Aevatar.Workshop.Host;
 

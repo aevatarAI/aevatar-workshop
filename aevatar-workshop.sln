@@ -148,6 +148,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.AI.Abstract
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.SemanticKernel", "gAgents\src\Aevatar.GAgents.SemanticKernel\Aevatar.GAgents.SemanticKernel.csproj", "{23834328-FE38-41B6-B9B4-D2888A6D540F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.Router", "gAgents\src\Aevatar.GAgents.Router\Aevatar.GAgents.Router.csproj", "{0F99E373-897A-4DBF-A517-DD0433DDF7D8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -186,6 +188,7 @@ Global
 		{BF80FA69-56C8-4523-BDEB-F82D54033408} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
 		{1F2662A8-6BA9-4AC7-A1F0-35BAA76AA7E6} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
 		{23834328-FE38-41B6-B9B4-D2888A6D540F} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
+		{0F99E373-897A-4DBF-A517-DD0433DDF7D8} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -232,5 +235,9 @@ Global
 		{23834328-FE38-41B6-B9B4-D2888A6D540F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23834328-FE38-41B6-B9B4-D2888A6D540F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23834328-FE38-41B6-B9B4-D2888A6D540F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F99E373-897A-4DBF-A517-DD0433DDF7D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F99E373-897A-4DBF-A517-DD0433DDF7D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F99E373-897A-4DBF-A517-DD0433DDF7D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F99E373-897A-4DBF-A517-DD0433DDF7D8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
