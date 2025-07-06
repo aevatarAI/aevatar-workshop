@@ -29,6 +29,7 @@ public interface IDynamicToolAIGAgent : IAIGAgent, IStateGAgent<DynamicToolAIGAg
     Task<bool> ConfigureServersAsync(List<MCPServerConfig> servers);
     Task<List<MCPToolInfo>> GetAvailableToolsAsync();
     Task<string> ChatAsync(string message);
+    Task<ChatWithDetailsResponse> ChatWithDetailsAsync(string message);
 }
 
 [GenerateSerializer]
@@ -55,6 +56,26 @@ public class ToolCalledStateLogEvent : StateLogEventBase<DynamicToolAIGAgentStat
     [Id(1)] public Dictionary<string, MCPToolInfo> Tools { get; set; } = new();
 }
 
+[GenerateSerializer]
+public class ChatWithDetailsResponse
+{
+    [Id(0)] public string Response { get; set; } = string.Empty;
+    [Id(1)] public List<ToolCallDetail> ToolCalls { get; set; } = new();
+    [Id(2)] public long TotalDurationMs { get; set; }
+}
+
+[GenerateSerializer]
+public class ToolCallDetail
+{
+    [Id(0)] public string ToolName { get; set; } = string.Empty;
+    [Id(1)] public string ServerName { get; set; } = string.Empty;
+    [Id(2)] public Dictionary<string, object> Arguments { get; set; } = new();
+    [Id(3)] public string Result { get; set; } = string.Empty;
+    [Id(4)] public bool Success { get; set; }
+    [Id(5)] public long DurationMs { get; set; }
+    [Id(6)] public string Timestamp { get; set; } = string.Empty;
+}
+
 [GAgent("dynamictoolai", "demo")]
 public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, DynamicToolAIGAgentStateLogEvent>,
     IDynamicToolAIGAgent
@@ -62,6 +83,7 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     private readonly ILogger<DynamicToolAIGAgent> _logger;
     private readonly IGAgentFactory _gAgentFactory;
     private Dictionary<string, string> _toolNameMapping = new(); // Maps kernel function names to MCP tool names
+    private List<ToolCallDetail> _currentToolCalls = new(); // Track tool calls for current request
 
     public DynamicToolAIGAgent()
     {
@@ -168,9 +190,21 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
 
     public async Task<string> ChatAsync(string message)
     {
+        var detailedResponse = await ChatWithDetailsAsync(message);
+        return detailedResponse.Response;
+    }
+
+    public async Task<ChatWithDetailsResponse> ChatWithDetailsAsync(string message)
+    {
+        var response = new ChatWithDetailsResponse();
+        var overallStartTime = DateTime.UtcNow;
+        
+        // Clear tool calls from previous request
+        _currentToolCalls.Clear();
+
         try
         {
-            Logger.LogInformation("Processing chat message: {Message}", message);
+            Logger.LogInformation("Processing chat message with details: {Message}", message);
             
             // Get the kernel from brain
             var kernel = GetKernelFromBrain();
@@ -178,7 +212,9 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
             {
                 Logger.LogWarning("Kernel not available, falling back to base implementation");
                 var fallbackHistory = await ChatWithHistory(message);
-                return fallbackHistory?.LastOrDefault()?.Content ?? "No response generated.";
+                response.Response = fallbackHistory?.LastOrDefault()?.Content ?? "No response generated.";
+                response.TotalDurationMs = (long)(DateTime.UtcNow - overallStartTime).TotalMilliseconds;
+                return response;
             }
             
             // If we have MCP agents but no tools registered yet, register them now
@@ -212,53 +248,51 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
             // Configure execution settings for automatic tool calling
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
-                Temperature = 0.1, // Lower temperature for more deterministic tool usage
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions, // Auto-invoke tools
+                Temperature = 0.1,
                 MaxTokens = 2000
             };
             
             // Get response with automatic tool invocation
-            var startTime = DateTime.UtcNow;
             Logger.LogInformation("[{Timestamp}] Starting LLM call with auto tool invocation",
-                startTime.ToString("HH:mm:ss.fff"));
+                DateTime.UtcNow.ToString("HH:mm:ss.fff"));
             
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2)); // 2 minutes timeout
-            try
-            {
-                var response = await chatService.GetChatMessageContentAsync(
-                    chatHistory,
-                    executionSettings,
-                    kernel,
-                    cts.Token);
-                
-                var endTime = DateTime.UtcNow;
-                var duration = endTime - startTime;
-                Logger.LogInformation("[{Timestamp}] Received response from LLM after {Duration}ms",
-                    endTime.ToString("HH:mm:ss.fff"), duration.TotalMilliseconds);
-                
-                var responseText = response.Content ?? "I couldn't generate a response.";
-                
-                // Log if tools were called
-                if (response.Metadata?.TryGetValue("ToolCalls", out var toolCalls) == true)
-                {
-                    Logger.LogInformation("[{Timestamp}] Tools were called during this request",
-                        DateTime.UtcNow.ToString("HH:mm:ss.fff"));
-                }
-                
-                Logger.LogInformation("Chat completed successfully");
-                return responseText;
-            }
-            catch (TaskCanceledException)
-            {
-                var timeoutDuration = DateTime.UtcNow - startTime;
-                Logger.LogError("Chat completion timed out after {Duration}ms", timeoutDuration.TotalMilliseconds);
-                return $"Request timed out after {timeoutDuration.TotalSeconds:F1} seconds. Please try again.";
-            }
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            
+            var chatResponse = await chatService.GetChatMessageContentAsync(
+                chatHistory,
+                executionSettings,
+                kernel,
+                cts.Token);
+            
+            response.Response = chatResponse.Content ?? "I couldn't generate a response.";
+            
+            // Copy collected tool calls to response
+            response.ToolCalls = new List<ToolCallDetail>(_currentToolCalls);
+            
+            response.TotalDurationMs = (long)(DateTime.UtcNow - overallStartTime).TotalMilliseconds;
+            
+            Logger.LogInformation("[{Timestamp}] Chat completed with {ToolCount} tool calls in {Duration}ms",
+                DateTime.UtcNow.ToString("HH:mm:ss.fff"),
+                response.ToolCalls.Count,
+                response.TotalDurationMs);
+            
+            return response;
+        }
+        catch (TaskCanceledException)
+        {
+            var timeoutDuration = DateTime.UtcNow - overallStartTime;
+            Logger.LogError("Chat completion timed out after {Duration}ms", timeoutDuration.TotalMilliseconds);
+            response.Response = $"Request timed out after {timeoutDuration.TotalSeconds:F1} seconds. Please try again.";
+            response.TotalDurationMs = (long)timeoutDuration.TotalMilliseconds;
+            return response;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error during chat");
-            return $"Error: {ex.Message}";
+            Logger.LogError(ex, "Error during chat with details");
+            response.Response = $"Error: {ex.Message}";
+            response.TotalDurationMs = (long)(DateTime.UtcNow - overallStartTime).TotalMilliseconds;
+            return response;
         }
     }
 
@@ -386,9 +420,22 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
 
     private async Task<string> CallMCPToolAsync(string serverName, string toolName, KernelArguments kernelArgs)
     {
+        var toolStartTime = DateTime.UtcNow;
+        var toolDetail = new ToolCallDetail
+        {
+            ServerName = serverName,
+            ToolName = toolName,
+            Timestamp = toolStartTime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+            Arguments = new Dictionary<string, object>()
+        };
+        
         if (!State.MCPAgents.TryGetValue(serverName, out var agentRef))
         {
-            return $"Error: Server {serverName} not found";
+            toolDetail.Result = $"Error: Server {serverName} not found";
+            toolDetail.Success = false;
+            toolDetail.DurationMs = (long)(DateTime.UtcNow - toolStartTime).TotalMilliseconds;
+            _currentToolCalls.Add(toolDetail);
+            return toolDetail.Result;
         }
 
         try
@@ -400,8 +447,14 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
                 if (value != null)
                 {
                     toolArgs[key] = value;
+                    toolDetail.Arguments[key] = value;
                 }
             }
+            
+            Logger.LogInformation("[{Timestamp}] Executing tool: {Server}.{Tool} with args: {Args}",
+                DateTime.UtcNow.ToString("HH:mm:ss.fff"),
+                serverName, toolName,
+                JsonSerializer.Serialize(toolArgs));
 
             // Get the MCP agent and call the tool
             var mcpAgent = await _gAgentFactory.GetGAgentAsync<IMCPGAgent>(agentRef.AgentId);
@@ -414,30 +467,46 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
                 // Return the result as a string
                 if (response.Result is string strResult)
                 {
-                    return strResult;
+                    toolDetail.Result = strResult;
                 }
                 else if (response.Result != null)
                 {
                     // Serialize complex results to JSON
-                    return JsonSerializer.Serialize(response.Result, new JsonSerializerOptions 
+                    toolDetail.Result = JsonSerializer.Serialize(response.Result, new JsonSerializerOptions 
                     { 
                         WriteIndented = true 
                     });
                 }
                 else
                 {
-                    return "Tool executed successfully but returned no result.";
+                    toolDetail.Result = "Tool executed successfully but returned no result.";
                 }
+                toolDetail.Success = true;
             }
             else
             {
-                return $"Error: {response.ErrorMessage ?? "Unknown error occurred"}";
+                toolDetail.Result = response.ErrorMessage ?? "Unknown error occurred";
+                toolDetail.Success = false;
             }
+            
+            toolDetail.DurationMs = (long)(DateTime.UtcNow - toolStartTime).TotalMilliseconds;
+            _currentToolCalls.Add(toolDetail);
+            
+            Logger.LogInformation("[{Timestamp}] Tool execution completed in {Duration}ms: {Server}.{Tool}",
+                DateTime.UtcNow.ToString("HH:mm:ss.fff"),
+                toolDetail.DurationMs,
+                serverName, toolName);
+            
+            return toolDetail.Result;
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, $"Error calling tool {toolName} on server {serverName}");
-            return $"Error: {ex.Message}";
+            toolDetail.Result = $"Error: {ex.Message}";
+            toolDetail.Success = false;
+            toolDetail.DurationMs = (long)(DateTime.UtcNow - toolStartTime).TotalMilliseconds;
+            _currentToolCalls.Add(toolDetail);
+            return toolDetail.Result;
         }
     }
 

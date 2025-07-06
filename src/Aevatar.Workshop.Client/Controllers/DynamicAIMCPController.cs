@@ -172,6 +172,36 @@ When using tools, be clear about the results and how they help answer the user's
         }
     }
 
+    [HttpPost("chat-with-details")]
+    public async Task<IActionResult> ChatWithDetails([FromBody] ChatRequest request)
+    {
+        try
+        {
+            var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
+            
+            // Process the chat message with tool call details
+            var detailedResponse = await agent.ChatWithDetailsAsync(request.Message);
+            
+            return Ok(new
+            {
+                success = true,
+                response = detailedResponse.Response,
+                toolCalls = detailedResponse.ToolCalls,
+                totalDurationMs = detailedResponse.TotalDurationMs,
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in chat with details");
+            return Ok(new
+            {
+                success = false,
+                error = ex.Message
+            });
+        }
+    }
+
     [HttpGet("configured-servers/{agentId}")]
     public async Task<IActionResult> GetConfiguredServers(string agentId)
     {
