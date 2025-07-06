@@ -335,6 +335,7 @@
                 });
 
                 const data = await response.json();
+                console.log('Tool call response:', data);
                 displayResult(data);
             } catch (error) {
                 resultSection.innerHTML = `
@@ -348,9 +349,11 @@
 
         function displayResult(data) {
             const resultSection = document.getElementById('resultSection');
+            console.log('Display result data:', data);
             
             if (data.success && data.resultDisplay) {
                 const result = data.resultDisplay;
+                console.log('Result display:', result);
                 let content = '';
                 
                 // Tool execution info
@@ -394,6 +397,7 @@
         }
 
         function formatResultContent(result) {
+            console.log('Formatting result:', result);
             if (!result) return '<pre>No result data</pre>';
             
             // Handle string types

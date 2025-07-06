@@ -150,10 +150,14 @@ public class MCPDemoController : ControllerBase
                 MCPToolResponseEvent? response = null;
                 try
                 {
+                    _logger.LogInformation("Raw result JSON: {Json}", resultJson);
                     response = System.Text.Json.JsonSerializer.Deserialize<MCPToolResponseEvent>(resultJson);
+                    _logger.LogInformation("Parsed response. Success: {Success}, Result type: {Type}, Result: {Result}", 
+                        response?.Success, response?.Result?.GetType().Name, response?.Result);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    _logger.LogWarning(ex, "Failed to deserialize MCPToolResponseEvent, using raw result");
                     // If deserialization fails, create a response with the raw result
                     response = new MCPToolResponseEvent
                     {
@@ -193,25 +197,8 @@ public class MCPDemoController : ControllerBase
                 // Add result in a highlighted section if successful
                 if (response?.Success == true && response.Result != null)
                 {
-                    // Try to extract the actual result from the JSON response
-                    object? actualResult = response.Result;
-                    
-                    // Check if Result is a JSON string containing MCPToolResponseEvent
-                    if (response.Result is string resultStr && resultStr.Contains("\"Result\":"))
-                    {
-                        try
-                        {
-                            using var doc = JsonDocument.Parse(resultStr);
-                            if (doc.RootElement.TryGetProperty("Result", out var resultProp))
-                            {
-                                actualResult = resultProp.GetString() ?? resultStr;
-                            }
-                        }
-                        catch
-                        {
-                            // If parsing fails, use the original result
-                        }
-                    }
+                    _logger.LogInformation("Tool call successful. Result type: {Type}, Result: {Result}", 
+                        response.Result?.GetType().Name, response.Result);
                     
                     return Ok(new
                     {
@@ -220,9 +207,9 @@ public class MCPDemoController : ControllerBase
                         resultDisplay = new
                         {
                             hasResult = true,
-                            resultType = actualResult?.GetType().Name ?? "Unknown",
-                            resultContent = actualResult,
-                            formattedResult = FormatResultForDisplay(actualResult)
+                            resultType = response.Result?.GetType().Name ?? "Unknown",
+                            resultContent = response.Result,
+                            formattedResult = FormatResultForDisplay(response.Result)
                         }
                     });
                 }
@@ -511,6 +498,9 @@ public class MCPDemoController : ControllerBase
     /// </summary>
     private object FormatResultForDisplay(object? result)
     {
+        _logger.LogInformation("FormatResultForDisplay called with type: {Type}, value: {Value}", 
+            result?.GetType().Name ?? "null", result);
+            
         if (result == null) return new { type = "null", value = "" };
         
         // Handle different result types
