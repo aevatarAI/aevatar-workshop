@@ -193,6 +193,26 @@ public class MCPDemoController : ControllerBase
                 // Add result in a highlighted section if successful
                 if (response?.Success == true && response.Result != null)
                 {
+                    // Try to extract the actual result from the JSON response
+                    object? actualResult = response.Result;
+                    
+                    // Check if Result is a JSON string containing MCPToolResponseEvent
+                    if (response.Result is string resultStr && resultStr.Contains("\"Result\":"))
+                    {
+                        try
+                        {
+                            using var doc = JsonDocument.Parse(resultStr);
+                            if (doc.RootElement.TryGetProperty("Result", out var resultProp))
+                            {
+                                actualResult = resultProp.GetString() ?? resultStr;
+                            }
+                        }
+                        catch
+                        {
+                            // If parsing fails, use the original result
+                        }
+                    }
+                    
                     return Ok(new
                     {
                         success = true,
@@ -200,9 +220,9 @@ public class MCPDemoController : ControllerBase
                         resultDisplay = new
                         {
                             hasResult = true,
-                            resultType = response.Result?.GetType().Name ?? "Unknown",
-                            resultContent = response.Result,
-                            formattedResult = FormatResultForDisplay(response.Result)
+                            resultType = actualResult?.GetType().Name ?? "Unknown",
+                            resultContent = actualResult,
+                            formattedResult = FormatResultForDisplay(actualResult)
                         }
                     });
                 }
