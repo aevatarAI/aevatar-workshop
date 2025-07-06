@@ -18,6 +18,8 @@ using Aevatar.GAgents.MCP.State;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Orleans;
 
 namespace Aevatar.Workshop.GAgent;
@@ -73,20 +75,14 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     }
     
     /// <summary>
-    /// Override Initialize to register MCP tools after brain initialization
+    /// After brain initialization, register MCP tools
     /// </summary>
-    public override async Task<bool> InitializeAsync(InitializeDto initializeDto)
+    private async Task RegisterMCPToolsAfterBrainInit()
     {
-        // Call base initialization first (this initializes the brain)
-        var result = await base.InitializeAsync(initializeDto);
-        
-        if (result && State.MCPAgents.Any())
+        if (State.MCPAgents.Any())
         {
-            // Now that brain is initialized, register MCP tools
             await UpdateKernelToolsAsync();
         }
-        
-        return result;
     }
 
     public async Task<bool> ConfigureServersAsync(List<MCPServerConfig> servers)
@@ -97,20 +93,20 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
         {
             foreach (var server in servers)
             {
-                var mcpAgent = await _gAgentFactory.GetGAgentAsync<IMCPGAgent>();
-                var mcpAgentId = mcpAgent.GetPrimaryKey();
-
-                // Initialize the MCP agent
-                await mcpAgent.ConfigAsync(new MCPGAgentConfig
+                // Create config for the MCP agent
+                var mcpConfig = new MCPGAgentConfig
                 {
                     Servers = [server]
-                });
+                };
+                
+                var mcpAgent = await _gAgentFactory.GetGAgentAsync<IMCPGAgent>(mcpConfig);
+                var mcpAgentId = mcpAgent.GetPrimaryKey();
 
                 State.MCPAgents[server.ServerName] = new MCPGAgentReference
                 {
                     AgentId = mcpAgentId,
                     ServerName = server.ServerName,
-                    Description = await mcpAgent.GetDescriptionAsync()
+                    Description = server.ServerName // Use server name as description
                 };
 
                 // Get tools from this server
@@ -174,9 +170,90 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     {
         try
         {
-            // Use ChatWithHistory method from AIGAgentBase
-            var chatHistory = await ChatWithHistory(message);
-            return chatHistory?.LastOrDefault()?.Content ?? "No response generated.";
+            Logger.LogInformation("Processing chat message: {Message}", message);
+            
+            // Get the kernel from brain
+            var kernel = GetKernelFromBrain();
+            if (kernel == null)
+            {
+                Logger.LogWarning("Kernel not available, falling back to base implementation");
+                var fallbackHistory = await ChatWithHistory(message);
+                return fallbackHistory?.LastOrDefault()?.Content ?? "No response generated.";
+            }
+            
+            // If we have MCP agents but no tools registered yet, register them now
+            if (State.MCPAgents.Any() && !kernel.Plugins.Any())
+            {
+                Logger.LogInformation("Brain is now initialized, registering MCP tools");
+                await UpdateKernelToolsAsync();
+            }
+            
+            // Get chat completion service from kernel
+            var chatService = kernel.GetRequiredService<IChatCompletionService>();
+            
+            // Create chat history
+            var chatHistory = new ChatHistory();
+            
+            // Add system message
+            var systemMessage = State.PromptTemplate ?? 
+                "You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol). " +
+                "When asked to perform tasks, use the available tools to help provide accurate and complete responses. " +
+                "Always explain what tools you're using and why. " +
+                "When using tools, be clear about the results and how they help answer the user's question.";
+            
+            chatHistory.AddSystemMessage(systemMessage);
+            
+            // Add user message
+            chatHistory.AddUserMessage(message);
+            
+            Logger.LogInformation("Available tools in kernel: {Tools}",
+                string.Join(", ", kernel.Plugins.SelectMany(p => p.Select(f => f.Name))));
+            
+            // Configure execution settings for automatic tool calling
+            var executionSettings = new OpenAIPromptExecutionSettings
+            {
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+                Temperature = 0.1, // Lower temperature for more deterministic tool usage
+                MaxTokens = 2000
+            };
+            
+            // Get response with automatic tool invocation
+            var startTime = DateTime.UtcNow;
+            Logger.LogInformation("[{Timestamp}] Starting LLM call with auto tool invocation",
+                startTime.ToString("HH:mm:ss.fff"));
+            
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2)); // 2 minutes timeout
+            try
+            {
+                var response = await chatService.GetChatMessageContentAsync(
+                    chatHistory,
+                    executionSettings,
+                    kernel,
+                    cts.Token);
+                
+                var endTime = DateTime.UtcNow;
+                var duration = endTime - startTime;
+                Logger.LogInformation("[{Timestamp}] Received response from LLM after {Duration}ms",
+                    endTime.ToString("HH:mm:ss.fff"), duration.TotalMilliseconds);
+                
+                var responseText = response.Content ?? "I couldn't generate a response.";
+                
+                // Log if tools were called
+                if (response.Metadata?.TryGetValue("ToolCalls", out var toolCalls) == true)
+                {
+                    Logger.LogInformation("[{Timestamp}] Tools were called during this request",
+                        DateTime.UtcNow.ToString("HH:mm:ss.fff"));
+                }
+                
+                Logger.LogInformation("Chat completed successfully");
+                return responseText;
+            }
+            catch (TaskCanceledException)
+            {
+                var timeoutDuration = DateTime.UtcNow - startTime;
+                Logger.LogError("Chat completion timed out after {Duration}ms", timeoutDuration.TotalMilliseconds);
+                return $"Request timed out after {timeoutDuration.TotalSeconds:F1} seconds. Please try again.";
+            }
         }
         catch (Exception ex)
         {
@@ -247,38 +324,54 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     /// </summary>
     private Kernel? GetKernelFromBrain()
     {
-        // Use reflection to access the private _brain field from base class
-        var brainField = typeof(AIGAgentBase<DynamicToolAIGAgentState, DynamicToolAIGAgentStateLogEvent>)
-            .GetField("_brain", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        
-        if (brainField == null)
-        {
-            Logger.LogWarning("Cannot find _brain field in base class");
-            return null;
-        }
-        
-        var brain = brainField.GetValue(this);
-        if (brain == null)
-        {
-            Logger.LogWarning("Brain is not initialized");
-            return null;
-        }
-
         try
         {
-            var brainType = brain.GetType();
-            var kernelField = brainType.GetField("Kernel",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-            if (kernelField != null)
+            // Use reflection to access the private _brain field from base class
+            // Need to search through the inheritance hierarchy
+            var currentType = GetType();
+            FieldInfo? brainField = null;
+            
+            while (currentType != null && brainField == null)
             {
-                return kernelField.GetValue(brain) as Kernel;
+                brainField = currentType.GetField("_brain", 
+                    BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+                
+                if (brainField == null)
+                {
+                    currentType = currentType.BaseType;
+                }
+            }
+            
+            if (brainField == null)
+            {
+                Logger.LogWarning("Cannot find _brain field in base class hierarchy");
+                return null;
+            }
+            
+            var brain = brainField.GetValue(this);
+            if (brain == null)
+            {
+                Logger.LogWarning("Brain is not initialized yet");
+                return null;
             }
 
+            // Try to get Kernel property or field
+            var brainType = brain.GetType();
+            
+            // First try property
             var kernelProperty = brainType.GetProperty("Kernel",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             if (kernelProperty != null)
             {
                 return kernelProperty.GetValue(brain) as Kernel;
+            }
+
+            // Then try field
+            var kernelField = brainType.GetField("Kernel",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (kernelField != null)
+            {
+                return kernelField.GetValue(brain) as Kernel;
             }
 
             Logger.LogWarning("Cannot find Kernel field or property in brain type {BrainType}", brainType.Name);
