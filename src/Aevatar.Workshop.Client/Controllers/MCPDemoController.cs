@@ -502,12 +502,13 @@ public class MCPDemoController : ControllerBase
                 try
                 {
                     var parsed = JsonSerializer.Deserialize<JsonElement>(str);
+                    var formatted = JsonSerializer.Serialize(parsed, new JsonSerializerOptions { WriteIndented = true });
                     return new
                     {
                         type = "json",
-                        value = parsed,
+                        value = str,
                         raw = str,
-                        formatted = JsonSerializer.Serialize(parsed, new JsonSerializerOptions { WriteIndented = true })
+                        formatted = formatted
                     };
                 }
                 catch
@@ -575,6 +576,7 @@ public class MCPDemoController : ControllerBase
                 type = "complex_object",
                 typeName = result.GetType().Name,
                 value = json,
+                formatted = json,
                 parsed = JsonSerializer.Deserialize<JsonElement>(json)
             };
         }
@@ -584,7 +586,7 @@ public class MCPDemoController : ControllerBase
             {
                 type = "unknown",
                 typeName = result.GetType().Name,
-                value = result.ToString()
+                value = result.ToString() ?? ""
             };
         }
     }
