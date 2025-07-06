@@ -2218,7 +2218,7 @@ async function renderMCPDemo(demo) {
   // Create demo card
   const demoCard = document.createElement('div');
   demoCard.className = 'demo-card';
-  demoCard.style.maxWidth = '1000px';
+  demoCard.style.maxWidth = '800px';
   demoCard.style.margin = '0 auto';
   
   // Title
@@ -2320,7 +2320,7 @@ async function renderMCPDemo(demo) {
     serverInfo.innerHTML = `
       <div style="font-weight:bold;">${server.name}</div>
       <div style="font-size:0.9em;color:#6b7280;">${server.description}</div>
-      <div style="font-size:0.85em;color:#9ca3af;font-family:monospace;">${server.command} ${server.args.join(' ')}</div>
+      <div style="font-size:0.85em;color:#9ca3af;font-family:monospace;word-wrap:break-word;overflow-wrap:break-word;">${server.command} ${server.args.join(' ')}</div>
     `;
     serverDiv.appendChild(serverInfo);
     
@@ -2472,6 +2472,9 @@ async function renderMCPDemo(demo) {
   resultDiv.style.background = '#f9fafb';
   resultDiv.style.borderRadius = '4px';
   resultDiv.style.minHeight = '60px';
+  resultDiv.style.wordWrap = 'break-word';
+  resultDiv.style.overflowWrap = 'break-word';
+  resultDiv.style.overflow = 'auto';
   callSection.appendChild(resultDiv);
   
   sectionsContainer.appendChild(callSection);
@@ -2719,7 +2722,7 @@ async function renderMCPDemo(demo) {
       if (data.success) {
         resultDiv.innerHTML = `
           <div style="color:#10b981;font-weight:bold;margin-bottom:8px;">✓ ${currentLanguage === 'zh' ? '成功' : 'Success'}</div>
-          <pre style="background:#fff;padding:8px;border-radius:4px;overflow-x:auto;">${JSON.stringify(data.result, null, 2)}</pre>
+          <pre style="background:#fff;padding:8px;border-radius:4px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;">${JSON.stringify(data.result, null, 2)}</pre>
         `;
         
         // Update history
@@ -2770,12 +2773,12 @@ async function renderMCPDemo(demo) {
               </div>
               <div style="font-size:0.9em;color:#4b5563;margin-bottom:4px;">
                 <strong>${currentLanguage === 'zh' ? '参数' : 'Arguments'}:</strong> 
-                <code style="background:#f3f4f6;padding:2px 4px;border-radius:2px;">${JSON.stringify(call.arguments)}</code>
+                <code style="background:#f3f4f6;padding:2px 4px;border-radius:2px;word-wrap:break-word;overflow-wrap:break-word;display:inline-block;max-width:100%;">${JSON.stringify(call.arguments)}</code>
               </div>
               ${call.success ? `
               <div style="font-size:0.9em;color:#059669;">
                 <strong>${currentLanguage === 'zh' ? '结果' : 'Result'}:</strong> 
-                <pre style="margin-top:4px;background:#fff;padding:4px;border-radius:2px;overflow-x:auto;max-height:100px;">${JSON.stringify(call.result, null, 2)}</pre>
+                <pre style="margin-top:4px;background:#fff;padding:4px;border-radius:2px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;max-height:100px;overflow-y:auto;">${JSON.stringify(call.result, null, 2)}</pre>
               </div>` : `
               <div style="font-size:0.9em;color:#dc2626;">
                 <strong>${currentLanguage === 'zh' ? '错误' : 'Error'}:</strong> ${call.errorMessage}
