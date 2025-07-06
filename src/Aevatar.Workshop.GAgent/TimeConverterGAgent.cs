@@ -30,7 +30,7 @@ public class TimeConvertEvent : EventBase
     [Id(2)] public string ToTimeZone { get; set; } = string.Empty;
 }
 
-public interface ITimeConverterGAgent : IGAgent
+public interface ITimeConverterGAgent : IStateGAgent<TimeConverterGAgentState>
 {
     Task<string> ConvertTimeAsync(string timeInput, string fromTimeZone = "", string toTimeZone = "");
     Task<string> GetTimeInZoneAsync(string timeZone);

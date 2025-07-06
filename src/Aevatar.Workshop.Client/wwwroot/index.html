@@ -546,6 +546,12 @@ const demos = [
     desc: { en: 'demodesc/GAgentServiceDemo.md', zh: 'demodesc/GAgentServiceDemo.zh.md' },
     isCustom: true // Custom rendering flag
   },
+  {
+    key: 'AIToolCallingDemo',
+    name: { en: 'AI Tool Calling Demo', zh: 'AI 工具调用演示' },
+    desc: { en: 'demodesc/AIToolCallingDemo.md', zh: 'demodesc/AIToolCallingDemo.zh.md' },
+    isCustom: true // Custom rendering for AI tool calling
+  },
 ];
 const logs = [
   { key: 'HostLog', name: 'Host Log' },
@@ -677,6 +683,11 @@ async function renderMainContent() {
     renderGAgentServiceDemo(demo);
     return;
   }
+  
+  if (demo.isCustom && demo.key === 'AIToolCallingDemo') {
+    renderAIToolCallingDemo(demo);
+    return;
+  }
 
   // notebook 状态
   let notebookState = window.notebookState || {};
@@ -760,6 +771,10 @@ async function renderMainContent() {
               select.appendChild(opt);
             });
             select.value = state.input[field.id] ?? (arr.includes('OpenAI') ? 'OpenAI' : arr[0]);
+            // Update state.input to keep it in sync with the actual selected value
+            if (!state.input[field.id] && select.value) {
+              state.input[field.id] = select.value;
+            }
           });
         }
       }
@@ -797,7 +812,16 @@ async function renderMainContent() {
         renderMainContent();
         let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
         for (const field of demo.form) {
-          const val = state.input[field.id] ?? field.default;
+          let val = state.input[field.id] ?? field.default;
+          // For llm type fields, get the actual value from DOM if not in state
+          if (field.type === 'llm' && !state.input[field.id]) {
+            const selectElement = document.getElementById(field.id);
+            if (selectElement) {
+              val = selectElement.value;
+              // Also update state to keep it in sync
+              state.input[field.id] = val;
+            }
+          }
           url += `&${field.id}=${encodeURIComponent(val)}`;
         }
         try {
@@ -956,7 +980,7 @@ async function renderGAgentServiceDemo(demo) {
   const listSection = createGAgentSection(
     currentLanguage === 'zh' ? '列出所有 GAgent' : 'List All GAgents',
     async () => {
-      const resp = await fetch('/api/GAgentDemo/list');
+      const resp = await fetch('/api/GAgentService/list');
       return await resp.json();
     },
     (data) => {
@@ -981,7 +1005,7 @@ async function renderGAgentServiceDemo(demo) {
     currentLanguage === 'zh' ? '获取 GAgent 详情' : 'Get GAgent Details',
     async (grainType) => {
       if (!grainType) throw new Error('Please enter a GrainType');
-      const resp = await fetch(`/api/GAgentDemo/info?grainType=${encodeURIComponent(grainType)}`);
+      const resp = await fetch(`/api/GAgentService/info?grainType=${encodeURIComponent(grainType)}`);
       return await resp.json();
     },
     (data) => {
@@ -1007,7 +1031,7 @@ async function renderGAgentServiceDemo(demo) {
     currentLanguage === 'zh' ? '按事件查找 GAgent' : 'Find GAgents by Event',
     async (eventTypeName) => {
       if (!eventTypeName) throw new Error('Please enter an event type name');
-      const resp = await fetch(`/api/GAgentDemo/find-by-event?eventTypeName=${encodeURIComponent(eventTypeName)}`);
+      const resp = await fetch(`/api/GAgentService/find-by-event?eventTypeName=${encodeURIComponent(eventTypeName)}`);
       return await resp.json();
     },
     (data) => {
@@ -1210,7 +1234,7 @@ function createGAgentExecuteSection() {
         throw new Error('GrainType and Event Type Name are required');
       }
       
-      const resp = await fetch('/api/GAgentDemo/execute', {
+      const resp = await fetch('/api/GAgentService/execute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1588,6 +1612,533 @@ function hideDescription() {
   // from legacy code. The log panel rendering is now handled by
   // the 'renderLogPanel' function.
 }
+
+// AI Tool Calling Demo rendering
+async function renderAIToolCallingDemo(demo) {
+  // Create demo card
+  const demoCard = document.createElement('div');
+  demoCard.className = 'demo-card';
+  demoCard.style.maxWidth = '1200px';
+  
+  // Title
+  const title = document.createElement('div');
+  title.className = 'demo-title';
+  title.textContent = demo.name[currentLanguage] || demo.name['en'];
+  demoCard.appendChild(title);
+  
+  // Description
+  const desc = document.createElement('div');
+  desc.className = 'demo-desc desc-content';
+  desc.innerHTML = 'Loading...';
+  const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+  fetch(descPath).then(r => r.text()).then(md => {
+    desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+    if (window.hljs) {
+      desc.querySelectorAll('pre code').forEach(block => {
+        hljs.highlightElement(block);
+      });
+    }
+  });
+  demoCard.appendChild(desc);
+  
+  // State management
+  let agentId = null;
+  let chatHistory = [];
+  
+  // Interactive sections container
+  const sectionsContainer = document.createElement('div');
+  sectionsContainer.style.marginTop = '32px';
+  sectionsContainer.style.display = 'grid';
+  sectionsContainer.style.gridTemplateColumns = '1fr 1fr';
+  sectionsContainer.style.gap = '24px';
+  
+  // 1. Initialize Agent Section
+  const initSection = document.createElement('div');
+  initSection.style.background = '#fff';
+  initSection.style.padding = '20px';
+  initSection.style.borderRadius = '8px';
+  initSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  
+  const initTitle = document.createElement('h3');
+  initTitle.style.marginTop = '0';
+  initTitle.style.color = '#1e293b';
+  initTitle.textContent = currentLanguage === 'zh' ? '初始化 AI 代理' : 'Initialize AI Agent';
+  initSection.appendChild(initTitle);
+  
+  // LLM System selector
+  const llmGroup = document.createElement('div');
+  llmGroup.style.marginBottom = '12px';
+  
+  const llmLabel = document.createElement('label');
+  llmLabel.style.display = 'block';
+  llmLabel.style.marginBottom = '4px';
+  llmLabel.style.fontWeight = 'bold';
+  llmLabel.textContent = currentLanguage === 'zh' ? 'LLM 系统:' : 'LLM System:';
+  llmGroup.appendChild(llmLabel);
+  
+  const llmSelect = document.createElement('select');
+  llmSelect.style.width = '100%';
+  llmSelect.style.padding = '8px';
+  llmSelect.style.border = '1px solid #d1d5db';
+  llmSelect.style.borderRadius = '4px';
+  llmGroup.appendChild(llmSelect);
+  
+  initSection.appendChild(llmGroup);
+  
+  // Load LLM options
+  fetch('/api/llm-configs/list').then(r => r.json()).then(systems => {
+    systems.forEach(sys => {
+      const option = document.createElement('option');
+      option.value = sys;
+      option.textContent = sys;
+      llmSelect.appendChild(option);
+    });
+    if (systems.includes('OpenAI')) {
+      llmSelect.value = 'OpenAI';
+    }
+  });
+  
+  const initButton = document.createElement('button');
+  initButton.style.padding = '10px 20px';
+  initButton.style.background = '#3b82f6';
+  initButton.style.color = '#fff';
+  initButton.style.border = 'none';
+  initButton.style.borderRadius = '4px';
+  initButton.style.cursor = 'pointer';
+  initButton.style.fontWeight = 'bold';
+  initButton.textContent = currentLanguage === 'zh' ? '初始化' : 'Initialize';
+  initSection.appendChild(initButton);
+  
+  const initStatus = document.createElement('div');
+  initStatus.style.marginTop = '12px';
+  initStatus.style.padding = '8px';
+  initStatus.style.background = '#f9fafb';
+  initStatus.style.borderRadius = '4px';
+  initStatus.style.color = '#6b7280';
+  initStatus.textContent = currentLanguage === 'zh' ? '等待初始化...' : 'Waiting for initialization...';
+  initSection.appendChild(initStatus);
+  
+  sectionsContainer.appendChild(initSection);
+  
+  // 2. Agent State Section
+  const stateSection = document.createElement('div');
+  stateSection.style.background = '#fff';
+  stateSection.style.padding = '20px';
+  stateSection.style.borderRadius = '8px';
+  stateSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  
+  const stateTitle = document.createElement('h3');
+  stateTitle.style.marginTop = '0';
+  stateTitle.style.color = '#1e293b';
+  stateTitle.textContent = currentLanguage === 'zh' ? '代理状态' : 'Agent State';
+  stateSection.appendChild(stateTitle);
+  
+  const stateContent = document.createElement('div');
+  stateContent.style.padding = '12px';
+  stateContent.style.background = '#f9fafb';
+  stateContent.style.borderRadius = '4px';
+  stateContent.innerHTML = `
+    <div style="margin-bottom:8px;"><strong>${currentLanguage === 'zh' ? '状态' : 'Status'}:</strong> <span id="agentStatus">${currentLanguage === 'zh' ? '未初始化' : 'Not initialized'}</span></div>
+    <div style="margin-bottom:8px;"><strong>${currentLanguage === 'zh' ? '代理 ID' : 'Agent ID'}:</strong> <span id="agentIdDisplay">-</span></div>
+    <div><strong>${currentLanguage === 'zh' ? '可用工具' : 'Available Tools'}:</strong> <span id="toolCount">0</span></div>
+  `;
+  stateSection.appendChild(stateContent);
+  
+  sectionsContainer.appendChild(stateSection);
+  
+  // 3. Available Tools Section (full width)
+  const toolsSection = document.createElement('div');
+  toolsSection.style.background = '#fff';
+  toolsSection.style.padding = '20px';
+  toolsSection.style.borderRadius = '8px';
+  toolsSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  toolsSection.style.gridColumn = '1 / -1';
+  
+  const toolsTitle = document.createElement('h3');
+  toolsTitle.style.marginTop = '0';
+  toolsTitle.style.color = '#1e293b';
+  toolsTitle.textContent = currentLanguage === 'zh' ? '可用工具' : 'Available Tools';
+  toolsSection.appendChild(toolsTitle);
+  
+  const toolsList = document.createElement('div');
+  toolsList.style.display = 'grid';
+  toolsList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+  toolsList.style.gap = '16px';
+  toolsList.innerHTML = `<div style="color:#6b7280;">${currentLanguage === 'zh' ? '初始化后显示工具...' : 'Tools will appear after initialization...'}</div>`;
+  toolsSection.appendChild(toolsList);
+  
+  sectionsContainer.appendChild(toolsSection);
+  
+  // 4. Chat Interface Section (full width)
+  const chatSection = document.createElement('div');
+  chatSection.style.background = '#fff';
+  chatSection.style.padding = '20px';
+  chatSection.style.borderRadius = '8px';
+  chatSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  chatSection.style.gridColumn = '1 / -1';
+  
+  const chatTitle = document.createElement('h3');
+  chatTitle.style.marginTop = '0';
+  chatTitle.style.color = '#1e293b';
+  chatTitle.textContent = currentLanguage === 'zh' ? '与 AI 对话' : 'Chat with AI';
+  chatSection.appendChild(chatTitle);
+  
+  // Chat history
+  const chatHistoryDiv = document.createElement('div');
+  chatHistoryDiv.style.height = '300px';
+  chatHistoryDiv.style.overflowY = 'auto';
+  chatHistoryDiv.style.border = '1px solid #e5e7eb';
+  chatHistoryDiv.style.borderRadius = '4px';
+  chatHistoryDiv.style.padding = '12px';
+  chatHistoryDiv.style.marginBottom = '12px';
+  chatHistoryDiv.style.background = '#f9fafb';
+  chatSection.appendChild(chatHistoryDiv);
+  
+  // Chat input
+  const chatInputGroup = document.createElement('div');
+  chatInputGroup.style.display = 'flex';
+  chatInputGroup.style.gap = '8px';
+  
+  const chatInput = document.createElement('input');
+  chatInput.type = 'text';
+  chatInput.style.flex = '1';
+  chatInput.style.padding = '10px';
+  chatInput.style.border = '1px solid #d1d5db';
+  chatInput.style.borderRadius = '4px';
+  chatInput.placeholder = currentLanguage === 'zh' ? '试试："计算25的平方根" 或 "东京现在几点？"' : 'Try: "Calculate square root of 25" or "What time is it in Tokyo?"';
+  chatInput.disabled = true;
+  chatInputGroup.appendChild(chatInput);
+  
+  const sendButton = document.createElement('button');
+  sendButton.style.padding = '10px 20px';
+  sendButton.style.background = '#10b981';
+  sendButton.style.color = '#fff';
+  sendButton.style.border = 'none';
+  sendButton.style.borderRadius = '4px';
+  sendButton.style.cursor = 'pointer';
+  sendButton.style.fontWeight = 'bold';
+  sendButton.textContent = currentLanguage === 'zh' ? '发送' : 'Send';
+  sendButton.disabled = true;
+  chatInputGroup.appendChild(sendButton);
+  
+  chatSection.appendChild(chatInputGroup);
+  
+  sectionsContainer.appendChild(chatSection);
+  
+  // 5. Tool Call History Section (full width)
+  const historySection = document.createElement('div');
+  historySection.style.background = '#fff';
+  historySection.style.padding = '20px';
+  historySection.style.borderRadius = '8px';
+  historySection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  historySection.style.gridColumn = '1 / -1';
+  
+  const historyTitle = document.createElement('h3');
+  historyTitle.style.marginTop = '0';
+  historyTitle.style.color = '#1e293b';
+  historyTitle.textContent = currentLanguage === 'zh' ? '工具调用历史' : 'Tool Call History';
+  historySection.appendChild(historyTitle);
+  
+  const historyContent = document.createElement('div');
+  historyContent.style.maxHeight = '200px';
+  historyContent.style.overflowY = 'auto';
+  historyContent.style.padding = '12px';
+  historyContent.style.background = '#f9fafb';
+  historyContent.style.borderRadius = '4px';
+  historyContent.innerHTML = `<div style="color:#6b7280;">${currentLanguage === 'zh' ? '工具调用将显示在这里...' : 'Tool calls will appear here...'}</div>`;
+  historySection.appendChild(historyContent);
+  
+  sectionsContainer.appendChild(historySection);
+  
+  // Demo Tools Section
+  const demoSection = document.createElement('div');
+  demoSection.style.background = '#fff';
+  demoSection.style.padding = '20px';
+  demoSection.style.borderRadius = '8px';
+  demoSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+  demoSection.style.gridColumn = '1 / -1';
+  demoSection.style.marginTop = '24px';
+  
+  const demoTitle = document.createElement('h3');
+  demoTitle.style.marginTop = '0';
+  demoTitle.style.color = '#1e293b';
+  demoTitle.textContent = currentLanguage === 'zh' ? '直接测试工具' : 'Test Tools Directly';
+  demoSection.appendChild(demoTitle);
+  
+  const demoButtons = document.createElement('div');
+  demoButtons.style.display = 'flex';
+  demoButtons.style.gap = '12px';
+  demoButtons.style.marginBottom = '16px';
+  
+  const mathDemoBtn = document.createElement('button');
+  mathDemoBtn.style.padding = '8px 16px';
+  mathDemoBtn.style.background = '#8b5cf6';
+  mathDemoBtn.style.color = '#fff';
+  mathDemoBtn.style.border = 'none';
+  mathDemoBtn.style.borderRadius = '4px';
+  mathDemoBtn.style.cursor = 'pointer';
+  mathDemoBtn.textContent = currentLanguage === 'zh' ? '测试数学工具' : 'Test Math Tool';
+  demoButtons.appendChild(mathDemoBtn);
+  
+  const timeDemoBtn = document.createElement('button');
+  timeDemoBtn.style.padding = '8px 16px';
+  timeDemoBtn.style.background = '#f59e0b';
+  timeDemoBtn.style.color = '#fff';
+  timeDemoBtn.style.border = 'none';
+  timeDemoBtn.style.borderRadius = '4px';
+  timeDemoBtn.style.cursor = 'pointer';
+  timeDemoBtn.textContent = currentLanguage === 'zh' ? '测试时间工具' : 'Test Time Tool';
+  demoButtons.appendChild(timeDemoBtn);
+  
+  demoSection.appendChild(demoButtons);
+  
+  const demoResult = document.createElement('div');
+  demoResult.style.padding = '12px';
+  demoResult.style.background = '#f9fafb';
+  demoResult.style.borderRadius = '4px';
+  demoResult.style.minHeight = '60px';
+  demoSection.appendChild(demoResult);
+  
+  sectionsContainer.appendChild(demoSection);
+  
+  demoCard.appendChild(sectionsContainer);
+  mainContent.appendChild(demoCard);
+  
+  // Event handlers
+  initButton.onclick = async () => {
+    try {
+      initButton.disabled = true;
+      initStatus.textContent = currentLanguage === 'zh' ? '初始化中...' : 'Initializing...';
+      initStatus.style.color = '#3b82f6';
+      
+      const resp = await fetch('/api/AIToolCallingDemo/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          LLMSystem: llmSelect.value
+        })
+      });
+      
+      const data = await resp.json();
+      
+      if (data.success) {
+        agentId = data.agentId;
+        initStatus.textContent = currentLanguage === 'zh' ? '✓ 初始化成功！' : '✓ Initialized successfully!';
+        initStatus.style.color = '#10b981';
+        
+        // Update state display
+        document.getElementById('agentStatus').textContent = currentLanguage === 'zh' ? '已初始化' : 'Initialized';
+        document.getElementById('agentStatus').style.color = '#10b981';
+        document.getElementById('agentIdDisplay').textContent = agentId;
+        document.getElementById('toolCount').textContent = data.availableTools.length;
+        
+        // Display available tools
+        toolsList.innerHTML = '';
+        data.availableTools.forEach(tool => {
+          const toolCard = document.createElement('div');
+          toolCard.style.padding = '12px';
+          toolCard.style.background = '#f3f4f6';
+          toolCard.style.borderRadius = '4px';
+          toolCard.innerHTML = `
+            <div style="font-weight:bold;color:#1f2937;margin-bottom:4px;">${tool.name}</div>
+            <div style="font-size:0.9em;color:#6b7280;margin-bottom:4px;">${tool.description}</div>
+            <div style="font-size:0.85em;color:#9ca3af;">Functions: ${tool.functions.join(', ')}</div>
+          `;
+          toolsList.appendChild(toolCard);
+        });
+        
+        // Enable chat
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+        chatInput.focus();
+      } else {
+        initStatus.textContent = `✗ ${data.error}`;
+        initStatus.style.color = '#ef4444';
+      }
+    } catch (error) {
+      initStatus.textContent = `✗ ${error.message}`;
+      initStatus.style.color = '#ef4444';
+    } finally {
+      initButton.disabled = false;
+    }
+  };
+  
+  // Chat functionality
+  const sendMessage = async () => {
+    const message = chatInput.value.trim();
+    if (!message || !agentId) return;
+    
+    chatInput.disabled = true;
+    sendButton.disabled = true;
+    
+    // Add user message to chat
+    addChatMessage('user', message);
+    chatInput.value = '';
+    
+    try {
+      const resp = await fetch('/api/AIToolCallingDemo/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: agentId,
+          message: message
+        })
+      });
+      
+      const data = await resp.json();
+      
+      if (data.success) {
+        // Add AI response
+        addChatMessage('assistant', data.response);
+        
+        // Update tool call history if any
+        if (data.toolCalls && data.toolCalls.length > 0) {
+          updateToolHistory();
+        }
+      } else {
+        addChatMessage('system', `Error: ${data.error}`);
+      }
+    } catch (error) {
+      addChatMessage('system', `Error: ${error.message}`);
+    } finally {
+      chatInput.disabled = false;
+      sendButton.disabled = false;
+      chatInput.focus();
+    }
+  };
+  
+  sendButton.onclick = sendMessage;
+  chatInput.onkeypress = (e) => {
+    if (e.key === 'Enter') sendMessage();
+  };
+  
+  // Add chat message
+  function addChatMessage(role, content) {
+    const messageDiv = document.createElement('div');
+    messageDiv.style.marginBottom = '12px';
+    
+    const roleSpan = document.createElement('span');
+    roleSpan.style.fontWeight = 'bold';
+    roleSpan.style.marginRight = '8px';
+    
+    if (role === 'user') {
+      roleSpan.style.color = '#3b82f6';
+      roleSpan.textContent = currentLanguage === 'zh' ? '用户:' : 'User:';
+    } else if (role === 'assistant') {
+      roleSpan.style.color = '#10b981';
+      roleSpan.textContent = 'AI:';
+    } else {
+      roleSpan.style.color = '#ef4444';
+      roleSpan.textContent = currentLanguage === 'zh' ? '系统:' : 'System:';
+    }
+    
+    messageDiv.appendChild(roleSpan);
+    messageDiv.appendChild(document.createTextNode(content));
+    
+    chatHistoryDiv.appendChild(messageDiv);
+    chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+  }
+  
+  // Update tool history
+  async function updateToolHistory() {
+    if (!agentId) return;
+    
+    try {
+      const resp = await fetch(`/api/AIToolCallingDemo/history/${agentId}`);
+      const data = await resp.json();
+      
+      if (data.success && data.toolCalls.length > 0) {
+        historyContent.innerHTML = '';
+        data.toolCalls.forEach(call => {
+          const callDiv = document.createElement('div');
+          callDiv.style.marginBottom = '8px';
+          callDiv.style.padding = '8px';
+          callDiv.style.background = '#fff';
+          callDiv.style.borderRadius = '4px';
+          callDiv.style.border = '1px solid #e5e7eb';
+          callDiv.innerHTML = `
+            <div style="font-size:0.85em;color:#6b7280;">${new Date(call.timestamp).toLocaleTimeString()}</div>
+            <div style="font-weight:bold;color:#1f2937;">${call.tool} - ${call.function}</div>
+            <div style="font-size:0.9em;color:#4b5563;">${call.parameters}</div>
+          `;
+          historyContent.appendChild(callDiv);
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch tool history:', error);
+    }
+  }
+  
+  // Demo tool buttons
+  mathDemoBtn.onclick = async () => {
+    try {
+      mathDemoBtn.disabled = true;
+      demoResult.innerHTML = '<span style="color:#6b7280;">Testing math tool...</span>';
+      
+      const resp = await fetch('/api/AIToolCallingDemo/demo-tools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ demoMath: true, demoTime: false })
+      });
+      
+      const data = await resp.json();
+      
+      if (data.success) {
+        demoResult.innerHTML = '';
+        data.demos.forEach(demo => {
+          demoResult.innerHTML += `
+            <div style="margin-bottom:8px;">
+              <strong>${demo.tool}:</strong> ${demo.operation}<br>
+              <span style="color:#10b981;">Result: ${demo.result}</span>
+            </div>
+          `;
+        });
+      } else {
+        demoResult.innerHTML = `<span style="color:#ef4444;">Error: ${data.error}</span>`;
+      }
+    } catch (error) {
+      demoResult.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+    } finally {
+      mathDemoBtn.disabled = false;
+    }
+  };
+  
+  timeDemoBtn.onclick = async () => {
+    try {
+      timeDemoBtn.disabled = true;
+      demoResult.innerHTML = '<span style="color:#6b7280;">Testing time tool...</span>';
+      
+      const resp = await fetch('/api/AIToolCallingDemo/demo-tools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ demoMath: false, demoTime: true })
+      });
+      
+      const data = await resp.json();
+      
+      if (data.success) {
+        demoResult.innerHTML = '';
+        data.demos.forEach(demo => {
+          demoResult.innerHTML += `
+            <div style="margin-bottom:8px;">
+              <strong>${demo.tool}:</strong> ${demo.operation}<br>
+              <span style="color:#10b981;">Result: ${demo.result}</span>
+            </div>
+          `;
+        });
+      } else {
+        demoResult.innerHTML = `<span style="color:#ef4444;">Error: ${data.error}</span>`;
+      }
+    } catch (error) {
+      demoResult.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+    } finally {
+      timeDemoBtn.disabled = false;
+    }
+  };
+}
+
+// Initial render
+// ... existing code ...
 </script>
 </body>
 </html>

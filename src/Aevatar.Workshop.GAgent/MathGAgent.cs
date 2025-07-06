@@ -29,7 +29,7 @@ public class MathCalculateEvent : EventBase
     [Id(0)] public string Expression { get; set; } = string.Empty;
 }
 
-public interface IMathGAgent : IGAgent
+public interface IMathGAgent : IStateGAgent<MathGAgentState>
 {
     Task<double> CalculateAsync(string expression);
 }
