@@ -137,11 +137,17 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 {
                     try
                     {
+                        Logger.LogInformation("[{Timestamp}] Tool 'calculate_math' called with expression: '{Expression}'", 
+                            DateTime.UtcNow.ToString("HH:mm:ss.fff"), expression);
                         var result = await _mathGAgent.CalculateAsync(expression);
+                        Logger.LogInformation("[{Timestamp}] Tool 'calculate_math' completed with result: {Result}", 
+                            DateTime.UtcNow.ToString("HH:mm:ss.fff"), result);
                         return $"The result of {expression} is {result}";
                     }
                     catch (Exception ex)
                     {
+                        Logger.LogError(ex, "[{Timestamp}] Tool 'calculate_math' failed for expression: '{Expression}'", 
+                            DateTime.UtcNow.ToString("HH:mm:ss.fff"), expression);
                         return $"Error calculating {expression}: {ex.Message}";
                     }
                 },
@@ -210,11 +216,17 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 {
                     try
                     {
+                        Logger.LogInformation("[{Timestamp}] Tool 'get_time_in_zone' called with timezone: '{TimeZone}'", 
+                            DateTime.UtcNow.ToString("HH:mm:ss.fff"), timeZone);
                         var result = await _timeGAgent.GetTimeInZoneAsync(timeZone);
+                        Logger.LogInformation("[{Timestamp}] Tool 'get_time_in_zone' completed with result: {Result}", 
+                            DateTime.UtcNow.ToString("HH:mm:ss.fff"), result);
                         return $"Current time in {timeZone}: {result}";
                     }
                     catch (Exception ex)
                     {
+                        Logger.LogError(ex, "[{Timestamp}] Tool 'get_time_in_zone' failed for timezone: '{TimeZone}'", 
+                            DateTime.UtcNow.ToString("HH:mm:ss.fff"), timeZone);
                         return $"Error getting time in {timeZone}: {ex.Message}";
                     }
                 },
@@ -285,11 +297,15 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 "1. calculate_math: Use this to calculate any mathematical expression (e.g., square roots, arithmetic operations)\n" +
                 "2. convert_time: Use this to convert time between different timezones\n" +
                 "3. get_time_in_zone: Use this to get the current time in a specific timezone\n\n" +
-                "IMPORTANT: When a user asks for calculations or time-related queries, you MUST use the appropriate tool. " +
-                "For example:\n" +
-                "- If user says 'calculate square root of 10' or '计算10的平方根', use calculate_math with expression='sqrt(10)'\n" +
-                "- If user asks 'what time is it in Tokyo', use get_time_in_zone with timeZone='JST'\n" +
-                "Always use the tools when applicable and explain what you're doing.");
+                "IMPORTANT RULES:\n" +
+                "- You MUST use calculate_math for ANY mathematical question, including percentages, arithmetic, etc.\n" +
+                "- Convert natural language to math expressions. Examples:\n" +
+                "  • '250的15%是多少？' or 'What is 15% of 250?' → use calculate_math('250 * 0.15')\n" +
+                "  • '计算10的平方根' or 'square root of 10' → use calculate_math('sqrt(10)')\n" +
+                "  • '100加50' or '100 plus 50' → use calculate_math('100 + 50')\n" +
+                "- For time queries like '东京现在几点' or 'What time in Tokyo', use get_time_in_zone('JST')\n" +
+                "- ALWAYS use tools for calculations, NEVER calculate in your head\n" +
+                "- Respond in the same language as the user's query");
 
             // Add conversation history
             foreach (var msg in State.ChatHistory.TakeLast(10)) // Keep last 10 messages for context
@@ -321,32 +337,48 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
             };
 
             // Get response with automatic tool invocation and timeout
-            Logger.LogInformation("Calling chat completion service...");
+            var startTime = DateTime.UtcNow;
+            Logger.LogInformation("[{Timestamp}] Starting LLM call for message: '{Message}'", startTime.ToString("HH:mm:ss.fff"), message);
             
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25)); // 25 seconds timeout (less than Orleans' 30s)
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(40)); // Increased to 40 seconds for debugging
             try
             {
+                Logger.LogInformation("[{Timestamp}] Sending request to OpenAI API...", DateTime.UtcNow.ToString("HH:mm:ss.fff"));
+                
                 var response = await chatService.GetChatMessageContentAsync(
                     chatHistory,
                     executionSettings,
                     _kernel,
                     cts.Token);
                 
-                Logger.LogInformation("Received response from chat completion service");
+                var endTime = DateTime.UtcNow;
+                var duration = endTime - startTime;
+                Logger.LogInformation("[{Timestamp}] Received response from LLM after {Duration}ms", endTime.ToString("HH:mm:ss.fff"), duration.TotalMilliseconds);
+                
                 var responseText = response.Content ?? "I couldn't generate a response.";
+
+                // Log if tools were called
+                if (response.Metadata?.TryGetValue("ToolCalls", out var toolCalls) == true)
+                {
+                    Logger.LogInformation("[{Timestamp}] Tools were called during this request", DateTime.UtcNow.ToString("HH:mm:ss.fff"));
+                }
 
                 // Add assistant message to history
                 RaiseEvent(new ChatMessageLogEvent { Role = "assistant", Message = responseText });
 
                 await ConfirmEvents();
 
-                Logger.LogInformation("Chat response generated successfully");
+                Logger.LogInformation("[{Timestamp}] Chat response generated successfully", DateTime.UtcNow.ToString("HH:mm:ss.fff"));
                 return responseText;
             }
             catch (TaskCanceledException)
             {
-                Logger.LogError("Chat completion timed out after 25 seconds");
-                return "Sorry, the request timed out. This might be due to network issues or high load. Please try again.";
+                var timeoutDuration = DateTime.UtcNow - startTime;
+                Logger.LogError("[{Timestamp}] Chat completion timed out after {Duration}ms. Message was: '{Message}'", 
+                    DateTime.UtcNow.ToString("HH:mm:ss.fff"), 
+                    timeoutDuration.TotalMilliseconds,
+                    message);
+                return $"⏱️ Request timed out after {timeoutDuration.TotalSeconds:F1} seconds. The AI received your message but is taking longer than expected to process it. Please try again or simplify your request.";
             }
         }
         catch (Exception ex)
