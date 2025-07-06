@@ -151,7 +151,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 [
                     new KernelParameterMetadata("expression")
                     {
-                        Description = "The mathematical expression to calculate",
+                        Description = "The mathematical expression to calculate. Examples: 'sqrt(10)' for square root, '10+5' for addition, '10*5' for multiplication, '10/5' for division, '10^2' for power",
                         IsRequired = true,
                         ParameterType = typeof(string)
                     }
@@ -278,12 +278,18 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
             // Create chat history
             var chatHistory = new ChatHistory();
             
-            // Add system message
+            // Add system message with clearer instructions
             chatHistory.AddSystemMessage(
-                "You are a helpful AI assistant with access to mathematical calculation and time conversion tools. " +
-                "When users ask you to calculate math expressions, use the calculate_math tool. " +
-                "When users ask about time conversions or time in different timezones, use the convert_time or get_time_in_zone tools. " +
-                "Always explain what tool you're using and why.");
+                "You are a helpful AI assistant with access to mathematical calculation and time conversion tools.\n\n" +
+                "Available tools:\n" +
+                "1. calculate_math: Use this to calculate any mathematical expression (e.g., square roots, arithmetic operations)\n" +
+                "2. convert_time: Use this to convert time between different timezones\n" +
+                "3. get_time_in_zone: Use this to get the current time in a specific timezone\n\n" +
+                "IMPORTANT: When a user asks for calculations or time-related queries, you MUST use the appropriate tool. " +
+                "For example:\n" +
+                "- If user says 'calculate square root of 10' or '计算10的平方根', use calculate_math with expression='sqrt(10)'\n" +
+                "- If user asks 'what time is it in Tokyo', use get_time_in_zone with timeZone='JST'\n" +
+                "Always use the tools when applicable and explain what you're doing.");
 
             // Add conversation history
             foreach (var msg in State.ChatHistory.TakeLast(10)) // Keep last 10 messages for context
@@ -303,27 +309,45 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
             // Add current user message
             chatHistory.AddUserMessage(message);
 
-            // Configure execution settings for automatic tool calling
+            Logger.LogInformation("Sending request to LLM with message: {Message}", message);
+            Logger.LogInformation("Available tools in kernel: {Tools}", string.Join(", ", _kernel.Plugins.SelectMany(p => p.Select(f => f.Name))));
+
+            // Configure execution settings for automatic tool calling with timeout
             var executionSettings = new OpenAIPromptExecutionSettings
             {
-                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+                Temperature = 0.1,  // Lower temperature for more deterministic tool usage
+                MaxTokens = 1000    // Limit response length
             };
 
-            // Get response with automatic tool invocation
-            var response = await chatService.GetChatMessageContentAsync(
-                chatHistory,
-                executionSettings,
-                _kernel);
+            // Get response with automatic tool invocation and timeout
+            Logger.LogInformation("Calling chat completion service...");
+            
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(25)); // 25 seconds timeout (less than Orleans' 30s)
+            try
+            {
+                var response = await chatService.GetChatMessageContentAsync(
+                    chatHistory,
+                    executionSettings,
+                    _kernel,
+                    cts.Token);
+                
+                Logger.LogInformation("Received response from chat completion service");
+                var responseText = response.Content ?? "I couldn't generate a response.";
 
-            var responseText = response.Content ?? "I couldn't generate a response.";
+                // Add assistant message to history
+                RaiseEvent(new ChatMessageLogEvent { Role = "assistant", Message = responseText });
 
-            // Add assistant message to history
-            RaiseEvent(new ChatMessageLogEvent { Role = "assistant", Message = responseText });
+                await ConfirmEvents();
 
-            await ConfirmEvents();
-
-            Logger.LogInformation("Chat response generated successfully");
-            return responseText;
+                Logger.LogInformation("Chat response generated successfully");
+                return responseText;
+            }
+            catch (TaskCanceledException)
+            {
+                Logger.LogError("Chat completion timed out after 25 seconds");
+                return "Sorry, the request timed out. This might be due to network issues or high load. Please try again.";
+            }
         }
         catch (Exception ex)
         {
