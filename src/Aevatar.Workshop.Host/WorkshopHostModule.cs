@@ -1,5 +1,6 @@
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.MCP;
 using Aevatar.GAgents.MCP.Provider;
 using Aevatar.GAgents.SemanticKernel.Extensions;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,8 @@ namespace Aevatar.Workshop.Host;
     typeof(AbpAutofacModule),
     typeof(AbpAutoMapperModule),
     typeof(AevatarModule),
-    typeof(AbpBlobStoringModule)
+    typeof(AbpBlobStoringModule),
+    typeof(AevatarGAgentsMCPModule)
 )]
 public class WorkshopHostModule : AbpModule
 {
@@ -35,7 +37,6 @@ public class WorkshopHostModule : AbpModule
         context.Services.AddHttpClient();
         context.Services.AddSingleton<IEventDispatcher, DefaultEventDispatcher>();
         context.Services.AddSingleton<IBlobContainer, MockBlobContainer>();
-        context.Services.AddSingleton<IMCPClientProvider, MockMCPClientProvider>();
         context.Services.Configure<SystemLLMConfigOptions>(configuration);
         context.Services.AddSemanticKernel();
         Configure<AbpBlobStoringOptions>(options =>
