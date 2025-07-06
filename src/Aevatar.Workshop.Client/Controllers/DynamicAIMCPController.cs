@@ -43,6 +43,10 @@ When using tools, be clear about the results and how they help answer the user's
             await agent.InitializeAsync(new InitializeDto
             {
                 Instructions = systemPrompt,
+                LLMConfig = new LLMConfigDto
+                {
+                    SystemLLM = "DeepSeek" // Use the DeepSeek configuration from appsettings.json
+                }
             });
             
             return Ok(new
