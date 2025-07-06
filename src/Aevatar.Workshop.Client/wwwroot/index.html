@@ -543,6 +543,12 @@ const demos = [
     desc: { en: 'demodesc/MCPDemo.md', zh: 'demodesc/MCPDemo.zh.md' },
     isCustom: true // Custom rendering for MCP demo
   },
+  {
+    key: 'DynamicAIMCPDemo',
+    name: { en: 'Dynamic AI MCP Integration', zh: '动态 AI MCP 集成' },
+    desc: { en: 'demodesc/DynamicAIMCPDemo.md', zh: 'demodesc/DynamicAIMCPDemo.zh.md' },
+    isCustom: true // Custom rendering for dynamic AI MCP integration
+  },
 ];
 const logs = [
   { key: 'HostLog', name: 'Host Log' },
@@ -682,6 +688,11 @@ async function renderMainContent() {
   
   if (demo.isCustom && demo.key === 'MCPDemo') {
     renderMCPDemo(demo);
+    return;
+  }
+  
+  if (demo.isCustom && demo.key === 'DynamicAIMCPDemo') {
+    renderDynamicAIMCPDemo(demo);
     return;
   }
 
@@ -2834,6 +2845,83 @@ async function renderMCPDemo(demo) {
       console.error('Failed to fetch history:', error);
     }
   }
+}
+
+// Dynamic AI MCP Demo rendering
+async function renderDynamicAIMCPDemo(demo) {
+  // Create an iframe to load the standalone demo page
+  const demoCard = document.createElement('div');
+  demoCard.className = 'demo-card';
+  demoCard.style.maxWidth = '100%';
+  demoCard.style.height = '100%';
+  
+  // Title
+  const title = document.createElement('div');
+  title.className = 'demo-title';
+  title.textContent = demo.name[currentLanguage] || demo.name['en'];
+  demoCard.appendChild(title);
+  
+  // Description
+  const desc = document.createElement('div');
+  desc.className = 'demo-desc desc-content';
+  desc.innerHTML = 'Loading...';
+  const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+  fetch(descPath).then(r => r.text()).then(md => {
+    desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+    if (window.hljs) {
+      desc.querySelectorAll('pre code').forEach(block => {
+        hljs.highlightElement(block);
+      });
+    }
+  });
+  demoCard.appendChild(desc);
+  
+  // Link to standalone demo
+  const linkContainer = document.createElement('div');
+  linkContainer.style.marginTop = '20px';
+  linkContainer.style.padding = '16px';
+  linkContainer.style.background = '#f0f9ff';
+  linkContainer.style.border = '1px solid #0ea5e9';
+  linkContainer.style.borderRadius = '8px';
+  linkContainer.style.textAlign = 'center';
+  
+  const link = document.createElement('a');
+  link.href = '/demos/dynamic-ai-mcp.html';
+  link.target = '_blank';
+  link.style.display = 'inline-block';
+  link.style.padding = '12px 24px';
+  link.style.background = '#0ea5e9';
+  link.style.color = 'white';
+  link.style.textDecoration = 'none';
+  link.style.borderRadius = '6px';
+  link.style.fontWeight = 'bold';
+  link.style.transition = 'background-color 0.2s';
+  link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+  link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+  link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+  
+  linkContainer.appendChild(link);
+  demoCard.appendChild(linkContainer);
+  
+  // Demo iframe
+  const iframeContainer = document.createElement('div');
+  iframeContainer.style.marginTop = '20px';
+  iframeContainer.style.height = '800px';
+  iframeContainer.style.border = '1px solid #e5e7eb';
+  iframeContainer.style.borderRadius = '8px';
+  iframeContainer.style.overflow = 'hidden';
+  
+  const iframe = document.createElement('iframe');
+  iframe.src = '/demos/dynamic-ai-mcp.html';
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.border = 'none';
+  iframe.style.background = 'white';
+  
+  iframeContainer.appendChild(iframe);
+  demoCard.appendChild(iframeContainer);
+  
+  mainContent.appendChild(demoCard);
 }
 
 // Initial render
