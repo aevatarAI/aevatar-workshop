@@ -367,17 +367,73 @@
                 `;
 
                 if (result.hasResult) {
+                    // CRITICAL: Get the actual result content, never show undefined
+                    let displayContent = null;
+                    
+                    // Try multiple sources to find the actual content
+                    if (result.resultContent !== undefined && result.resultContent !== null) {
+                        displayContent = result.resultContent;
+                    } else if (result.formattedResult && result.formattedResult.value !== undefined) {
+                        displayContent = result.formattedResult.value;
+                    } else if (result.formattedResult && result.formattedResult.raw !== undefined) {
+                        displayContent = result.formattedResult.raw;
+                    } else if (data.result !== undefined) {
+                        displayContent = data.result;
+                    } else {
+                        // Last resort: show the entire data object
+                        displayContent = data;
+                    }
+                    
+                    // Format the content for display
+                    let formattedHtml = '';
+                    try {
+                        // Try to pretty-print if JSON
+                        const jsonStr = typeof displayContent === 'string' ? displayContent : JSON.stringify(displayContent);
+                        const parsed = JSON.parse(jsonStr);
+                        formattedHtml = `<pre>${escapeHtml(JSON.stringify(parsed, null, 2))}</pre>`;
+                    } catch (e) {
+                        // Not JSON, display as-is
+                        formattedHtml = `<pre>${escapeHtml(String(displayContent))}</pre>`;
+                    }
+                    
                     content += `
                         <div class="result-box">
                             <div class="result-header">
                                 <div class="result-title">Execution Result</div>
-                                <div class="result-type">${result.resultType}</div>
+                                <div class="result-type">${result.resultType || 'Response'}</div>
                             </div>
-                            <div class="result-content ${result.formattedResult?.type === 'json' ? 'json' : ''}">
-                                ${formatResultContent(result.formattedResult, result.resultContent)}
+                            <div class="result-content">
+                                ${formattedHtml}
                             </div>
                         </div>
                     `;
+                    
+                    // Try to extract and display Result field separately
+                    let resultFieldValue = null;
+                    try {
+                        const jsonStr = typeof displayContent === 'string' ? displayContent : JSON.stringify(displayContent);
+                        const parsed = JSON.parse(jsonStr);
+                        if (parsed.Result !== undefined && parsed.Result !== null) {
+                            resultFieldValue = parsed.Result;
+                        }
+                    } catch (e) {
+                        // Not JSON or no Result field
+                    }
+                    
+                    // If Result field exists, display it in a separate box
+                    if (resultFieldValue !== null) {
+                        content += `
+                            <div class="result-box" style="background: #f0fff4; border-color: #34d399; margin-top: 16px;">
+                                <div class="result-header">
+                                    <div class="result-title" style="color: #059669;">Result Field Value</div>
+                                    <div class="result-type" style="background: #059669;">Extracted</div>
+                                </div>
+                                <div class="result-content">
+                                    <pre>${escapeHtml(String(resultFieldValue))}</pre>
+                                </div>
+                            </div>
+                        `;
+                    }
                 }
                 content += '</div>';
                 
@@ -399,114 +455,59 @@
         function formatResultContent(formattedResult, rawContent) {
             console.log('Formatting result:', formattedResult, 'Raw content:', rawContent);
             
-            // Priority 1: Extract Result from rawContent
+            // Display the raw content as-is, like in the history
             if (rawContent) {
                 try {
+                    // Try to parse and prettify if it's JSON
                     const jsonStr = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
                     const parsed = JSON.parse(jsonStr);
-                    if (parsed.Result !== undefined && parsed.Result !== null) {
-                        console.log('Extracted Result from rawContent:', parsed.Result);
-                        return `<pre>${escapeHtml(parsed.Result)}</pre>`;
-                    }
+                    const prettified = JSON.stringify(parsed, null, 2);
+                    console.log('Displaying prettified JSON');
+                    return `<pre>${escapeHtml(prettified)}</pre>`;
                 } catch (e) {
-                    console.log('Failed to parse raw content:', e);
+                    // Not valid JSON, display as-is
+                    console.log('Not valid JSON, displaying as plain text');
+                    return `<pre>${escapeHtml(String(rawContent))}</pre>`;
                 }
             }
             
-            // Priority 2: Extract Result from formattedResult
-            if (formattedResult) {
-                try {
-                    let jsonStr = '';
-                    if (formattedResult.value) {
-                        jsonStr = formattedResult.value;
-                    } else if (formattedResult.raw) {
-                        jsonStr = formattedResult.raw;
-                    } else if (typeof formattedResult === 'string') {
-                        jsonStr = formattedResult;
-                    }
-                    
-                    if (jsonStr) {
-                        const parsed = JSON.parse(jsonStr);
-                        if (parsed.Result !== undefined && parsed.Result !== null) {
-                            console.log('Extracted Result from formattedResult:', parsed.Result);
-                            return `<pre>${escapeHtml(parsed.Result)}</pre>`;
-                        }
-                    }
-                } catch (e) {
-                    console.log('Failed to parse formatted result:', e);
-                }
-            }
-            
-            // Fallback
+            // If no raw content, try formattedResult
             const result = formattedResult;
-            if (!result) return '<pre>No result data</pre>';
+            if (!result) return '<pre>No result data available</pre>';
             
-            // Handle string types
-            if (result.type === 'string' || result.type === 'multiline_string') {
-                const value = result.value !== undefined ? String(result.value) : '';
-                return `<pre>${escapeHtml(value)}</pre>
-                    ${result.lineCount && result.lineCount > 5 ? `<div style="margin-top: 10px; color: #666;">Total lines: ${result.lineCount}</div>` : ''}`;
+            // Handle different result types but always show full content
+            if (result.type === 'json' && result.formatted) {
+                return `<pre>${escapeHtml(result.formatted)}</pre>`;
             }
             
-            // Handle JSON type - extract Result field if present
-            if (result.type === 'json') {
-                try {
-                    // Try to parse the JSON and extract Result field
-                    const jsonStr = result.value || result.raw || '';
-                    const parsed = JSON.parse(jsonStr);
-                    if (parsed.Result !== undefined) {
-                        // Display only the Result field
-                        return `<pre>${escapeHtml(parsed.Result)}</pre>`;
-                    }
-                } catch (e) {
-                    console.log('Failed to extract Result from JSON:', e);
-                }
-                // Fallback to formatted display
-                const content = result.formatted || result.value || '';
-                return `<pre>${escapeHtml(typeof content === 'string' ? content : JSON.stringify(content, null, 2))}</pre>`;
-            }
-            
-            // Handle array type
-            if (result.type === 'array') {
-                return `<div>Array with ${result.count || 0} items:</div>
-                    <pre>${escapeHtml(JSON.stringify(result.items || [], null, 2))}</pre>`;
-            }
-            
-            // Handle object type
-            if (result.type === 'object') {
-                return `<div>Object with ${result.propertyCount || 0} properties:</div>
-                    <pre>${escapeHtml(JSON.stringify(result.properties || {}, null, 2))}</pre>`;
-            }
-            
-            // Handle complex objects
-            if (result.type === 'complex_object') {
-                const value = result.formatted || result.value || '';
-                return `<div>Complex object (${result.typeName || 'Unknown'}):</div>
-                    <pre>${escapeHtml(typeof value === 'string' ? value : JSON.stringify(value, null, 2))}</pre>`;
-            }
-            
-            // Handle null type
-            if (result.type === 'null') {
-                return '<pre>null</pre>';
-            }
-            
-            // Handle primitive types (number, boolean, etc.)
-            if (result.type && result.value !== undefined) {
-                return `<pre>${escapeHtml(String(result.value))}</pre>`;
-            }
-            
-            // Fallback: try to display whatever we have
             if (result.value !== undefined) {
-                return `<pre>${escapeHtml(String(result.value))}</pre>`;
+                try {
+                    // Try to prettify if it's JSON
+                    const parsed = typeof result.value === 'string' ? JSON.parse(result.value) : result.value;
+                    const prettified = JSON.stringify(parsed, null, 2);
+                    return `<pre>${escapeHtml(prettified)}</pre>`;
+                } catch (e) {
+                    // Not JSON, display as-is
+                    return `<pre>${escapeHtml(String(result.value))}</pre>`;
+                }
             }
             
-            // Last resort: stringify the entire result
-            return `<pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+            // Last resort: stringify whatever we have
+            try {
+                const stringified = JSON.stringify(result, null, 2);
+                return `<pre>${escapeHtml(stringified)}</pre>`;
+            } catch (e) {
+                console.error('Failed to stringify result:', e);
+                return '<pre>Unable to display result</pre>';
+            }
         }
 
         function escapeHtml(text) {
+            if (text === undefined || text === null) {
+                return 'No data available';
+            }
             const div = document.createElement('div');
-            div.textContent = text;
+            div.textContent = String(text);
             return div.innerHTML;
         }
 

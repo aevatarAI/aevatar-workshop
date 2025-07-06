@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCP Debug Tool</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .debug-section { 
+            background: #f5f5f5; 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        pre { 
+            background: white; 
+            padding: 10px; 
+            border: 1px solid #ccc;
+            overflow-x: auto;
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log-entry { 
+            margin: 5px 0; 
+            padding: 5px;
+            background: #e9ecef;
+            border-radius: 3px;
+        }
+        .log-time { color: #666; font-size: 12px; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MCP Debug Tool</h1>
+
+        <div class="debug-section">
+            <h2>Quick Test</h2>
+            <button onclick="quickTest()">Run Full Test Cycle</button>
+            <button onclick="clearLogs()">Clear Logs</button>
+        </div>
+
+        <div class="debug-section">
+            <h2>Raw API Test</h2>
+            <button onclick="testRawAPI()">Test Raw API Response</button>
+        </div>
+
+        <div class="debug-section">
+            <h2>Debug Logs</h2>
+            <div id="logs"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>Response Data</h2>
+            <pre id="responseData">No data yet</pre>
+        </div>
+    </div>
+
+    <script>
+        let currentAgentId = null;
+
+        function log(message, type = 'info') {
+            const logsDiv = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="${type}">${message}</span>`;
+            logsDiv.appendChild(entry);
+            console.log(`[${time}] ${message}`);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('responseData').innerText = 'No data yet';
+        }
+
+        async function quickTest() {
+            clearLogs();
+            log('Starting quick test...');
+
+            try {
+                // Step 1: Initialize
+                log('Step 1: Initializing MCP server...');
+                const initResponse = await fetch('/api/MCPDemo/initialize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        servers: [{
+                            serverName: 'filesystem',
+                            command: 'npx',
+                            args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp']
+                        }],
+                        timeoutSeconds: 30
+                    })
+                });
+
+                const initData = await initResponse.json();
+                log(`Initialize response: ${JSON.stringify(initData, null, 2)}`);
+                
+                if (!initData.success) {
+                    log(`Initialize failed: ${initData.error}`, 'error');
+                    return;
+                }
+
+                currentAgentId = initData.agentId;
+                log(`Agent initialized: ${currentAgentId}`, 'success');
+                log(`Tools available: ${Object.keys(initData.availableTools).join(', ')}`);
+
+                // Step 2: Call tool
+                log('Step 2: Calling list_directory tool...');
+                const callResponse = await fetch('/api/MCPDemo/tool-call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        agentId: currentAgentId,
+                        serverName: 'filesystem',
+                        toolName: 'filesystem.list_directory',
+                        arguments: { path: '/tmp' }
+                    })
+                });
+
+                const callData = await callResponse.json();
+                log(`Tool call response received`);
+                
+                // Display full response
+                document.getElementById('responseData').innerText = JSON.stringify(callData, null, 2);
+
+                // Analyze response structure
+                log('Analyzing response structure...');
+                if (callData.resultDisplay) {
+                    log(`resultDisplay.hasResult: ${callData.resultDisplay.hasResult}`);
+                    log(`resultDisplay.resultType: ${callData.resultDisplay.resultType}`);
+                    log(`resultDisplay.resultContent type: ${typeof callData.resultDisplay.resultContent}`);
+                    log(`resultDisplay.formattedResult type: ${typeof callData.resultDisplay.formattedResult}`);
+                    
+                    if (callData.resultDisplay.resultContent) {
+                        log('Raw resultContent:');
+                        log(JSON.stringify(callData.resultDisplay.resultContent, null, 2));
+                        
+                        // Try to parse and find Result field
+                        try {
+                            const parsed = JSON.parse(callData.resultDisplay.resultContent);
+                            if (parsed.Result) {
+                                log(`Found Result field: ${parsed.Result}`, 'success');
+                            } else {
+                                log('No Result field found in parsed content', 'error');
+                            }
+                        } catch (e) {
+                            log(`Failed to parse resultContent: ${e.message}`, 'error');
+                        }
+                    }
+                    
+                    if (callData.resultDisplay.formattedResult) {
+                        log('formattedResult structure:');
+                        log(JSON.stringify(callData.resultDisplay.formattedResult, null, 2));
+                    }
+                }
+
+            } catch (error) {
+                log(`Test failed: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function testRawAPI() {
+            log('Testing raw API without UI processing...');
+            
+            if (!currentAgentId) {
+                log('Please run Quick Test first to initialize agent', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/MCPDemo/tool-call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        agentId: currentAgentId,
+                        serverName: 'filesystem',
+                        toolName: 'filesystem.list_directory',
+                        arguments: { path: '/tmp' }
+                    })
+                });
+
+                const text = await response.text();
+                log('Raw response text:');
+                document.getElementById('responseData').innerText = text;
+
+                try {
+                    const data = JSON.parse(text);
+                    log('Successfully parsed as JSON', 'success');
+                    
+                    // Deep inspection
+                    if (data.resultDisplay?.resultContent) {
+                        log('Attempting to extract Result field...');
+                        const content = data.resultDisplay.resultContent;
+                        const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+                        if (parsed.Result) {
+                            log(`✓ Result field found: "${parsed.Result}"`, 'success');
+                        }
+                    }
+                } catch (e) {
+                    log(`JSON parsing failed: ${e.message}`, 'error');
+                }
+
+            } catch (error) {
+                log(`Raw API test failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run on load
+        window.onload = () => {
+            log('Debug tool loaded. Click "Run Full Test Cycle" to start.');
+        };
+    </script>
+</body>
+</html> 
