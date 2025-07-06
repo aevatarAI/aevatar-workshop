@@ -45,12 +45,13 @@ When using tools, be clear about the results and how they help answer the user's
                 Instructions = systemPrompt,
                 LLMConfig = new LLMConfigDto
                 {
-                    SystemLLM = "DeepSeek" // Use the DeepSeek configuration from appsettings.json
+                    SystemLLM = request.SystemLLM // Use the selected LLM from the request
                 }
             });
             
             return Ok(new
             {
+                success = true,
                 agentId = agentId.ToString(),
                 message = "Agent created successfully"
             });
@@ -94,13 +95,17 @@ When using tools, be clear about the results and how they help answer the user's
             
             return Ok(new
             {
+                success = true,
                 message = $"Configured {servers.Count} servers",
-                tools = tools.Select(t => new
-                {
-                    name = $"{t.ServerName}.{t.Name}",
-                    description = t.Description,
-                    parameters = t.Parameters
-                })
+                availableTools = tools.GroupBy(t => t.ServerName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(t => new
+                        {
+                            name = t.Name,
+                            description = t.Description
+                        }).ToList()
+                    )
             });
         }
         catch (Exception ex)
@@ -151,6 +156,7 @@ When using tools, be clear about the results and how they help answer the user's
             
             return Ok(new
             {
+                success = true,
                 response = response,
                 timestamp = DateTime.UtcNow
             });
@@ -244,6 +250,7 @@ When using tools, be clear about the results and how they help answer the user's
 
 public class InitializeAgentRequest
 {
+    public string SystemLLM { get; set; } = "DeepSeek"; // Default to DeepSeek if not provided
 }
 
 public class ConfigureServersRequest
