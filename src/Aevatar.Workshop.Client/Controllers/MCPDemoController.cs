@@ -56,10 +56,10 @@ public class MCPDemoController : ControllerBase
                 RequestTimeout = TimeSpan.FromSeconds(request.TimeoutSeconds ?? 30),
                 Servers = request.Servers.Select(s => new MCPServerConfig
                 {
-                    ServerName = s.ServerName,
-                    Command = s.Command,
-                    Args = s.Args ?? new List<string>(),
-                    Environment = s.Environment ?? new Dictionary<string, string>()
+                    ServerName = s.ServerName ?? string.Empty,
+                    Command = s.Command ?? string.Empty,
+                    Args = s.Args?.Select(arg => arg?.ToString() ?? string.Empty).ToList() ?? new List<string>(),
+                    Environment = ConvertEnvironmentDictionary(s.Environment)
                 }).ToList()
             };
 
@@ -379,6 +379,23 @@ public class MCPDemoController : ControllerBase
         foreach (var kvp in input)
         {
             result[kvp.Key] = ConvertValue(kvp.Value);
+        }
+        
+        return result;
+    }
+    
+    /// <summary>
+    /// Convert environment dictionary ensuring all values are strings
+    /// </summary>
+    private Dictionary<string, string> ConvertEnvironmentDictionary(Dictionary<string, string>? input)
+    {
+        if (input == null) return new Dictionary<string, string>();
+        
+        var result = new Dictionary<string, string>();
+        foreach (var kvp in input)
+        {
+            // The value should already be a string, but ensure it's not null
+            result[kvp.Key] = kvp.Value ?? string.Empty;
         }
         
         return result;
