@@ -1163,11 +1163,11 @@ function createGAgentExecuteSection() {
   formGrid.style.marginBottom = '16px';
   
   // GrainType input
-  const grainTypeGroup = createInputGroup('GrainType:', 'e.g., gagent.alice');
+  const grainTypeGroup = createInputGroup('GrainType:', 'e.g., tools.math, gagent.alice');
   formGrid.appendChild(grainTypeGroup);
   
   // EventTypeName input
-  const eventTypeGroup = createInputGroup('Event Type Name:', 'e.g., GreetingEvent');
+  const eventTypeGroup = createInputGroup('Event Type Name:', 'e.g., MathCalculateEvent, GreetingEvent');
   formGrid.appendChild(eventTypeGroup);
   
   section.appendChild(formGrid);
@@ -1190,8 +1190,8 @@ function createGAgentExecuteSection() {
   paramsTextarea.style.border = '1px solid #d1d5db';
   paramsTextarea.style.borderRadius = '4px';
   paramsTextarea.style.fontFamily = 'monospace';
-  paramsTextarea.placeholder = '{\n  "message": "Hello World"\n}';
-  paramsTextarea.value = '{}';
+  paramsTextarea.placeholder = '{\n  "expression": "1+1"\n}\n// or for GreetingEvent:\n{\n  "message": "Hello World"\n}';
+  paramsTextarea.value = '{\n  "expression": "1+1"\n}';
   paramsGroup.appendChild(paramsTextarea);
   
   section.appendChild(paramsGroup);
@@ -1248,7 +1248,18 @@ function createGAgentExecuteSection() {
       
       if (data.success) {
         resultDiv.innerHTML = `<div style="color:#059669;font-weight:bold;margin-bottom:8px;">✓ Execution Successful</div>`;
-        resultDiv.innerHTML += `<pre style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;overflow-x:auto;">${JSON.stringify(JSON.parse(data.result), null, 2)}</pre>`;
+        try {
+          // Try to parse and display as formatted JSON
+          const parsedResult = JSON.parse(data.result);
+          resultDiv.innerHTML += `<pre style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;overflow-x:auto;">${JSON.stringify(parsedResult, null, 2)}</pre>`;
+        } catch (parseError) {
+          // If parsing fails, display raw result
+          console.error('Failed to parse result as JSON:', parseError);
+          resultDiv.innerHTML += `<div style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;">`;
+          resultDiv.innerHTML += `<div style="color:#ef4444;margin-bottom:8px;">⚠️ Result is not valid JSON, showing raw output:</div>`;
+          resultDiv.innerHTML += `<pre style="overflow-x:auto;">${data.result}</pre>`;
+          resultDiv.innerHTML += `</div>`;
+        }
       } else {
         resultDiv.innerHTML = `<div style="color:#ef4444;font-weight:bold;">✗ Execution Failed</div>`;
         resultDiv.innerHTML += `<div style="margin-top:8px;">${data.error}</div>`;
