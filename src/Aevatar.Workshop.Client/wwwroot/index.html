@@ -407,7 +407,7 @@ const translations = {
     'refresh-log': 'Refresh Log',
     'multigagent-messages': 'MultiGAgentDemo AI Messages',
     'router-messages': 'RouterDemo AI Messages',
-    'toolai-messages': 'ToolAIGAgent AI Messages'
+
   },
   zh: {
     'restart-services': '重启服务',
@@ -446,7 +446,7 @@ const translations = {
     'refresh-log': '刷新日志',
     'multigagent-messages': 'MultiGAgentDemo AI 消息',
     'router-messages': 'RouterDemo AI 消息',
-    'toolai-messages': 'ToolAIGAgent AI 消息'
+
   }
 };
 let currentLanguage = localStorage.getItem('language') || 'en';
@@ -524,22 +524,7 @@ const demos = [
       { type: 'chat', chatKey: 'RouterDemo' }
     ]
   },
-  {
-    key: 'ToolAIGAgentDemo',
-    name: { en: 'ToolAI GAgent Demo', zh: 'ToolAI GAgent 演示' },
-    desc: { en: 'demodesc/ToolAIGAgentDemo.md', zh: 'demodesc/ToolAIGAgentDemo.zh.md' },
-    form: [
-      { type: 'text', id: 'task', label: { en: 'Complex Task', zh: '复杂任务' }, default: 'Write a comprehensive report about artificial intelligence in 2024' },
-      { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
-    ],
-    notebookCells: [
-      { type: 'markdown', contentKey: 'desc' },
-      { type: 'input', fieldsKey: 'form' },
-      { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
-      { type: 'output' },
-      { type: 'chat', chatKey: 'ToolAIGAgentDemo' }
-    ]
-  },
+
   {
     key: 'GAgentServiceDemo',
     name: { en: 'GAgent Service Demo', zh: 'GAgent Service 演示' },
@@ -792,7 +777,7 @@ async function renderMainContent() {
       runBtn.style.margin = '0 auto';
       // 新增 LLM System 状态提示
       let llmStatus = null;
-      if (demo.key === 'MultiGAgentDemo' || demo.key === 'RouterDemo' || demo.key === 'ToolAIGAgentDemo') {
+      if (demo.key === 'MultiGAgentDemo' || demo.key === 'RouterDemo') {
         llmStatus = document.createElement('div');
         llmStatus.style.marginTop = '10px';
         llmStatus.style.fontSize = '1rem';
@@ -874,9 +859,6 @@ async function renderMainContent() {
       if (cell.chatKey === 'MultiGAgentDemo') {
         titleKey = 'multigagent-messages';
         titleText = 'MultiGAgentDemo AI Messages';
-      } else if (cell.chatKey === 'ToolAIGAgentDemo') {
-        titleKey = 'toolai-messages';
-        titleText = 'ToolAIGAgent AI Messages';
       }
       chatTitle.setAttribute('data-i18n-key', titleKey);
       chatTitle.textContent = titleText;
@@ -897,7 +879,7 @@ async function renderMainContent() {
       fetchChat();
       if (cell.chatKey === 'MultiGAgentDemo') multichatInterval = setInterval(fetchChat, 5000);
       if (cell.chatKey === 'RouterDemo') routerchatInterval = setInterval(fetchChat, 5000);
-      if (cell.chatKey === 'ToolAIGAgentDemo') routerchatInterval = setInterval(fetchChat, 5000);
+
     }
   }
   mainContent.appendChild(notebook);
@@ -1247,18 +1229,69 @@ function createGAgentExecuteSection() {
       const data = await resp.json();
       
       if (data.success) {
-        resultDiv.innerHTML = `<div style="color:#059669;font-weight:bold;margin-bottom:8px;">✓ Execution Successful</div>`;
-        try {
-          // Try to parse and display as formatted JSON
-          const parsedResult = JSON.parse(data.result);
-          resultDiv.innerHTML += `<pre style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;overflow-x:auto;">${JSON.stringify(parsedResult, null, 2)}</pre>`;
-        } catch (parseError) {
-          // If parsing fails, display raw result
-          console.error('Failed to parse result as JSON:', parseError);
-          resultDiv.innerHTML += `<div style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;">`;
-          resultDiv.innerHTML += `<div style="color:#ef4444;margin-bottom:8px;">⚠️ Result is not valid JSON, showing raw output:</div>`;
-          resultDiv.innerHTML += `<pre style="overflow-x:auto;">${data.result}</pre>`;
-          resultDiv.innerHTML += `</div>`;
+        // Check if result is pending (timeout case)
+        if (data.result === 'PENDING' && data.resultGAgentId) {
+          resultDiv.innerHTML = `<div style="color:#3b82f6;font-weight:bold;margin-bottom:8px;">⏳ Execution in progress...</div>`;
+          resultDiv.innerHTML += `<div style="margin-top:8px;">ResultGAgent ID: ${data.resultGAgentId}</div>`;
+          resultDiv.innerHTML += `<div style="margin-top:4px;color:#6b7280;">Polling for result...</div>`;
+          
+          // Start polling for result
+          let pollCount = 0;
+          const maxPolls = 10; // Poll for up to 10 seconds
+          const pollInterval = setInterval(async () => {
+            pollCount++;
+            
+            try {
+              const stateResponse = await fetch(`/api/GAgentService/result-state/${data.resultGAgentId}`);
+              const stateData = await stateResponse.json();
+              
+              if (stateData.success && stateData.state.hasResult) {
+                clearInterval(pollInterval);
+                resultDiv.innerHTML = `<div style="color:#059669;font-weight:bold;margin-bottom:8px;">✓ Execution Successful</div>`;
+                try {
+                  // Try to parse and display as formatted JSON
+                  const parsedResult = JSON.parse(stateData.state.result);
+                  resultDiv.innerHTML += `<pre style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;overflow-x:auto;">${JSON.stringify(parsedResult, null, 2)}</pre>`;
+                } catch (parseError) {
+                  // If parsing fails, display raw result
+                  console.error('Failed to parse result as JSON:', parseError);
+                  resultDiv.innerHTML += `<div style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;">`;
+                  resultDiv.innerHTML += `<div style="color:#ef4444;margin-bottom:8px;">⚠️ Result is not valid JSON, showing raw output:</div>`;
+                  resultDiv.innerHTML += `<pre style="overflow-x:auto;">${stateData.state.result}</pre>`;
+                  resultDiv.innerHTML += `</div>`;
+                }
+              } else if (pollCount >= maxPolls) {
+                clearInterval(pollInterval);
+                resultDiv.innerHTML = `<div style="color:#f59e0b;font-weight:bold;">⚠️ Timeout</div>`;
+                resultDiv.innerHTML += `<div style="margin-top:8px;">No result received after ${maxPolls} seconds</div>`;
+                resultDiv.innerHTML += `<div style="margin-top:4px;color:#6b7280;">ResultGAgent ID: ${data.resultGAgentId}</div>`;
+              } else {
+                // Update polling status
+                resultDiv.innerHTML = `<div style="color:#3b82f6;font-weight:bold;margin-bottom:8px;">⏳ Execution in progress...</div>`;
+                resultDiv.innerHTML += `<div style="margin-top:8px;">ResultGAgent ID: ${data.resultGAgentId}</div>`;
+                resultDiv.innerHTML += `<div style="margin-top:4px;color:#6b7280;">Polling for result... (${pollCount}/${maxPolls})</div>`;
+              }
+            } catch (error) {
+              clearInterval(pollInterval);
+              resultDiv.innerHTML = `<div style="color:#ef4444;font-weight:bold;">✗ Polling Error</div>`;
+              resultDiv.innerHTML += `<div style="margin-top:8px;">${error.message}</div>`;
+            }
+          }, 1000); // Poll every second
+        } else {
+          // Normal case - result returned immediately
+          resultDiv.innerHTML = `<div style="color:#059669;font-weight:bold;margin-bottom:8px;">✓ Execution Successful</div>`;
+          try {
+            // Try to parse and display as formatted JSON
+            const parsedResult = JSON.parse(data.result);
+            resultDiv.innerHTML += `<pre style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;overflow-x:auto;">${JSON.stringify(parsedResult, null, 2)}</pre>`;
+          } catch (parseError) {
+            // If parsing fails, display raw result
+            console.error('Failed to parse result as JSON:', parseError);
+            resultDiv.innerHTML += `<div style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;">`;
+            resultDiv.innerHTML += `<div style="color:#ef4444;margin-bottom:8px;">⚠️ Result is not valid JSON, showing raw output:</div>`;
+            resultDiv.innerHTML += `<pre style="overflow-x:auto;">${data.result}</pre>`;
+            resultDiv.innerHTML += `</div>`;
+          }
         }
       } else {
         resultDiv.innerHTML = `<div style="color:#ef4444;font-weight:bold;">✗ Execution Failed</div>`;
@@ -1962,6 +1995,9 @@ async function renderAIToolCallingDemo(demo) {
         chatInput.disabled = false;
         sendButton.disabled = false;
         chatInput.focus();
+        
+        // Update tool history to show initialization
+        updateToolHistory();
       } else {
         initStatus.textContent = `✗ ${data.error}`;
         initStatus.style.color = '#ef4444';
@@ -2002,9 +2038,12 @@ async function renderAIToolCallingDemo(demo) {
         // Add AI response
         addChatMessage('assistant', data.response);
         
-        // Update tool call history if any
-        if (data.toolCalls && data.toolCalls.length > 0) {
-          updateToolHistory();
+        // Update tool call history
+        updateToolHistory();
+        
+        // Log recent tool calls for debugging
+        if (data.recentToolCalls && data.recentToolCalls.length > 0) {
+          console.log('Recent tool calls:', data.recentToolCalls);
         }
       } else {
         addChatMessage('system', `Error: ${data.error}`);
@@ -2067,10 +2106,25 @@ async function renderAIToolCallingDemo(demo) {
           callDiv.style.background = '#fff';
           callDiv.style.borderRadius = '4px';
           callDiv.style.border = '1px solid #e5e7eb';
+          
+          // Special styling for system_init
+          if (call.tool === 'system_init') {
+            callDiv.style.background = '#f0f9ff';
+            callDiv.style.borderColor = '#3b82f6';
+          }
+          
+          // Get tool display name
+          const toolDisplayName = {
+            'calculate_math': '🧮 Math Calculator',
+            'get_time_in_zone': '🕐 Time Zone',
+            'convert_time': '🔄 Time Converter',
+            'system_init': '🚀 System'
+          }[call.tool] || call.tool;
+          
           callDiv.innerHTML = `
             <div style="font-size:0.85em;color:#6b7280;">${new Date(call.timestamp).toLocaleTimeString()}</div>
-            <div style="font-weight:bold;color:#1f2937;">${call.tool} - ${call.function}</div>
-            <div style="font-size:0.9em;color:#4b5563;">${call.parameters}</div>
+            <div style="font-weight:bold;color:#1f2937;">${toolDisplayName}</div>
+            <div style="font-size:0.9em;color:#4b5563;">${call.parameters || call.input || 'N/A'}</div>
           `;
           historyContent.appendChild(callDiv);
         });

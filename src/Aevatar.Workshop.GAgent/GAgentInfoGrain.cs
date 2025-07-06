@@ -1,5 +1,7 @@
+using Aevatar.Core;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.Executor;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Aevatar.Workshop.GAgent;
@@ -36,6 +38,7 @@ public class GAgentExecutionResult
     [Id(0)] public bool Success { get; set; }
     [Id(1)] public string Result { get; set; } = string.Empty;
     [Id(2)] public string Error { get; set; } = string.Empty;
+    [Id(3)] public string ResultGAgentId { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -186,13 +189,52 @@ public class GAgentInfoGrain : Grain, IGAgentInfoGrain
                 };
             }
 
-            // Execute the GAgent
-            var result = await _gAgentExecutor.ExecuteGAgentEventHandler(grainType, @event);
+            // Use a simpler approach - directly execute and get result
+            var resultGAgentId = Guid.NewGuid();
+            var gAgentFactory = new GAgentFactory(ServiceProvider.GetRequiredService<IClusterClient>());
+
+            // Get the GAgents
+            var targetGAgent = await gAgentFactory.GetGAgentAsync(GrainId.Create(grainType, Guid.NewGuid().ToString()));
+            var resultGAgent = await gAgentFactory.GetGAgentAsync<IResultGAgent>(resultGAgentId);
+            var publishingGAgent = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>();
+
+            // Set up ResultGAgent
+            await resultGAgent.SetExecutionContextAsync(
+                resultGAgentId.ToString(),
+                AevatarCoreConstants.StreamProvider,
+                AevatarGAgentExecutorConstants.GAgentExecutorStreamNamespace);
+
+            // Subscribe ResultGAgent to the target GAgent
+            await targetGAgent.RegisterAsync(resultGAgent);
+
+            // Subscribe target GAgent to PublishingGAgent
+            await publishingGAgent.RegisterAsync(targetGAgent);
+
+            // Publish the event
+            await publishingGAgent.PublishEventAsync(@event);
+
+            // Wait for the result
+            string? finalResult = null;
+            for (int i = 0; i < 10; i++) // Poll for up to 10 seconds
+            {
+                await Task.Delay(1000);
+                var state = await resultGAgent.GetStateAsync();
+                if (!string.IsNullOrEmpty(state.Result))
+                {
+                    finalResult = state.Result;
+                    break;
+                }
+            }
+
+            // Clean up
+            await targetGAgent.UnregisterAsync(resultGAgent);
+            await publishingGAgent.UnregisterAsync(targetGAgent);
 
             return new GAgentExecutionResult
             {
                 Success = true,
-                Result = result
+                Result = finalResult ?? "PENDING", // Special marker for frontend to poll
+                ResultGAgentId = resultGAgentId.ToString()
             };
         }
         catch (Exception ex)

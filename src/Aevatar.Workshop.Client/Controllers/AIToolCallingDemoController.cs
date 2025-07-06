@@ -13,7 +13,6 @@ public class AIToolCallingDemoController : ControllerBase
 {
     private readonly IGAgentFactory _gAgentFactory;
     private readonly ILogger<AIToolCallingDemoController> _logger;
-    private static readonly Dictionary<Guid, List<ToolCallInfo>> _toolCallHistory = new();
 
     public AIToolCallingDemoController(
         IGAgentFactory gAgentFactory,
@@ -42,8 +41,6 @@ public class AIToolCallingDemoController : ControllerBase
             
             // Get registered tools
             var tools = await agent.GetRegisteredToolsAsync();
-            
-            _toolCallHistory[agentId] = new List<ToolCallInfo>();
             
             // Transform tool names into the expected format for frontend
             var availableTools = new List<object>
@@ -101,49 +98,31 @@ public class AIToolCallingDemoController : ControllerBase
             }
 
             // Process the chat message
+            _logger.LogInformation("Processing chat message: {Message}", request.Message);
             var response = await agent.ChatAsync(request.Message);
+            _logger.LogInformation("Received response: {Response}", response);
             
-            // Track tool calls (simplified tracking based on response content)
-            if (_toolCallHistory.TryGetValue(agentId, out var history))
-            {
-                // Simple heuristic: if response mentions using a tool, track it
-                if (response.Contains("calculate_math") || response.Contains("calculating"))
+            // Get tool call history directly from agent
+            var toolCallHistory = await agent.GetToolCallHistoryAsync();
+            
+            // Get recent tool calls for immediate display
+            var recentToolCalls = toolCallHistory
+                .OrderByDescending(h => h.Timestamp)
+                .Take(5)
+                .Select(h => new
                 {
-                    history.Add(new ToolCallInfo
-                    {
-                        ToolName = "calculate_math",
-                        Timestamp = DateTime.UtcNow,
-                        Input = request.Message,
-                        Output = response
-                    });
-                }
-                else if (response.Contains("convert_time") || response.Contains("time conversion"))
-                {
-                    history.Add(new ToolCallInfo
-                    {
-                        ToolName = "convert_time",
-                        Timestamp = DateTime.UtcNow,
-                        Input = request.Message,
-                        Output = response
-                    });
-                }
-                else if (response.Contains("get_time_in_zone") || response.Contains("current time"))
-                {
-                    history.Add(new ToolCallInfo
-                    {
-                        ToolName = "get_time_in_zone",
-                        Timestamp = DateTime.UtcNow,
-                        Input = request.Message,
-                        Output = response
-                    });
-                }
-            }
-
+                    tool = h.ToolName,
+                    timestamp = h.Timestamp,
+                    input = h.Input
+                })
+                .ToList();
+            
             return Ok(new
             {
                 success = true,
                 response = response,
-                toolCallsCount = _toolCallHistory.GetValueOrDefault(agentId)?.Count ?? 0
+                toolCallsCount = toolCallHistory.Count,
+                recentToolCalls = recentToolCalls
             });
         }
         catch (Exception ex)
@@ -157,24 +136,26 @@ public class AIToolCallingDemoController : ControllerBase
     /// Get tool call history for an agent
     /// </summary>
     [HttpGet("history/{agentId}")]
-    public IActionResult GetToolCallHistory(string agentId)
+    public async Task<IActionResult> GetToolCallHistory(string agentId)
     {
         if (!Guid.TryParse(agentId, out var id))
         {
             return BadRequest(new { success = false, error = "Invalid agent ID" });
         }
 
-        var history = _toolCallHistory.GetValueOrDefault(id) ?? new List<ToolCallInfo>();
+        var agent = await _gAgentFactory.GetGAgentAsync<IToolCallingAIGAgent>(id);
+        var toolCallHistory = await agent.GetToolCallHistoryAsync();
         
         return Ok(new
         {
             success = true,
             agentId = agentId,
-            toolCalls = history.OrderByDescending(h => h.Timestamp).Take(20).Select(h => new
+            toolCalls = toolCallHistory.OrderByDescending(h => h.Timestamp).Take(20).Select(h => new
             {
                 tool = h.ToolName,
                 function = h.ToolName,
                 parameters = h.Input,
+                input = h.Input, // Add both for compatibility
                 timestamp = h.Timestamp
             })
         });
@@ -253,6 +234,13 @@ public class AIToolCallingDemoController : ControllerBase
                     {
                         var mathAgent = await _gAgentFactory.GetGAgentAsync<IMathGAgent>(Guid.NewGuid());
                         var result = await mathAgent.CalculateAsync(request.Input);
+                        
+                        // Track this manual tool call if agent ID is provided
+                        if (!string.IsNullOrEmpty(request.AgentId) && Guid.TryParse(request.AgentId, out var agentId))
+                        {
+                            _logger.LogInformation("Manual tool test for agent {AgentId}", agentId);
+                        }
+                        
                         return Ok(new { success = true, tool = "MathGAgent", input = request.Input, result = result });
                     }
                 case "timeconvertergagent":
@@ -297,20 +285,12 @@ public class AIToolCallingDemoController : ControllerBase
     {
         public string ToolName { get; set; } = string.Empty;
         public string Input { get; set; } = string.Empty;
+        public string? AgentId { get; set; }
     }
 
     public class DemoToolsRequest
     {
         public bool DemoMath { get; set; }
         public bool DemoTime { get; set; }
-    }
-
-    // Tool call tracking
-    public class ToolCallInfo
-    {
-        public string ToolName { get; set; } = string.Empty;
-        public DateTime Timestamp { get; set; }
-        public string Input { get; set; } = string.Empty;
-        public string Output { get; set; } = string.Empty;
     }
 } 

@@ -1,3 +1,6 @@
+using Aevatar.Core;
+using Aevatar.Core.Abstractions;
+using Aevatar.GAgents.Executor;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
 using Aevatar.Workshop.GAgent;
@@ -205,6 +208,39 @@ public class GAgentServiceController : ControllerBase
             {
                 success = false,
                 error = "Failed to execute GAgent"
+            });
+        }
+    }
+
+    /// <summary>
+    /// Get ResultGAgent state (for debugging)
+    /// </summary>
+    [HttpGet("result-state/{grainId}")]
+    public async Task<IActionResult> GetResultGAgentState(string grainId)
+    {
+        try
+        {
+            var gAgentFactory = new GAgentFactory(_clusterClient);
+            var resultGAgent = await gAgentFactory.GetGAgentAsync<IResultGAgent>(Guid.Parse(grainId));
+            var state = await resultGAgent.GetStateAsync();
+
+            return Ok(new
+            {
+                success = true,
+                state = new
+                {
+                    result = state.Result,
+                    executionId = state.ExecutionId,
+                    hasResult = !string.IsNullOrEmpty(state.Result)
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                error = ex.Message
             });
         }
     }
