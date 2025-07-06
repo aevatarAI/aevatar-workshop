@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -176,12 +177,49 @@ public class MCPDemoController : ControllerBase
 
                 _logger.LogInformation("Tool call completed. Success: {Success}", response?.Success ?? false);
 
-                return Ok(new
+                // Format the response with result in a separate section
+                var formattedResponse = new
                 {
                     success = response?.Success ?? false,
-                    result = response?.Result,
-                    errorMessage = response?.ErrorMessage
-                });
+                    errorMessage = response?.ErrorMessage,
+                    toolInfo = new
+                    {
+                        serverName = request.ServerName,
+                        toolName = request.ToolName,
+                        executedAt = DateTime.UtcNow
+                    }
+                };
+
+                // Add result in a highlighted section if successful
+                if (response?.Success == true && response.Result != null)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        toolInfo = formattedResponse.toolInfo,
+                        resultDisplay = new
+                        {
+                            hasResult = true,
+                            resultType = response.Result?.GetType().Name ?? "Unknown",
+                            resultContent = response.Result,
+                            formattedResult = FormatResultForDisplay(response.Result)
+                        }
+                    });
+                }
+                else
+                {
+                    return Ok(new
+                    {
+                        success = false,
+                        errorMessage = response?.ErrorMessage ?? "Unknown error",
+                        toolInfo = formattedResponse.toolInfo,
+                        resultDisplay = new
+                        {
+                            hasResult = false,
+                            errorDetails = response?.ErrorMessage
+                        }
+                    });
+                }
             }
             catch (TimeoutException tex)
             {
@@ -446,5 +484,108 @@ public class MCPDemoController : ControllerBase
         
         // If it's already a basic type, return as-is
         return value;
+    }
+    
+    /// <summary>
+    /// Format result for better display in UI
+    /// </summary>
+    private object FormatResultForDisplay(object? result)
+    {
+        if (result == null) return new { type = "null", value = "" };
+        
+        // Handle different result types
+        if (result is string str)
+        {
+            // Check if it's JSON string
+            if ((str.StartsWith("{") && str.EndsWith("}")) || (str.StartsWith("[") && str.EndsWith("]")))
+            {
+                try
+                {
+                    var parsed = JsonSerializer.Deserialize<JsonElement>(str);
+                    return new
+                    {
+                        type = "json",
+                        value = parsed,
+                        raw = str,
+                        formatted = JsonSerializer.Serialize(parsed, new JsonSerializerOptions { WriteIndented = true })
+                    };
+                }
+                catch
+                {
+                    // Not valid JSON, treat as regular string
+                }
+            }
+            
+            // For multiline strings, provide line count
+            var lines = str.Split('\n');
+            if (lines.Length > 1)
+            {
+                return new
+                {
+                    type = "multiline_string",
+                    value = str,
+                    lineCount = lines.Length,
+                    preview = lines.Length > 5 ? string.Join("\n", lines.Take(5)) + "\n..." : str
+                };
+            }
+            
+            return new { type = "string", value = str };
+        }
+        
+        if (result is IList list)
+        {
+            var items = new List<object>();
+            foreach (var item in list)
+            {
+                items.Add(FormatResultForDisplay(item));
+            }
+            return new
+            {
+                type = "array",
+                count = list.Count,
+                items = items
+            };
+        }
+        
+        if (result is Dictionary<string, object> dict)
+        {
+            return new
+            {
+                type = "object",
+                propertyCount = dict.Count,
+                properties = dict.ToDictionary(kvp => kvp.Key, kvp => FormatResultForDisplay(kvp.Value))
+            };
+        }
+        
+        if (result is bool || result is int || result is long || result is double || result is decimal)
+        {
+            return new
+            {
+                type = result.GetType().Name.ToLower(),
+                value = result
+            };
+        }
+        
+        // For complex objects, try to serialize to JSON
+        try
+        {
+            var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+            return new
+            {
+                type = "complex_object",
+                typeName = result.GetType().Name,
+                value = json,
+                parsed = JsonSerializer.Deserialize<JsonElement>(json)
+            };
+        }
+        catch
+        {
+            return new
+            {
+                type = "unknown",
+                typeName = result.GetType().Name,
+                value = result.ToString()
+            };
+        }
     }
 }

@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Tool Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #0052a3;
+        }
+        .button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .tool-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .tool-item:hover {
+            background: #e9ecef;
+        }
+        .tool-name {
+            font-weight: bold;
+            color: #0066cc;
+        }
+        .tool-description {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .server-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .server-badge.disconnected {
+            background: #dc3545;
+        }
+        .result-box {
+            background: #f0f8ff;
+            border: 2px solid #4a90e2;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .result-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+        .result-type {
+            background: #2c5aa0;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .result-content {
+            background: white;
+            border: 1px solid #d0e3f7;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+        }
+        .result-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .result-content.json {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+        .error-box {
+            background: #fff5f5;
+            border: 2px solid #f56565;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .error-title {
+            color: #c53030;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .error-message {
+            color: #742a2a;
+        }
+        .tool-info {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .info-item {
+            margin: 5px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #4a5568;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .input-group textarea {
+            min-height: 60px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0066cc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>MCP Tool Demo</h1>
+
+        <div class="section">
+            <h2>Initialize MCP Server</h2>
+            <button class="button" onclick="initializeMCP()">Initialize Filesystem Server</button>
+            <div id="initStatus"></div>
+        </div>
+
+        <div class="section" id="toolsSection" style="display:none;">
+            <h2>Available Tools</h2>
+            <div id="toolsList"></div>
+        </div>
+
+        <div class="section" id="callSection" style="display:none;">
+            <h2>Call Tool</h2>
+            <div id="selectedTool"></div>
+            <div id="argumentsForm"></div>
+            <button class="button" onclick="callTool()">Execute Tool</button>
+            <button class="button" onclick="clearSelection()">Clear</button>
+        </div>
+
+        <div id="resultSection"></div>
+    </div>
+
+    <script>
+        let currentAgentId = null;
+        let selectedTool = null;
+
+        async function initializeMCP() {
+            const statusDiv = document.getElementById('initStatus');
+            statusDiv.innerHTML = '<span class="loading"></span> Initializing MCP server...';
+
+            try {
+                const response = await fetch('/api/MCPDemo/initialize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        servers: [{
+                            serverName: 'filesystem',
+                            command: 'npx',
+                            args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp']
+                        }],
+                        timeoutSeconds: 30
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentAgentId = data.agentId;
+                    statusDiv.innerHTML = `<div style="color: green;">✓ MCP server initialized successfully!</div>
+                        <div>Agent ID: ${data.agentId}</div>
+                        <div>Tools discovered: ${Object.keys(data.availableTools).length}</div>`;
+                    
+                    displayTools(data.availableTools);
+                    document.getElementById('toolsSection').style.display = 'block';
+                } else {
+                    statusDiv.innerHTML = `<div style="color: red;">✗ Failed to initialize: ${data.error}</div>`;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<div style="color: red;">✗ Error: ${error.message}</div>`;
+            }
+        }
+
+        function displayTools(tools) {
+            const toolsList = document.getElementById('toolsList');
+            toolsList.innerHTML = '';
+
+            for (const [name, tool] of Object.entries(tools)) {
+                const toolDiv = document.createElement('div');
+                toolDiv.className = 'tool-item';
+                toolDiv.innerHTML = `
+                    <div class="tool-name">${name}
+                        <span class="server-badge">${tool.serverName}</span>
+                    </div>
+                    <div class="tool-description">${tool.description}</div>
+                `;
+                toolDiv.onclick = () => selectTool(name, tool);
+                toolsList.appendChild(toolDiv);
+            }
+        }
+
+        function selectTool(name, tool) {
+            selectedTool = { name, ...tool };
+            document.getElementById('callSection').style.display = 'block';
+            
+            const selectedDiv = document.getElementById('selectedTool');
+            selectedDiv.innerHTML = `<h3>Selected Tool: ${name}</h3>`;
+
+            const formDiv = document.getElementById('argumentsForm');
+            formDiv.innerHTML = '';
+
+            if (tool.parameters && Object.keys(tool.parameters).length > 0) {
+                for (const [paramName, param] of Object.entries(tool.parameters)) {
+                    const inputGroup = document.createElement('div');
+                    inputGroup.className = 'input-group';
+                    inputGroup.innerHTML = `
+                        <label for="${paramName}">
+                            ${paramName} (${param.type})${param.required ? ' *' : ''}
+                            ${param.description ? `<br><small style="color: #666;">${param.description}</small>` : ''}
+                        </label>
+                        ${param.type === 'array' || param.type === 'object' ? 
+                            `<textarea id="${paramName}" placeholder='Enter JSON (e.g., ["item1", "item2"] or {"key": "value"})'></textarea>` :
+                            `<input type="text" id="${paramName}" placeholder="Enter ${param.type}">`
+                        }
+                    `;
+                    formDiv.appendChild(inputGroup);
+                }
+            } else {
+                formDiv.innerHTML = '<p>This tool requires no parameters.</p>';
+            }
+        }
+
+        async function callTool() {
+            if (!selectedTool || !currentAgentId) return;
+
+            const resultSection = document.getElementById('resultSection');
+            resultSection.innerHTML = '<div class="section"><span class="loading"></span> Calling tool...</div>';
+
+            // Collect arguments
+            const args = {};
+            if (selectedTool.parameters) {
+                for (const paramName of Object.keys(selectedTool.parameters)) {
+                    const input = document.getElementById(paramName);
+                    if (input && input.value) {
+                        const param = selectedTool.parameters[paramName];
+                        if (param.type === 'array' || param.type === 'object') {
+                            try {
+                                args[paramName] = JSON.parse(input.value);
+                            } catch (e) {
+                                args[paramName] = input.value;
+                            }
+                        } else {
+                            args[paramName] = input.value;
+                        }
+                    }
+                }
+            }
+
+            try {
+                const response = await fetch('/api/MCPDemo/tool-call', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        agentId: currentAgentId,
+                        serverName: selectedTool.serverName,
+                        toolName: selectedTool.name,
+                        arguments: args
+                    })
+                });
+
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                resultSection.innerHTML = `
+                    <div class="error-box">
+                        <div class="error-title">Request Error</div>
+                        <div class="error-message">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function displayResult(data) {
+            const resultSection = document.getElementById('resultSection');
+            
+            if (data.success && data.resultDisplay) {
+                const result = data.resultDisplay;
+                let content = '';
+                
+                // Tool execution info
+                content += `
+                    <div class="section">
+                        <div class="tool-info">
+                            <div class="info-item"><span class="info-label">Server:</span> ${data.toolInfo.serverName}</div>
+                            <div class="info-item"><span class="info-label">Tool:</span> ${data.toolInfo.toolName}</div>
+                            <div class="info-item"><span class="info-label">Executed at:</span> ${new Date(data.toolInfo.executedAt).toLocaleString()}</div>
+                        </div>
+                `;
+
+                if (result.hasResult) {
+                    content += `
+                        <div class="result-box">
+                            <div class="result-header">
+                                <div class="result-title">Execution Result</div>
+                                <div class="result-type">${result.resultType}</div>
+                            </div>
+                            <div class="result-content ${result.formattedResult?.type === 'json' ? 'json' : ''}">
+                                ${formatResultContent(result.formattedResult || result.resultContent)}
+                            </div>
+                        </div>
+                    `;
+                }
+                content += '</div>';
+                
+                resultSection.innerHTML = content;
+            } else {
+                resultSection.innerHTML = `
+                    <div class="error-box">
+                        <div class="error-title">Tool Execution Failed</div>
+                        <div class="tool-info">
+                            <div class="info-item"><span class="info-label">Server:</span> ${data.toolInfo?.serverName || 'Unknown'}</div>
+                            <div class="info-item"><span class="info-label">Tool:</span> ${data.toolInfo?.toolName || 'Unknown'}</div>
+                        </div>
+                        <div class="error-message">${data.errorMessage || data.resultDisplay?.errorDetails || 'Unknown error'}</div>
+                    </div>
+                `;
+            }
+        }
+
+        function formatResultContent(result) {
+            if (!result) return '<pre>No result data</pre>';
+            
+            if (result.type === 'json' && result.formatted) {
+                return `<pre>${escapeHtml(result.formatted)}</pre>`;
+            }
+            
+            if (result.type === 'multiline_string') {
+                return `<pre>${escapeHtml(result.value)}</pre>
+                    ${result.lineCount > 5 ? `<div style="margin-top: 10px; color: #666;">Total lines: ${result.lineCount}</div>` : ''}`;
+            }
+            
+            if (result.type === 'array') {
+                return `<div>Array with ${result.count} items:</div>
+                    <pre>${JSON.stringify(result.items, null, 2)}</pre>`;
+            }
+            
+            if (result.type === 'object') {
+                return `<div>Object with ${result.propertyCount} properties:</div>
+                    <pre>${JSON.stringify(result.properties, null, 2)}</pre>`;
+            }
+            
+            if (result.value !== undefined) {
+                return `<pre>${escapeHtml(String(result.value))}</pre>`;
+            }
+            
+            return `<pre>${escapeHtml(JSON.stringify(result, null, 2))}</pre>`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearSelection() {
+            selectedTool = null;
+            document.getElementById('callSection').style.display = 'none';
+            document.getElementById('resultSection').innerHTML = '';
+        }
+    </script>
+</body>
+</html> 
