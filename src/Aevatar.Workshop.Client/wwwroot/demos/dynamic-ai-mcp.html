@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic AI MCP Integration - Cursor Style</title>
+    <!-- Add Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -554,6 +556,137 @@
             background: #5a5a5a;
         }
 
+        /* Markdown Content Styles */
+        .markdown-content {
+            line-height: 1.6;
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+            margin-top: 20px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .markdown-content h1 { font-size: 1.5em; }
+        .markdown-content h2 { font-size: 1.3em; }
+        .markdown-content h3 { font-size: 1.1em; }
+        .markdown-content h4 { font-size: 1em; }
+        .markdown-content h5 { font-size: 0.9em; }
+        .markdown-content h6 { font-size: 0.85em; }
+
+        .markdown-content p {
+            margin: 0 0 12px 0;
+        }
+
+        .markdown-content code {
+            background-color: #2a2a2a;
+            color: #e06c75;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-content pre {
+            background-color: #1e1e1e;
+            border: 1px solid #3a3a3a;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .markdown-content pre code {
+            background-color: transparent;
+            color: #abb2bf;
+            padding: 0;
+            font-size: 0.875em;
+            line-height: 1.5;
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            margin: 0 0 12px 0;
+            padding-left: 24px;
+        }
+
+        .markdown-content li {
+            margin: 4px 0;
+            color: #e0e0e0;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #4a4a4a;
+            padding-left: 16px;
+            margin: 12px 0;
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        .markdown-content a {
+            color: #60a5fa;
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .markdown-content a:hover {
+            color: #93bbfc;
+            border-bottom-color: #60a5fa;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #3a3a3a;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #2a2a2a;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .markdown-content table tr:nth-child(even) {
+            background-color: #1a1a1a;
+        }
+
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid #3a3a3a;
+            margin: 20px 0;
+        }
+
+        .markdown-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+
+        .markdown-content strong {
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .markdown-content em {
+            font-style: italic;
+            color: #e0e0e0;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -694,6 +827,16 @@
 
     // Initialize page
     function initializePage() {
+        // Configure marked.js options
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            mangle: false,
+            sanitize: false, // We'll rely on marked's built-in security
+            xhtml: false
+        });
+        
         // Page is initialized with the assistant message
     }
 
@@ -916,6 +1059,19 @@
                 })
             });
 
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            // Check if response is JSON
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                throw new Error("Server returned non-JSON response");
+            }
+
             const data = await response.json();
 
             // Remove typing indicator
@@ -1004,12 +1160,27 @@
         const avatarText = role === 'user' ? 'U' : role === 'assistant' ? 'AI' : 'S';
         const roleText = role.charAt(0).toUpperCase() + role.slice(1);
 
+        // Process content based on role
+        let processedContent;
+        if (role === 'assistant') {
+            // Parse Markdown for assistant messages
+            processedContent = marked.parse(content, {
+                breaks: true, // Convert line breaks to <br>
+                gfm: true,    // GitHub Flavored Markdown
+                headerIds: false,
+                mangle: false
+            });
+        } else {
+            // For user and system messages, just escape HTML but preserve line breaks
+            processedContent = escapeHtml(content).replace(/\n/g, '<br>');
+        }
+
         message.innerHTML = `
                 <div class="message-header">
                     <div class="message-avatar">${avatarText}</div>
                     <div class="message-role">${roleText}</div>
                 </div>
-                <div class="message-content">${escapeHtml(content)}</div>
+                <div class="message-content markdown-content">${processedContent}</div>
             `;
 
         messagesDiv.appendChild(message);
