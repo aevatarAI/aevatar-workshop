@@ -124,7 +124,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
         try
         {
             _gAgentFactory = ServiceProvider.GetRequiredService<IGAgentFactory>();
-            
+
             // Get MathGAgent and TimeConverterGAgent
             _mathGAgent = await _gAgentFactory.GetGAgentAsync<IMathGAgent>(Guid.NewGuid());
             _timeGAgent = await _gAgentFactory.GetGAgentAsync<ITimeConverterGAgent>(Guid.NewGuid());
@@ -137,16 +137,17 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 {
                     try
                     {
-                        Logger.LogInformation("[{Timestamp}] Tool 'calculate_math' called with expression: '{Expression}'", 
+                        Logger.LogInformation(
+                            "[{Timestamp}] Tool 'calculate_math' called with expression: '{Expression}'",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), expression);
                         var result = await _mathGAgent.CalculateAsync(expression);
-                        Logger.LogInformation("[{Timestamp}] Tool 'calculate_math' completed with result: {Result}", 
+                        Logger.LogInformation("[{Timestamp}] Tool 'calculate_math' completed with result: {Result}",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), result);
                         return $"The result of {expression} is {result}";
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "[{Timestamp}] Tool 'calculate_math' failed for expression: '{Expression}'", 
+                        Logger.LogError(ex, "[{Timestamp}] Tool 'calculate_math' failed for expression: '{Expression}'",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), expression);
                         return $"Error calculating {expression}: {ex.Message}";
                     }
@@ -157,7 +158,8 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 [
                     new KernelParameterMetadata("expression")
                     {
-                        Description = "The mathematical expression to calculate. Examples: 'sqrt(10)' for square root, '10+5' for addition, '10*5' for multiplication, '10/5' for division, '10^2' for power",
+                        Description =
+                            "The mathematical expression to calculate. Examples: 'sqrt(10)' for square root, '10+5' for addition, '10*5' for multiplication, '10/5' for division, '10^2' for power",
                         IsRequired = true,
                         ParameterType = typeof(string)
                     }
@@ -216,16 +218,17 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 {
                     try
                     {
-                        Logger.LogInformation("[{Timestamp}] Tool 'get_time_in_zone' called with timezone: '{TimeZone}'", 
+                        Logger.LogInformation(
+                            "[{Timestamp}] Tool 'get_time_in_zone' called with timezone: '{TimeZone}'",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), timeZone);
                         var result = await _timeGAgent.GetTimeInZoneAsync(timeZone);
-                        Logger.LogInformation("[{Timestamp}] Tool 'get_time_in_zone' completed with result: {Result}", 
+                        Logger.LogInformation("[{Timestamp}] Tool 'get_time_in_zone' completed with result: {Result}",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), result);
                         return $"Current time in {timeZone}: {result}";
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "[{Timestamp}] Tool 'get_time_in_zone' failed for timezone: '{TimeZone}'", 
+                        Logger.LogError(ex, "[{Timestamp}] Tool 'get_time_in_zone' failed for timezone: '{TimeZone}'",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), timeZone);
                         return $"Error getting time in {timeZone}: {ex.Message}";
                     }
@@ -286,10 +289,10 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
 
             // Get chat completion service
             var chatService = _kernel.GetRequiredService<IChatCompletionService>();
-            
+
             // Create chat history
             var chatHistory = new ChatHistory();
-            
+
             // Add system message with clearer instructions
             chatHistory.AddSystemMessage(
                 "You are a helpful AI assistant with access to mathematical calculation and time conversion tools.\n\n" +
@@ -326,41 +329,46 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
             chatHistory.AddUserMessage(message);
 
             Logger.LogInformation("Sending request to LLM with message: {Message}", message);
-            Logger.LogInformation("Available tools in kernel: {Tools}", string.Join(", ", _kernel.Plugins.SelectMany(p => p.Select(f => f.Name))));
+            Logger.LogInformation("Available tools in kernel: {Tools}",
+                string.Join(", ", _kernel.Plugins.SelectMany(p => p.Select(f => f.Name))));
 
             // Configure execution settings for automatic tool calling with timeout
             var executionSettings = new OpenAIPromptExecutionSettings
             {
                 ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
-                Temperature = 0.1,  // Lower temperature for more deterministic tool usage
-                MaxTokens = 1000    // Limit response length
+                Temperature = 0.1, // Lower temperature for more deterministic tool usage
+                MaxTokens = 1000 // Limit response length
             };
 
             // Get response with automatic tool invocation and timeout
             var startTime = DateTime.UtcNow;
-            Logger.LogInformation("[{Timestamp}] Starting LLM call for message: '{Message}'", startTime.ToString("HH:mm:ss.fff"), message);
-            
+            Logger.LogInformation("[{Timestamp}] Starting LLM call for message: '{Message}'",
+                startTime.ToString("HH:mm:ss.fff"), message);
+
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2)); // 2 minutes timeout to match Orleans
             try
             {
-                Logger.LogInformation("[{Timestamp}] Sending request to OpenAI API...", DateTime.UtcNow.ToString("HH:mm:ss.fff"));
-                
+                Logger.LogInformation("[{Timestamp}] Sending request to OpenAI API...",
+                    DateTime.UtcNow.ToString("HH:mm:ss.fff"));
+
                 var response = await chatService.GetChatMessageContentAsync(
                     chatHistory,
                     executionSettings,
                     _kernel,
                     cts.Token);
-                
+
                 var endTime = DateTime.UtcNow;
                 var duration = endTime - startTime;
-                Logger.LogInformation("[{Timestamp}] Received response from LLM after {Duration}ms", endTime.ToString("HH:mm:ss.fff"), duration.TotalMilliseconds);
-                
+                Logger.LogInformation("[{Timestamp}] Received response from LLM after {Duration}ms",
+                    endTime.ToString("HH:mm:ss.fff"), duration.TotalMilliseconds);
+
                 var responseText = response.Content ?? "I couldn't generate a response.";
 
                 // Log if tools were called
                 if (response.Metadata?.TryGetValue("ToolCalls", out var toolCalls) == true)
                 {
-                    Logger.LogInformation("[{Timestamp}] Tools were called during this request", DateTime.UtcNow.ToString("HH:mm:ss.fff"));
+                    Logger.LogInformation("[{Timestamp}] Tools were called during this request",
+                        DateTime.UtcNow.ToString("HH:mm:ss.fff"));
                 }
 
                 // Add assistant message to history
@@ -368,17 +376,19 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
 
                 await ConfirmEvents();
 
-                Logger.LogInformation("[{Timestamp}] Chat response generated successfully", DateTime.UtcNow.ToString("HH:mm:ss.fff"));
+                Logger.LogInformation("[{Timestamp}] Chat response generated successfully",
+                    DateTime.UtcNow.ToString("HH:mm:ss.fff"));
                 return responseText;
             }
             catch (TaskCanceledException)
             {
                 var timeoutDuration = DateTime.UtcNow - startTime;
-                Logger.LogError("[{Timestamp}] Chat completion timed out after {Duration}ms. Message was: '{Message}'", 
-                    DateTime.UtcNow.ToString("HH:mm:ss.fff"), 
+                Logger.LogError("[{Timestamp}] Chat completion timed out after {Duration}ms. Message was: '{Message}'",
+                    DateTime.UtcNow.ToString("HH:mm:ss.fff"),
                     timeoutDuration.TotalMilliseconds,
                     message);
-                return $"⏱️ Request timed out after {timeoutDuration.TotalSeconds:F1} seconds. The AI received your message but is taking longer than expected to process it. Please try again or simplify your request.";
+                return
+                    $"⏱️ Request timed out after {timeoutDuration.TotalSeconds:F1} seconds. The AI received your message but is taking longer than expected to process it. Please try again or simplify your request.";
             }
         }
         catch (Exception ex)
@@ -393,7 +403,8 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
         return Task.FromResult(State.RegisteredTools.ToList());
     }
 
-    protected override void GAgentTransitionState(ToolCallingAIGAgentState state, StateLogEventBase<ToolCallingStateLogEvent> @event)
+    protected override void GAgentTransitionState(ToolCallingAIGAgentState state,
+        StateLogEventBase<ToolCallingStateLogEvent> @event)
     {
         switch (@event)
         {
@@ -407,13 +418,15 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 {
                     state.ChatHistory.RemoveAt(0);
                 }
+
                 break;
             case ToolRegisteredLogEvent tool:
                 if (!state.RegisteredTools.Contains(tool.ToolName))
                 {
                     state.RegisteredTools.Add(tool.ToolName);
                 }
+
                 break;
         }
     }
-} 
+}

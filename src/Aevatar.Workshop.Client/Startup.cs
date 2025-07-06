@@ -1,9 +1,11 @@
+using System;
 using Aevatar.Core.Abstractions;
 using Aevatar.Extensions;
 using Aevatar.GAgents.Executor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
+using Orleans.Configuration;
 
 namespace Aevatar.Workshop.Client;
 
@@ -16,6 +18,11 @@ public static class Startup
             {
                 client.UseLocalhostClustering()
                     .AddMemoryStreams(AevatarCoreConstants.StreamProvider)
+                    .Configure<ClientMessagingOptions>(options =>
+                    {
+                        options.ResponseTimeout = TimeSpan.FromMinutes(2);
+                        options.ResponseTimeoutWithDebugger = TimeSpan.FromMinutes(2);
+                    })
                     .UseAevatar(true);
                 client.Services.AddTransient<IGAgentService, GAgentService>();
                 client.Services.AddTransient<IGAgentExecutor, GAgentExecutor>();
