@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Aevatar.Core;
@@ -10,7 +10,6 @@ using Aevatar.GAgents.AI.Common;
 using Aevatar.GAgents.AIGAgent.Agent;
 using Aevatar.GAgents.AIGAgent.Dtos;
 using Aevatar.GAgents.AIGAgent.State;
-using Aevatar.GAgents.MCP;
 using Aevatar.GAgents.MCP.GAgents;
 using Aevatar.GAgents.MCP.GEvents;
 using Aevatar.GAgents.MCP.Model;
@@ -19,9 +18,7 @@ using Aevatar.GAgents.MCP.State;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
-using MongoDB.Driver.Core.Clusters;
 using Orleans;
-using Orleans.Runtime;
 
 namespace Aevatar.Workshop.GAgent;
 
@@ -62,7 +59,7 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
 {
     private readonly ILogger<DynamicToolAIGAgent> _logger;
     private readonly IGAgentFactory _gAgentFactory;
-    private Kernel? _kernel;
+    private Dictionary<string, string> _toolNameMapping = new(); // Maps kernel function names to MCP tool names
 
     public DynamicToolAIGAgent()
     {
@@ -73,6 +70,23 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     public override Task<string> GetDescriptionAsync()
     {
         return Task.FromResult("Dynamic AI agent that can use MCP tools at runtime");
+    }
+    
+    /// <summary>
+    /// Override Initialize to register MCP tools after brain initialization
+    /// </summary>
+    public override async Task<bool> InitializeAsync(InitializeDto initializeDto)
+    {
+        // Call base initialization first (this initializes the brain)
+        var result = await base.InitializeAsync(initializeDto);
+        
+        if (result && State.MCPAgents.Any())
+        {
+            // Now that brain is initialized, register MCP tools
+            await UpdateKernelToolsAsync();
+        }
+        
+        return result;
     }
 
     public async Task<bool> ConfigureServersAsync(List<MCPServerConfig> servers)
@@ -112,7 +126,15 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
             await ConfirmEvents();
 
             // Update Kernel tools after configuring servers
-            await UpdateKernelToolsAsync();
+            // Only update if brain is initialized
+            if (GetKernelFromBrain() != null)
+            {
+                await UpdateKernelToolsAsync();
+            }
+            else
+            {
+                Logger.LogWarning("Brain not initialized yet. Tools will be registered after brain initialization.");
+            }
 
             return true;
         }
@@ -165,11 +187,16 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
 
     private async Task UpdateKernelToolsAsync()
     {
-        // Create a new kernel for this agent
-        _kernel = new Kernel();
+        // Get the kernel from the brain if it exists
+        var kernel = GetKernelFromBrain();
+        if (kernel == null)
+        {
+            Logger.LogWarning("Cannot update kernel tools: Brain not initialized or kernel not accessible");
+            return;
+        }
 
-        // Clear existing plugins
-        _kernel.Plugins.Clear();
+        // Clear the tool name mapping
+        _toolNameMapping.Clear();
 
         // Register MCP tools as kernel functions
         foreach (var (serverName, agentRef) in State.MCPAgents)
@@ -183,19 +210,28 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
 
                 foreach (var (toolName, tool) in tools)
                 {
+                    // Semantic Kernel function names can only contain ASCII letters, digits, and underscores
+                    // Replace dots with underscores for the kernel function name
+                    var mcpToolFullName = $"{serverName}.{toolName}";
+                    var kernelFunctionName = $"{serverName}_{toolName}".Replace(".", "_").Replace("-", "_");
+                    
+                    // Store the mapping for later use
+                    _toolNameMapping[kernelFunctionName] = mcpToolFullName;
+                    
                     var function = KernelFunctionFactory.CreateFromMethod(
                         async (KernelArguments args) => await CallMCPToolAsync(serverName, toolName, args),
-                        functionName: toolName,
+                        functionName: kernelFunctionName,
                         description: tool.Description,
                         parameters: ConvertToKernelParameters(tool.Parameters)
                     );
 
                     functions.Add(function);
+                    Logger.LogInformation($"Registered tool: {kernelFunctionName} (MCP: {mcpToolFullName})");
                 }
 
                 if (functions.Any())
                 {
-                    _kernel.Plugins.AddFromFunctions(serverName, functions);
+                    kernel.Plugins.AddFromFunctions(serverName, functions);
                     Logger.LogInformation($"Registered {functions.Count} tools from server {serverName}");
                 }
             }
@@ -203,6 +239,55 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
             {
                 Logger.LogError(ex, $"Failed to register tools from server {serverName}");
             }
+        }
+    }
+    
+    /// <summary>
+    /// Gets the Semantic Kernel from the brain using reflection
+    /// </summary>
+    private Kernel? GetKernelFromBrain()
+    {
+        // Use reflection to access the private _brain field from base class
+        var brainField = typeof(AIGAgentBase<DynamicToolAIGAgentState, DynamicToolAIGAgentStateLogEvent>)
+            .GetField("_brain", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        
+        if (brainField == null)
+        {
+            Logger.LogWarning("Cannot find _brain field in base class");
+            return null;
+        }
+        
+        var brain = brainField.GetValue(this);
+        if (brain == null)
+        {
+            Logger.LogWarning("Brain is not initialized");
+            return null;
+        }
+
+        try
+        {
+            var brainType = brain.GetType();
+            var kernelField = brainType.GetField("Kernel",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+            if (kernelField != null)
+            {
+                return kernelField.GetValue(brain) as Kernel;
+            }
+
+            var kernelProperty = brainType.GetProperty("Kernel",
+                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
+            if (kernelProperty != null)
+            {
+                return kernelProperty.GetValue(brain) as Kernel;
+            }
+
+            Logger.LogWarning("Cannot find Kernel field or property in brain type {BrainType}", brainType.Name);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error accessing Kernel from brain");
+            return null;
         }
     }
 
@@ -295,8 +380,8 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     {
         await base.OnAIGAgentActivateAsync(cancellationToken);
         
-        // If we have MCP agents configured, update kernel tools
-        if (State.MCPAgents.Any())
+        // If we have MCP agents configured and brain is initialized, update kernel tools
+        if (State.MCPAgents.Any() && GetKernelFromBrain() != null)
         {
             await UpdateKernelToolsAsync();
         }
