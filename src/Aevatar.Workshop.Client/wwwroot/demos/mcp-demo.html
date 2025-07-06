@@ -399,23 +399,45 @@
         function formatResultContent(formattedResult, rawContent) {
             console.log('Formatting result:', formattedResult, 'Raw content:', rawContent);
             
-            // If no formatted result but have raw content that's JSON string
-            if (!formattedResult && rawContent) {
+            // Priority 1: Extract Result from rawContent
+            if (rawContent) {
                 try {
-                    // Try to parse and extract Result field
-                    if (typeof rawContent === 'string' && rawContent.includes('"Result":')) {
-                        const parsed = JSON.parse(rawContent);
-                        if (parsed.Result !== undefined) {
-                            return `<pre>${escapeHtml(parsed.Result)}</pre>`;
-                        }
+                    const jsonStr = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
+                    const parsed = JSON.parse(jsonStr);
+                    if (parsed.Result !== undefined && parsed.Result !== null) {
+                        console.log('Extracted Result from rawContent:', parsed.Result);
+                        return `<pre>${escapeHtml(parsed.Result)}</pre>`;
                     }
                 } catch (e) {
                     console.log('Failed to parse raw content:', e);
                 }
-                // Fallback to display raw content
-                return `<pre>${escapeHtml(String(rawContent))}</pre>`;
             }
             
+            // Priority 2: Extract Result from formattedResult
+            if (formattedResult) {
+                try {
+                    let jsonStr = '';
+                    if (formattedResult.value) {
+                        jsonStr = formattedResult.value;
+                    } else if (formattedResult.raw) {
+                        jsonStr = formattedResult.raw;
+                    } else if (typeof formattedResult === 'string') {
+                        jsonStr = formattedResult;
+                    }
+                    
+                    if (jsonStr) {
+                        const parsed = JSON.parse(jsonStr);
+                        if (parsed.Result !== undefined && parsed.Result !== null) {
+                            console.log('Extracted Result from formattedResult:', parsed.Result);
+                            return `<pre>${escapeHtml(parsed.Result)}</pre>`;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Failed to parse formatted result:', e);
+                }
+            }
+            
+            // Fallback
             const result = formattedResult;
             if (!result) return '<pre>No result data</pre>';
             
