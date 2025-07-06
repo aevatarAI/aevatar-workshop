@@ -2274,14 +2274,26 @@ async function renderMCPDemo(demo) {
     {
       name: 'filesystem',
       command: 'npx',
-      args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp'],
-      description: currentLanguage === 'zh' ? '文件系统服务器' : 'Filesystem Server'
+      args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp', '/Users', '/System/Volumes/Data/Users'],
+      description: currentLanguage === 'zh' ? '文件系统服务器 - 访问系统和用户目录' : 'Filesystem Server - Access system and user directories'
     },
     {
       name: 'memory',
       command: 'npx',
       args: ['-y', '@modelcontextprotocol/server-memory'],
-      description: currentLanguage === 'zh' ? '内存服务器' : 'Memory Server'
+      description: currentLanguage === 'zh' ? '内存存储服务器 - 临时键值存储' : 'Memory Server - Temporary key-value storage'
+    },
+    {
+      name: 'sequential-thinking',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-sequential-thinking'],
+      description: currentLanguage === 'zh' ? '顺序思考服务器 - 分步解决问题' : 'Sequential Thinking Server - Step-by-step problem solving'
+    },
+    {
+      name: 'everything',
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-everything'],
+      description: currentLanguage === 'zh' ? '测试服务器 - 展示所有MCP功能' : 'Everything Server - Demonstrates all MCP features'
     }
   ];
   
