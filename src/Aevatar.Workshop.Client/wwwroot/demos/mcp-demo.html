@@ -374,7 +374,7 @@
                                 <div class="result-type">${result.resultType}</div>
                             </div>
                             <div class="result-content ${result.formattedResult?.type === 'json' ? 'json' : ''}">
-                                ${formatResultContent(result.formattedResult || result.resultContent)}
+                                ${formatResultContent(result.formattedResult, result.resultContent)}
                             </div>
                         </div>
                     `;
@@ -396,8 +396,27 @@
             }
         }
 
-        function formatResultContent(result) {
-            console.log('Formatting result:', result);
+        function formatResultContent(formattedResult, rawContent) {
+            console.log('Formatting result:', formattedResult, 'Raw content:', rawContent);
+            
+            // If no formatted result but have raw content that's JSON string
+            if (!formattedResult && rawContent) {
+                try {
+                    // Try to parse and extract Result field
+                    if (typeof rawContent === 'string' && rawContent.includes('"Result":')) {
+                        const parsed = JSON.parse(rawContent);
+                        if (parsed.Result !== undefined) {
+                            return `<pre>${escapeHtml(parsed.Result)}</pre>`;
+                        }
+                    }
+                } catch (e) {
+                    console.log('Failed to parse raw content:', e);
+                }
+                // Fallback to display raw content
+                return `<pre>${escapeHtml(String(rawContent))}</pre>`;
+            }
+            
+            const result = formattedResult;
             if (!result) return '<pre>No result data</pre>';
             
             // Handle string types
@@ -407,8 +426,20 @@
                     ${result.lineCount && result.lineCount > 5 ? `<div style="margin-top: 10px; color: #666;">Total lines: ${result.lineCount}</div>` : ''}`;
             }
             
-            // Handle JSON type
+            // Handle JSON type - extract Result field if present
             if (result.type === 'json') {
+                try {
+                    // Try to parse the JSON and extract Result field
+                    const jsonStr = result.value || result.raw || '';
+                    const parsed = JSON.parse(jsonStr);
+                    if (parsed.Result !== undefined) {
+                        // Display only the Result field
+                        return `<pre>${escapeHtml(parsed.Result)}</pre>`;
+                    }
+                } catch (e) {
+                    console.log('Failed to extract Result from JSON:', e);
+                }
+                // Fallback to formatted display
                 const content = result.formatted || result.value || '';
                 return `<pre>${escapeHtml(typeof content === 'string' ? content : JSON.stringify(content, null, 2))}</pre>`;
             }
