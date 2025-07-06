@@ -340,7 +340,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
             var startTime = DateTime.UtcNow;
             Logger.LogInformation("[{Timestamp}] Starting LLM call for message: '{Message}'", startTime.ToString("HH:mm:ss.fff"), message);
             
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(40)); // Increased to 40 seconds for debugging
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2)); // 2 minutes timeout to match Orleans
             try
             {
                 Logger.LogInformation("[{Timestamp}] Sending request to OpenAI API...", DateTime.UtcNow.ToString("HH:mm:ss.fff"));

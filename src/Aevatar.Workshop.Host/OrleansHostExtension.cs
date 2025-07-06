@@ -1,9 +1,11 @@
+using System;
 using Aevatar.Core.Abstractions;
 using Aevatar.Extensions;
 using Aevatar.GAgents.Executor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Orleans.Configuration;
 using Orleans.Serialization;
 
 namespace Aevatar.Workshop.Host;
@@ -22,6 +24,11 @@ public static class OrleansHostExtension
                     .AddMemoryStreams(AevatarCoreConstants.StreamProvider)
                     .AddMemoryGrainStorage("PubSubStore")
                     .AddLogStorageBasedLogConsistencyProvider()
+                    .Configure<SiloMessagingOptions>(options =>
+                    {
+                        options.ResponseTimeout = TimeSpan.FromMinutes(2);
+                        options.SystemResponseTimeout = TimeSpan.FromMinutes(2);
+                    })
                     .Configure<ExceptionSerializationOptions>(options =>
                     {
                         options.SupportedNamespacePrefixes.Add("Volo.Abp");
