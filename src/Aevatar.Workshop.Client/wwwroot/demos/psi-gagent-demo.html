@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PsiGAgent Demo - Self-Organizing AI Agent System</title>
+    <script src="https://cdn.jsdelivr.net/npm/vis-network@9.1.2/standalone/umd/vis-network.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .panel h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #667eea;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .control-section {
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #48bb78;
+        }
+        
+        .btn-secondary:hover {
+            background: #38a169;
+        }
+        
+        .btn-danger {
+            background: #f56565;
+        }
+        
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        input[type="text"], textarea {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .chat-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fafafa;
+            margin-bottom: 15px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            background: #e6f3ff;
+            margin-left: 20%;
+            border-left: 4px solid #667eea;
+        }
+        
+        .message.assistant {
+            background: #f0f0f0;
+            margin-right: 20%;
+            border-left: 4px solid #48bb78;
+        }
+        
+        .message.system {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            font-style: italic;
+        }
+        
+        .message-role {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #4a5568;
+        }
+        
+        .message-content {
+            color: #2d3748;
+        }
+        
+        .message-time {
+            font-size: 0.85rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+        
+        #agentGraph {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(72, 187, 120, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
+        }
+        
+        .status-inactive {
+            background: #cbd5e0;
+        }
+        
+        .info-box {
+            background: #e6f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h3 {
+            color: #5a67d8;
+            margin-bottom: 8px;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background: #2d3748;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: none;
+            z-index: 1000;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #fee;
+            border-left: 4px solid #f56565;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .example-tasks {
+            margin-top: 15px;
+        }
+        
+        .example-task {
+            display: inline-block;
+            background: #f7fafc;
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        
+        .example-task:hover {
+            background: #e6f3ff;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 PsiGAgent Demo</h1>
+            <p>Experience the power of self-organizing AI agents that can dynamically decide their operation mode and create child agents to solve complex tasks</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="panel">
+                <h2>Control Panel</h2>
+                
+                <div class="info-box">
+                    <h3>ℹ️ How it works</h3>
+                    <p>PsiGAgent automatically decides whether to operate as an Orchestrator (delegating to child agents) or as a Specialized agent (performing specific tasks). Try giving it complex tasks to see it create a hierarchy of agents!</p>
+                </div>
+                
+                <div class="control-section">
+                    <button id="createAgentBtn" class="btn" onclick="createAgent()">
+                        Create New Agent
+                    </button>
+                    <button id="resetBtn" class="btn btn-danger" onclick="resetDemo()" disabled>
+                        Reset Demo
+                    </button>
+                    <div style="margin-top: 10px;">
+                        <span class="status-indicator status-inactive" id="statusIndicator"></span>
+                        <span id="statusText">No agent created</span>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>Send Task/Message</h3>
+                    <textarea id="messageInput" placeholder="Enter a task or message for the agent..."></textarea>
+                    <button id="sendBtn" class="btn btn-secondary" onclick="sendMessage()" disabled>
+                        Send Message
+                    </button>
+                    
+                    <div class="example-tasks">
+                        <p style="margin-bottom: 10px;">Example tasks:</p>
+                        <span class="example-task" onclick="setExampleTask('Help me plan a birthday party for 20 people')">
+                            🎉 Plan a party
+                        </span>
+                        <span class="example-task" onclick="setExampleTask('Research the latest trends in AI and write a summary')">
+                            🔍 AI Research
+                        </span>
+                        <span class="example-task" onclick="setExampleTask('Create a workout plan for beginners')">
+                            💪 Workout Plan
+                        </span>
+                        <span class="example-task" onclick="setExampleTask('Analyze the pros and cons of electric vehicles')">
+                            🚗 EV Analysis
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="totalAgents">0</div>
+                        <div class="stat-label">Total Agents</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="maxDepth">0</div>
+                        <div class="stat-label">Max Depth</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="messageCount">0</div>
+                        <div class="stat-label">Messages</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>Chat History</h2>
+                <div class="chat-container" id="chatContainer">
+                    <div class="message system">
+                        <div class="message-content">Welcome to PsiGAgent Demo! Create an agent to get started.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>Agent Hierarchy Visualization</h2>
+            <div id="agentGraph"></div>
+        </div>
+    </div>
+    
+    <div class="tooltip" id="tooltip"></div>
+    
+    <script>
+        let sessionId = null;
+        let network = null;
+        let refreshInterval = null;
+        let totalMessages = 0;
+        
+        function createAgent() {
+            const btn = document.getElementById('createAgentBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Creating...';
+            
+            fetch('/api/PsiGAgentDemo/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                
+                sessionId = data.sessionId;
+                document.getElementById('statusIndicator').className = 'status-indicator status-active';
+                document.getElementById('statusText').textContent = 'Agent active';
+                document.getElementById('sendBtn').disabled = false;
+                document.getElementById('resetBtn').disabled = false;
+                
+                addMessage('system', `Agent created successfully! Session ID: ${sessionId}`);
+                
+                // Start refreshing the agent state
+                startRefreshing();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessage('system', `Error creating agent: ${error.message}`, true);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = 'Create New Agent';
+            });
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message || !sessionId) return;
+            
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Sending...';
+            
+            addMessage('user', message);
+            input.value = '';
+            
+            fetch('/api/PsiGAgentDemo/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: sessionId,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                addMessage('system', 'Message sent to agent. Processing...');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessage('system', `Error sending message: ${error.message}`, true);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = 'Send Message';
+            });
+        }
+        
+        function startRefreshing() {
+            // Refresh immediately
+            refreshAgentState();
+            
+            // Then refresh every 2 seconds
+            refreshInterval = setInterval(refreshAgentState, 2000);
+        }
+        
+        function stopRefreshing() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        }
+        
+        function refreshAgentState() {
+            if (!sessionId) return;
+            
+            fetch(`/api/PsiGAgentDemo/state/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) throw new Error(data.error);
+                    
+                    updateVisualization(data);
+                    updateStats(data);
+                    updateChatFromState(data);
+                })
+                .catch(error => {
+                    console.error('Error refreshing state:', error);
+                });
+        }
+        
+        function updateVisualization(agentStates) {
+            const nodes = new vis.DataSet();
+            const edges = new vis.DataSet();
+            
+            // Create nodes
+            agentStates.forEach(agent => {
+                const state = agent.state;
+                const color = getNodeColor(agent.depth, state.realizationStatus);
+                
+                nodes.add({
+                    id: agent.id,
+                    label: truncateText(state.description || state.agentId || 'Agent', 30),
+                    title: createTooltipContent(agent),
+                    level: agent.depth,
+                    color: color,
+                    shape: state.realizationStatus === 'Orchestrator' ? 'box' : 'ellipse',
+                    font: { color: 'white' }
+                });
+            });
+            
+            // Create edges based on child relationships
+            agentStates.forEach(agent => {
+                if (agent.state.childAgents) {
+                    Object.keys(agent.state.childAgents).forEach(childId => {
+                        if (nodes.get(childId)) {
+                            edges.add({
+                                from: agent.id,
+                                to: childId,
+                                arrows: 'to',
+                                color: { color: '#667eea' }
+                            });
+                        }
+                    });
+                }
+            });
+            
+            const container = document.getElementById('agentGraph');
+            const data = { nodes, edges };
+            const options = {
+                layout: {
+                    hierarchical: {
+                        direction: 'UD',
+                        sortMethod: 'directed',
+                        levelSeparation: 100,
+                        nodeSpacing: 150
+                    }
+                },
+                physics: {
+                    enabled: false
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 200
+                }
+            };
+            
+            if (!network) {
+                network = new vis.Network(container, data, options);
+            } else {
+                network.setData(data);
+            }
+        }
+        
+        function getNodeColor(depth, status) {
+            const orchestratorColors = ['#667eea', '#5a67d8', '#4c51bf', '#434190'];
+            const specializedColors = ['#48bb78', '#38a169', '#2f855a', '#276749'];
+            
+            const colors = status === 'Orchestrator' ? orchestratorColors : specializedColors;
+            return colors[Math.min(depth, colors.length - 1)];
+        }
+        
+        function createTooltipContent(agent) {
+            const state = agent.state;
+            let content = `<strong>${state.agentId}</strong><br>`;
+            content += `Type: ${state.realizationStatus}<br>`;
+            content += `Depth: ${agent.depth}<br>`;
+            
+            if (state.description) {
+                content += `<br>Description: ${state.description}<br>`;
+            }
+            
+            if (state.tools && state.tools.length > 0) {
+                content += `<br>Tools: ${state.tools.join(', ')}<br>`;
+            }
+            
+            if (state.childAgents && Object.keys(state.childAgents).length > 0) {
+                content += `<br>Child Agents: ${Object.keys(state.childAgents).length}<br>`;
+            }
+            
+            return content;
+        }
+        
+        function updateStats(agentStates) {
+            document.getElementById('totalAgents').textContent = agentStates.length;
+            
+            const maxDepth = Math.max(...agentStates.map(a => a.depth));
+            document.getElementById('maxDepth').textContent = maxDepth;
+            
+            const totalMessages = agentStates.reduce((sum, agent) => 
+                sum + (agent.state.chatHistory ? agent.state.chatHistory.length : 0), 0);
+            document.getElementById('messageCount').textContent = totalMessages;
+        }
+        
+        function updateChatFromState(agentStates) {
+            // Find the root agent (depth 0) and check for new messages
+            const rootAgent = agentStates.find(a => a.depth === 0);
+            if (!rootAgent || !rootAgent.state.chatHistory) return;
+            
+            // Check the last assistant message for final results
+            const chatHistory = rootAgent.state.chatHistory;
+            const lastAssistantMsg = [...chatHistory].reverse().find(m => m.role === 'assistant');
+            
+            if (lastAssistantMsg && lastAssistantMsg.content) {
+                try {
+                    const content = JSON.parse(lastAssistantMsg.content);
+                    if (content.Final) {
+                        // Check if we haven't already shown this final result
+                        const chatContainer = document.getElementById('chatContainer');
+                        const lastMessage = chatContainer.lastElementChild;
+                        if (!lastMessage || !lastMessage.dataset.finalResult) {
+                            addMessage('assistant', content.Final);
+                            const newMessage = chatContainer.lastElementChild;
+                            newMessage.dataset.finalResult = 'true';
+                        }
+                    }
+                } catch (e) {
+                    // If not JSON, show the raw content
+                    const chatContainer = document.getElementById('chatContainer');
+                    const lastMessage = chatContainer.lastElementChild;
+                    if (!lastMessage || lastMessage.textContent !== lastAssistantMsg.content) {
+                        addMessage('assistant', lastAssistantMsg.content);
+                    }
+                }
+            }
+        }
+        
+        function addMessage(role, content, isError = false) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            if (isError) messageDiv.className += ' error-message';
+            
+            const now = new Date().toLocaleTimeString();
+            
+            messageDiv.innerHTML = `
+                <div class="message-role">${role.charAt(0).toUpperCase() + role.slice(1)}</div>
+                <div class="message-content">${escapeHtml(content)}</div>
+                <div class="message-time">${now}</div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            totalMessages++;
+        }
+        
+        function resetDemo() {
+            sessionId = null;
+            stopRefreshing();
+            
+            document.getElementById('statusIndicator').className = 'status-indicator status-inactive';
+            document.getElementById('statusText').textContent = 'No agent created';
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('resetBtn').disabled = true;
+            document.getElementById('messageInput').value = '';
+            
+            // Clear visualization
+            if (network) {
+                network.destroy();
+                network = null;
+            }
+            
+            // Reset stats
+            document.getElementById('totalAgents').textContent = '0';
+            document.getElementById('maxDepth').textContent = '0';
+            document.getElementById('messageCount').textContent = '0';
+            
+            // Clear chat
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = `
+                <div class="message system">
+                    <div class="message-content">Demo reset. Create a new agent to start again.</div>
+                </div>
+            `;
+            
+            totalMessages = 0;
+        }
+        
+        function setExampleTask(task) {
+            document.getElementById('messageInput').value = task;
+        }
+        
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+        }
+        
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+        
+        // Handle Enter key in message input
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html> 

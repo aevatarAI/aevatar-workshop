@@ -1,4 +1,5 @@
 using System.Collections;
+using System.ComponentModel;
 using System.Reflection;
 using System.Text.Json;
 using Aevatar.Core.Abstractions;
@@ -8,6 +9,8 @@ using Aevatar.GAgents.MCP.GAgents;
 using Aevatar.GAgents.MCP.Model;
 using Aevatar.GAgents.MCP.Options;
 using Aevatar.GAgents.Executor;
+using Aevatar.GAgents.AI.BrainFactory;
+using Aevatar.GAgents.AI.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
@@ -19,6 +22,7 @@ namespace Aevatar.Workshop.GAgent;
 public interface IDynamicToolAIGAgent : IAIGAgent, IStateGAgent<DynamicToolAIGAgentState>
 {
     Task<bool> ConfigureServersAsync(List<MCPServerConfig> servers);
+    Task<bool> ConfigureBrainAsync(string systemLLM);
     Task<List<MCPToolInfo>> GetAvailableToolsAsync();
     Task<string> ChatAsync(string message);
     Task<ChatWithDetailsResponse> ChatWithDetailsAsync(string message);
@@ -80,6 +84,7 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     private readonly IGAgentFactory _gAgentFactory;
     private readonly IGAgentService _gAgentService;
     private readonly IGAgentExecutor _gAgentExecutor;
+    private readonly IBrainFactory _brainFactory;
     private Dictionary<string, string> _toolNameMapping = new(); // Maps kernel function names to MCP tool names
     private List<ToolCallDetail> _currentToolCalls = new(); // Track tool calls for current request
 
@@ -89,11 +94,65 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
         _logger = ServiceProvider.GetRequiredService<ILogger<DynamicToolAIGAgent>>();
         _gAgentService = ServiceProvider.GetRequiredService<IGAgentService>();
         _gAgentExecutor = ServiceProvider.GetRequiredService<IGAgentExecutor>();
+        _brainFactory = ServiceProvider.GetRequiredService<IBrainFactory>();
     }
 
     public override Task<string> GetDescriptionAsync()
     {
         return Task.FromResult("Dynamic AI agent that can use MCP tools at runtime");
+    }
+    
+    /// <summary>
+    /// Configure the brain with a specific LLM system
+    /// </summary>
+    public async Task<bool> ConfigureBrainAsync(string systemLLM)
+    {
+        try
+        {
+            Logger.LogInformation("Configuring brain with system LLM: {SystemLLM}", systemLLM);
+            
+            // Set the system LLM
+            State.SystemLLM = systemLLM;
+            
+            // Set a default prompt template if not already set
+            if (string.IsNullOrEmpty(State.PromptTemplate))
+            {
+                State.PromptTemplate = @"You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol) and other GAgent tools.
+
+When asked to perform tasks, use the available tools to help provide accurate and complete responses.
+
+Before using any tool:
+- Check the tool's description to understand what it does
+- Review the parameter descriptions to understand what inputs are required
+- Use the exact tool names and parameter names as provided
+
+Always explain what tools you're using and why.
+When using tools, be clear about the results and how they help answer the user's question.";
+            }
+            
+            RaiseEvent(new DynamicToolAIGAgentStateLogEvent());
+            await ConfirmEvents();
+            
+            // Manually trigger brain initialization by calling the activation logic
+            await OnAIGAgentActivateAsync(CancellationToken.None);
+            
+            // Check if brain was initialized successfully
+            if (GetKernelFromBrain() != null)
+            {
+                Logger.LogInformation("Brain configured and initialized successfully");
+                return true;
+            }
+            else
+            {
+                Logger.LogError("Failed to initialize brain for system LLM: {SystemLLM}", systemLLM);
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to configure brain");
+            return false;
+        }
     }
     
     /// <summary>
@@ -464,11 +523,19 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
                             },
                             functionName: functionName,
                             description: GenerateFunctionDescription(grainType, eventType, gAgentInfo.Description),
-                            parameters: eventProperties.Select(p => new KernelParameterMetadata(p.Name)
+                            parameters: eventProperties.Select(p => 
                             {
-                                Description = $"Parameter {p.Name} of type {p.PropertyType.Name}",
-                                IsRequired = true,
-                                ParameterType = p.PropertyType
+                                // Try to get the Description attribute
+                                var descriptionAttr = p.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+                                var description = descriptionAttr?.Description ?? 
+                                                 $"Parameter {p.Name} of type {p.PropertyType.Name}";
+                                
+                                return new KernelParameterMetadata(p.Name)
+                                {
+                                    Description = description,
+                                    IsRequired = !IsNullableType(p.PropertyType),
+                                    ParameterType = p.PropertyType
+                                };
                             }).ToArray()
                         );
 
@@ -820,7 +887,7 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     {
         await base.OnAIGAgentActivateAsync(cancellationToken);
         
-        // If we have MCP agents configured and brain is initialized, update kernel tools
+        // Register MCP tools after brain initialization if we have any configured
         if (State.MCPAgents.Any() && GetKernelFromBrain() != null)
         {
             await UpdateKernelToolsAsync();
@@ -929,13 +996,20 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
             }
 
             // For complex types, try to deserialize
-            return JsonSerializer.Deserialize(element.GetRawText(), targetType);
+            var json = element.GetRawText();
+            return JsonSerializer.Deserialize(json, targetType);
         }
         catch (Exception ex)
         {
             Logger.LogWarning(ex, "Failed to convert JsonElement to type {TargetType}", targetType.Name);
             return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
         }
+    }
+    
+    private static bool IsNullableType(Type type)
+    {
+        return !type.IsValueType || 
+               (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
     }
 }
 

@@ -40,7 +40,41 @@ public class WorkshopHostModule : AbpModule
         context.Services.AddHttpClient();
         context.Services.AddSingleton<IEventDispatcher, DefaultEventDispatcher>();
         context.Services.AddSingleton<IBlobContainer, MockBlobContainer>();
-        context.Services.Configure<SystemLLMConfigOptions>(configuration);
+        
+        // Configure SystemLLMConfigOptions with merged configurations
+        context.Services.Configure<SystemLLMConfigOptions>(options =>
+        {
+            var llmConfigs = new Dictionary<string, LLMConfig>();
+            
+            // Load from appsettings.json
+            var section = configuration.GetSection("SystemLLMConfigs");
+            if (section.Exists())
+            {
+                var configs = section.Get<Dictionary<string, LLMConfig>>();
+                if (configs != null)
+                {
+                    foreach (var kvp in configs)
+                    {
+                        llmConfigs[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+            
+            // Configuration already includes both files due to Program.cs loading both
+            // The second file (appsettings.secrets.json) will override any duplicate keys
+            options.SystemLLMConfigs = llmConfigs;
+            
+            // Log loaded configurations for debugging
+            Log.Information("Loaded {Count} SystemLLMConfigs:", llmConfigs.Count);
+            foreach (var kvp in llmConfigs)
+            {
+                Log.Information("  - {Key}: {Provider} ({ModelName})", 
+                    kvp.Key, 
+                    kvp.Value.ProviderEnum,
+                    kvp.Value.ModelName);
+            }
+        });
+        
         context.Services.AddSemanticKernel();
         context.Services.AddSingleton<IKernelFactory, KernelFactory>();
         context.Services.AddSingleton<IKernelFunctionRegistry, KernelFunctionRegistry>();
@@ -50,7 +84,8 @@ public class WorkshopHostModule : AbpModule
         context.Services.AddSingleton<IWebContentFetcher, WebContentFetcher>();
         
         // Register all search engines
-        context.Services.AddSingleton<ISearchEngine, GoogleSearchEngine>(); // GoogleSearchEngine now uses built-in GoogleTextSearch
+        context.Services
+            .AddSingleton<ISearchEngine, GoogleSearchEngine>(); // GoogleSearchEngine now uses built-in GoogleTextSearch
         context.Services.AddHttpClient<DuckDuckGoSearchEngine>();
         context.Services.AddHttpClient<BingSearchEngine>();
         context.Services.AddSingleton<ISearchEngine, DuckDuckGoSearchEngine>();

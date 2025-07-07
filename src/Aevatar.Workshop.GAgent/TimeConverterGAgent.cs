@@ -25,9 +25,17 @@ public class TimeConversionLogEvent : TimeConverterStateLogEvent
 [GenerateSerializer]
 public class TimeConvertEvent : EventBase
 {
-    [Id(0)] public string TimeInput { get; set; } = string.Empty;
-    [Id(1)] public string FromTimeZone { get; set; } = string.Empty;
-    [Id(2)] public string ToTimeZone { get; set; } = string.Empty;
+    [Id(0)] 
+    [System.ComponentModel.Description("Time input to convert. Can be 'now' for current time, or specific times like '3:00 PM', '15:00', '2024-01-01 10:30:00'")]
+    public string TimeInput { get; set; } = string.Empty;
+    
+    [Id(1)] 
+    [System.ComponentModel.Description("Source timezone (optional). Can be timezone abbreviations like 'UTC', 'EST', 'PST', 'JST', etc. Defaults to 'UTC' if not specified")]
+    public string FromTimeZone { get; set; } = string.Empty;
+    
+    [Id(2)] 
+    [System.ComponentModel.Description("Target timezone (optional). Can be timezone abbreviations like 'UTC', 'EST', 'PST', 'JST', etc. Defaults to 'Local' if not specified")]
+    public string ToTimeZone { get; set; } = string.Empty;
 }
 
 public interface ITimeConverterGAgent : IStateGAgent<TimeConverterGAgentState>
@@ -237,6 +245,12 @@ public class TimeConverterGAgent : GAgentBase<TimeConverterGAgentState, TimeConv
     {
         input = input.Trim();
         string detectedTimeZone = "";
+
+        // Handle special case: "now"
+        if (input.Equals("now", StringComparison.OrdinalIgnoreCase))
+        {
+            return (DateTime.Now, "Local");
+        }
 
         // Check for timezone abbreviations at the end
         foreach (var tz in _commonTimeZones.Keys)

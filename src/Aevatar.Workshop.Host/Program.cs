@@ -31,6 +31,12 @@ finally
 
 static IHostBuilder CreateHostBuilder(string[] args) =>
     Host.CreateDefaultBuilder(args)
+        .ConfigureAppConfiguration((hostingContext, config) =>
+        {
+            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                  .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                  .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
+        })
         .ConfigureServices((_, services) => { services.AddApplication<WorkshopHostModule>(); })
         .UseOrleansConfiguration()
         .UseAutofac()

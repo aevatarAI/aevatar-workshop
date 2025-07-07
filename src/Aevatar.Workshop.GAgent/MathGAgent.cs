@@ -26,7 +26,9 @@ public class MathCalculationLogEvent : MathStateLogEvent
 [GenerateSerializer]
 public class MathCalculateEvent : EventBase
 {
-    [Id(0)] public string Expression { get; set; } = string.Empty;
+    [Id(0)] 
+    [System.ComponentModel.Description("Mathematical expression to evaluate. Examples: '2+2', '10*5', 'sqrt(16)', 'sin(3.14)', '2^3', 'log(10)'")]
+    public string Expression { get; set; } = string.Empty;
 }
 
 public interface IMathGAgent : IStateGAgent<MathGAgentState>

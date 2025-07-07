@@ -43,6 +43,9 @@ When using tools, be clear about the results and how they help answer the user's
                 }
             });
             
+            // Also explicitly configure the brain to ensure it's initialized
+            await agent.ConfigureBrainAsync(request.SystemLLM);
+            
             return Ok(new
             {
                 success = true,
@@ -145,6 +148,18 @@ When using tools, be clear about the results and how they help answer the user's
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
             
+            // Ensure brain is configured (this is idempotent, so safe to call multiple times)
+            var state = await agent.GetStateAsync();
+            if (!string.IsNullOrEmpty(state.SystemLLM))
+            {
+                await agent.ConfigureBrainAsync(state.SystemLLM);
+            }
+            else
+            {
+                // Use default if not configured
+                await agent.ConfigureBrainAsync("DeepSeek");
+            }
+            
             // Process the chat message
             var response = await agent.ChatAsync(request.Message);
             
@@ -172,6 +187,18 @@ When using tools, be clear about the results and how they help answer the user's
         try
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
+            
+            // Ensure brain is configured (this is idempotent, so safe to call multiple times)
+            var state = await agent.GetStateAsync();
+            if (!string.IsNullOrEmpty(state.SystemLLM))
+            {
+                await agent.ConfigureBrainAsync(state.SystemLLM);
+            }
+            else
+            {
+                // Use default if not configured
+                await agent.ConfigureBrainAsync("DeepSeek");
+            }
             
             // Process the chat message with tool call details
             var detailedResponse = await agent.ChatWithDetailsAsync(request.Message);
