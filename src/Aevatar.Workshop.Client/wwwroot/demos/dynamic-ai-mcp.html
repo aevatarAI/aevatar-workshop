@@ -828,7 +828,7 @@
         <div class="section">
             <div class="section-header">Initialize Agent</div>
             <select id="systemLLM" style="width: 100%; padding: 8px; margin-bottom: 12px; background-color: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 6px; color: #e0e0e0;">
-                <option value="DeepSeek">DeepSeek</option>
+                <!-- Options will be loaded dynamically -->
             </select>
             <button class="button" id="initBtn" onclick="initializeAgent()">
                 <span>Initialize AI Agent</span>
@@ -979,6 +979,45 @@
         document.documentElement.setAttribute('data-theme', savedTheme);
         
         // Page is initialized with the assistant message
+        
+        // Load available LLM configurations
+        loadAvailableLLMs();
+    }
+    
+    // Load available LLM configurations
+    async function loadAvailableLLMs() {
+        try {
+            const response = await fetch('/api/llm-configs/list');
+            const llmKeys = await response.json();
+            
+            const selectElement = document.getElementById('systemLLM');
+            selectElement.innerHTML = ''; // Clear existing options
+            
+            if (llmKeys && llmKeys.length > 0) {
+                llmKeys.forEach(key => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = key;
+                    selectElement.appendChild(option);
+                });
+                
+                // Set DeepSeek as default if it exists
+                if (llmKeys.includes('DeepSeek')) {
+                    selectElement.value = 'DeepSeek';
+                }
+            } else {
+                // Fallback option if no configs found
+                const option = document.createElement('option');
+                option.value = 'DeepSeek';
+                option.textContent = 'DeepSeek (Default)';
+                selectElement.appendChild(option);
+            }
+        } catch (error) {
+            console.error('Failed to load LLM configurations:', error);
+            // Fallback to default
+            const selectElement = document.getElementById('systemLLM');
+            selectElement.innerHTML = '<option value="DeepSeek">DeepSeek (Default)</option>';
+        }
     }
 
     // Theme toggle function

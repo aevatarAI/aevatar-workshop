@@ -12,6 +12,9 @@ using Volo.Abp.Modularity;
 using Aevatar.Workshop.GAgent;
 using Aevatar.Workshop.AIRouterWorkflowGAgent.Researcher;
 using Microsoft.Extensions.Configuration;
+using PsiGAgent.Common.Interfaces;
+using PsiGAgent.Plugins;
+using PsiGAgent.Plugins.Services;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Aws;
 
@@ -39,6 +42,22 @@ public class WorkshopHostModule : AbpModule
         context.Services.AddSingleton<IBlobContainer, MockBlobContainer>();
         context.Services.Configure<SystemLLMConfigOptions>(configuration);
         context.Services.AddSemanticKernel();
+        context.Services.AddSingleton<IKernelFactory, KernelFactory>();
+        context.Services.AddSingleton<IKernelFunctionRegistry, KernelFunctionRegistry>();
+        
+        // Register web search services
+        context.Services.AddHttpClient<WebContentFetcher>();
+        context.Services.AddSingleton<IWebContentFetcher, WebContentFetcher>();
+        
+        // Register all search engines
+        context.Services.AddSingleton<ISearchEngine, GoogleSearchEngine>(); // GoogleSearchEngine now uses built-in GoogleTextSearch
+        context.Services.AddHttpClient<DuckDuckGoSearchEngine>();
+        context.Services.AddHttpClient<BingSearchEngine>();
+        context.Services.AddSingleton<ISearchEngine, DuckDuckGoSearchEngine>();
+        context.Services.AddSingleton<ISearchEngine, BingSearchEngine>();
+        
+        // Register main web search service
+        context.Services.AddSingleton<IWebSearchService, WebSearchService>();
         Configure<AbpBlobStoringOptions>(options =>
         {
             options.Containers.ConfigureDefault(container =>

@@ -77,19 +77,42 @@ public class LlmConfigController : ControllerBase
     {
         try
         {
-            if (!System.IO.File.Exists(configPath))
-                return Ok(Array.Empty<string>());
-            var json = await System.IO.File.ReadAllTextAsync(configPath);
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-            if (root.TryGetProperty("SystemLLMConfigs", out var llmConfigs) &&
-                llmConfigs.ValueKind == JsonValueKind.Object)
+            var keys = new HashSet<string>();
+            
+            // Read from appsettings.json
+            if (System.IO.File.Exists(configPath))
             {
-                var keys = llmConfigs.EnumerateObject().Select(p => p.Name).ToArray();
-                return Ok(keys);
+                var json = await System.IO.File.ReadAllTextAsync(configPath);
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("SystemLLMConfigs", out var llmConfigs) &&
+                    llmConfigs.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var prop in llmConfigs.EnumerateObject())
+                    {
+                        keys.Add(prop.Name);
+                    }
+                }
+            }
+            
+            // Also read from appsettings.secrets.json
+            var secretsPath = Path.Combine(Directory.GetCurrentDirectory(), "../Aevatar.Workshop.Host/appsettings.secrets.json");
+            if (System.IO.File.Exists(secretsPath))
+            {
+                var json = await System.IO.File.ReadAllTextAsync(secretsPath);
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("SystemLLMConfigs", out var llmConfigs) &&
+                    llmConfigs.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var prop in llmConfigs.EnumerateObject())
+                    {
+                        keys.Add(prop.Name);
+                    }
+                }
             }
 
-            return Ok(Array.Empty<string>());
+            return Ok(keys.ToArray());
         }
         catch
         {

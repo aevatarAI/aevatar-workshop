@@ -549,6 +549,12 @@
       desc: { en: 'demodesc/DynamicAIMCPDemo.md', zh: 'demodesc/DynamicAIMCPDemo.zh.md' },
       isCustom: true // Custom rendering for dynamic AI MCP integration
     },
+    {
+      key: 'PsiGAgentDemo',
+      name: { en: 'PsiGAgent Demo', zh: 'PsiGAgent 演示' },
+      desc: { en: 'demodesc/PsiGAgentDemo.md', zh: 'demodesc/PsiGAgentDemo.zh.md' },
+      isCustom: true // Custom rendering for PsiGAgent demo
+    },
   ];
   const logs = [
     { key: 'HostLog', name: 'Host Log' },
@@ -693,6 +699,11 @@
 
     if (demo.isCustom && demo.key === 'DynamicAIMCPDemo') {
       renderDynamicAIMCPDemo(demo);
+      return;
+    }
+
+    if (demo.isCustom && demo.key === 'PsiGAgentDemo') {
+      renderPsiGAgentDemo(demo);
       return;
     }
 
@@ -2852,8 +2863,10 @@
     // Create an iframe to load the standalone demo page
     const demoCard = document.createElement('div');
     demoCard.className = 'demo-card';
-    demoCard.style.maxWidth = '100%';
+    demoCard.style.maxWidth = '1400px';
     demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
 
     // Title
     const title = document.createElement('div');
@@ -2918,6 +2931,86 @@
     iframe.style.height = '100%';
     iframe.style.border = 'none';
     iframe.style.background = '#0e0e0e';
+
+    iframeContainer.appendChild(iframe);
+    demoCard.appendChild(iframeContainer);
+
+    mainContent.appendChild(demoCard);
+  }
+
+  // PsiGAgent Demo rendering
+  async function renderPsiGAgentDemo(demo) {
+    // Create an iframe to load the standalone demo page
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = '/demos/psi-gagent-demo.html';
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Demo iframe
+    const iframeContainer = document.createElement('div');
+    iframeContainer.style.marginTop = '20px';
+    iframeContainer.style.height = '900px';
+    iframeContainer.style.border = '1px solid #e2e8f0';
+    iframeContainer.style.borderRadius = '8px';
+    iframeContainer.style.overflow = 'hidden';
+    iframeContainer.style.background = '#f5f5f5';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = '/demos/psi-gagent-demo.html';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.style.background = '#f5f5f5';
 
     iframeContainer.appendChild(iframe);
     demoCard.appendChild(iframeContainer);

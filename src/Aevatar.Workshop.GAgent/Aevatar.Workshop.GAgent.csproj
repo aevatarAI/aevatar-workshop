@@ -17,6 +17,8 @@
       <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.AIGAgent\Aevatar.GAgents.AIGAgent.csproj" />
       <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.Basic\Aevatar.GAgents.Basic.csproj" />
       <ProjectReference Include="..\..\gAgents\test\Aevatar.GAgents.AIGAgent.Test\Aevatar.GAgents.AIGAgent.Test.csproj" />
+      <ProjectReference Include="..\..\psi-omni\src\PsiGAgent.Omni\PsiGAgent.Omni.csproj" />
+      <ProjectReference Include="..\..\psi-omni\src\PsiGAgent.Plugins\PsiGAgent.Plugins.csproj" />
     </ItemGroup>
 
 </Project>

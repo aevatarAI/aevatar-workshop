@@ -160,6 +160,22 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.MCP", "gAge
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.MCP.Test", "gAgents\test\Aevatar.GAgents.MCP.Test\Aevatar.GAgents.MCP.Test.csproj", "{AB048E46-41DA-4BF1-9B1B-BBBDABD6F3A7}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "psi-omni", "psi-omni", "{957BE9A3-6851-48C8-B265-FF4BD87F2CB4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{CA3DA7F9-77EC-49BB-B3C9-F6EC7C8AA34E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PsiGAgent.Common", "psi-omni\src\PsiGAgent.Common\PsiGAgent.Common.csproj", "{3F3FF8D1-1ADF-482C-A7D9-6AEF7E655A23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PsiGAgent.Omni", "psi-omni\src\PsiGAgent.Omni\PsiGAgent.Omni.csproj", "{09A7D95A-4C60-499E-A6BE-A75BC770AB6B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PsiGAgent.Plugins", "psi-omni\src\PsiGAgent.Plugins\PsiGAgent.Plugins.csproj", "{40DC7754-19F9-4260-A634-BCD43928CB23}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{359F5648-D1D6-4F3D-96B9-ABB1C38D5EC4}"
+	ProjectSection(SolutionItems) = preProject
+		psi-omni\tools\sample_state.json = psi-omni\tools\sample_state.json
+		psi-omni\tools\visualize-v2.html = psi-omni\tools\visualize-v2.html
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -204,6 +220,11 @@ Global
 		{B40439B9-2B02-4A4C-BA6F-AFFD07C00003} = {C0AB7953-B9AD-4208-84B1-71438AB38819}
 		{FBEB8856-B7A3-47D8-B470-87F2E7B9200B} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
 		{AB048E46-41DA-4BF1-9B1B-BBBDABD6F3A7} = {C0AB7953-B9AD-4208-84B1-71438AB38819}
+		{CA3DA7F9-77EC-49BB-B3C9-F6EC7C8AA34E} = {957BE9A3-6851-48C8-B265-FF4BD87F2CB4}
+		{3F3FF8D1-1ADF-482C-A7D9-6AEF7E655A23} = {CA3DA7F9-77EC-49BB-B3C9-F6EC7C8AA34E}
+		{09A7D95A-4C60-499E-A6BE-A75BC770AB6B} = {CA3DA7F9-77EC-49BB-B3C9-F6EC7C8AA34E}
+		{40DC7754-19F9-4260-A634-BCD43928CB23} = {CA3DA7F9-77EC-49BB-B3C9-F6EC7C8AA34E}
+		{359F5648-D1D6-4F3D-96B9-ABB1C38D5EC4} = {957BE9A3-6851-48C8-B265-FF4BD87F2CB4}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -270,5 +291,17 @@ Global
 		{AB048E46-41DA-4BF1-9B1B-BBBDABD6F3A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB048E46-41DA-4BF1-9B1B-BBBDABD6F3A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB048E46-41DA-4BF1-9B1B-BBBDABD6F3A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F3FF8D1-1ADF-482C-A7D9-6AEF7E655A23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F3FF8D1-1ADF-482C-A7D9-6AEF7E655A23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F3FF8D1-1ADF-482C-A7D9-6AEF7E655A23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F3FF8D1-1ADF-482C-A7D9-6AEF7E655A23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09A7D95A-4C60-499E-A6BE-A75BC770AB6B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09A7D95A-4C60-499E-A6BE-A75BC770AB6B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09A7D95A-4C60-499E-A6BE-A75BC770AB6B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09A7D95A-4C60-499E-A6BE-A75BC770AB6B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40DC7754-19F9-4260-A634-BCD43928CB23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40DC7754-19F9-4260-A634-BCD43928CB23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40DC7754-19F9-4260-A634-BCD43928CB23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40DC7754-19F9-4260-A634-BCD43928CB23}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
