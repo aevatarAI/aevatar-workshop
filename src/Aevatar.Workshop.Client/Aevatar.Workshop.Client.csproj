@@ -25,6 +25,5 @@
     <ItemGroup>
         <ProjectReference Include="..\Aevatar.Workshop.AIRouterWorkflowGAgent\Aevatar.Workshop.AIRouterWorkflowGAgent.csproj" />
         <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
-        <ProjectReference Include="..\Aevatar.Workshop.Host\Aevatar.Workshop.Host.csproj" />
     </ItemGroup>
 </Project>

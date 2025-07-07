@@ -80,7 +80,7 @@ When using tools, be clear about the results and how they help answer the user's
                 Environment = s.Environment?.ToDictionary(kv => kv.Key, kv => kv.Value ?? string.Empty) ?? new Dictionary<string, string>()
             }).ToList();
 
-            var success = await agent.ConfigureServersAsync(servers);
+            var success = await agent.ConfigureMCPServersAsync(servers);
             
             if (!success)
             {
@@ -88,7 +88,7 @@ When using tools, be clear about the results and how they help answer the user's
             }
             
             // Get available tools
-            var tools = await agent.GetAvailableToolsAsync();
+            var tools = await agent.GetAvailableMCPToolsAsync();
             
             return Ok(new
             {
@@ -122,7 +122,7 @@ When using tools, be clear about the results and how they help answer the user's
         try
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(agentId));
-            var tools = await agent.GetAvailableToolsAsync();
+            var tools = await agent.GetAvailableMCPToolsAsync();
             
             return Ok(new
             {
@@ -362,7 +362,7 @@ When using tools, be clear about the results and how they help answer the user's
             }
             
             // Get all available tools (MCP + GAgent)
-            var mcpTools = await agent.GetAvailableToolsAsync();
+            var mcpTools = await agent.GetAvailableMCPToolsAsync();
             
             // Get configured GAgent info for response
             var allGAgents = await agent.GetAvailableGAgentsAsync();
@@ -396,6 +396,49 @@ When using tools, be clear about the results and how they help answer the user's
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error configuring GAgent tools");
+            return Ok(new
+            {
+                success = false,
+                error = ex.Message
+            });
+        }
+    }
+
+    [HttpGet("agent-info")]
+    public async Task<IActionResult> GetAgentInfo([FromQuery] string agentId)
+    {
+        try
+        {
+            var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(agentId));
+            var state = await agent.GetStateAsync();
+            
+            // Get MCP tools
+            var mcpTools = await agent.GetAvailableMCPToolsAsync();
+            
+            // Create the response
+            var response = new
+            {
+                success = true,
+                agentId = agentId,
+                systemLLM = state.SystemLLM,
+                enableMCPTools = state.EnableMCPTools,
+                enableGAgentTools = state.EnableGAgentTools,
+                selectedGAgents = state.SelectedGAgents?.Select(g => g.ToString()).ToList() ?? new List<string>(),
+                registeredGAgentFunctions = state.RegisteredGAgentFunctions ?? new List<string>(),
+                mcpTools = mcpTools.Select(t => new
+                {
+                    serverName = t.ServerName,
+                    name = t.Name,
+                    description = t.Description
+                }).ToList(),
+                totalTools = mcpTools.Count + (state.RegisteredGAgentFunctions?.Count ?? 0)
+            };
+            
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting agent info");
             return Ok(new
             {
                 success = false,
