@@ -1,21 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Aevatar.Core;
 using Aevatar.Core.Abstractions;
-using Aevatar.GAgents.AI.Brain;
-using Aevatar.GAgents.AI.BrainFactory;
 using Aevatar.GAgents.AI.Options;
-using Aevatar.GAgents.AI.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Orleans;
-using Volo.Abp.Guids;
 
 namespace Aevatar.Workshop.GAgent;
 

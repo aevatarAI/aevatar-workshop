@@ -1,26 +1,18 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections;
 using System.Reflection;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Aevatar.Core;
 using Aevatar.Core.Abstractions;
-using Aevatar.GAgents.AI.Common;
 using Aevatar.GAgents.AIGAgent.Agent;
-using Aevatar.GAgents.AIGAgent.Dtos;
 using Aevatar.GAgents.AIGAgent.State;
 using Aevatar.GAgents.MCP.GAgents;
-using Aevatar.GAgents.MCP.GEvents;
 using Aevatar.GAgents.MCP.Model;
 using Aevatar.GAgents.MCP.Options;
-using Aevatar.GAgents.MCP.State;
+using Aevatar.GAgents.Executor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Orleans;
 
 namespace Aevatar.Workshop.GAgent;
 
@@ -30,12 +22,16 @@ public interface IDynamicToolAIGAgent : IAIGAgent, IStateGAgent<DynamicToolAIGAg
     Task<List<MCPToolInfo>> GetAvailableToolsAsync();
     Task<string> ChatAsync(string message);
     Task<ChatWithDetailsResponse> ChatWithDetailsAsync(string message);
+    Task<List<GAgentDetailInfo>> GetAvailableGAgentsAsync();
+    Task<bool> ConfigureGAgentToolsAsync(List<GrainType> selectedGAgents);
 }
 
 [GenerateSerializer]
 public class DynamicToolAIGAgentState : AIGAgentStateBase
 {
     [Id(0)] public Dictionary<string, MCPGAgentReference> MCPAgents { get; set; } = new();
+    [Id(1)] public List<GrainType> SelectedGAgents { get; set; } = new();
+    [Id(2)] public Dictionary<string, string> GAgentToolMapping { get; set; } = new(); // Maps kernel function names to GAgent info
 }
 
 [GenerateSerializer]
@@ -82,6 +78,8 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
 {
     private readonly ILogger<DynamicToolAIGAgent> _logger;
     private readonly IGAgentFactory _gAgentFactory;
+    private readonly IGAgentService _gAgentService;
+    private readonly IGAgentExecutor _gAgentExecutor;
     private Dictionary<string, string> _toolNameMapping = new(); // Maps kernel function names to MCP tool names
     private List<ToolCallDetail> _currentToolCalls = new(); // Track tool calls for current request
 
@@ -89,6 +87,8 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     {
         _gAgentFactory = ServiceProvider.GetRequiredService<IGAgentFactory>();
         _logger = ServiceProvider.GetRequiredService<ILogger<DynamicToolAIGAgent>>();
+        _gAgentService = ServiceProvider.GetRequiredService<IGAgentService>();
+        _gAgentExecutor = ServiceProvider.GetRequiredService<IGAgentExecutor>();
     }
 
     public override Task<string> GetDescriptionAsync()
@@ -186,6 +186,70 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
         }
 
         return allTools;
+    }
+
+    public async Task<List<GAgentDetailInfo>> GetAvailableGAgentsAsync()
+    {
+        try
+        {
+            // Get all available GAgents
+            var allGAgentInfos = await _gAgentService.GetAllAvailableGAgentInformation();
+            var gAgentList = new List<GAgentDetailInfo>();
+
+            // Filter out self and MCP-related agents
+            var selfGrainType = this.GetGrainId().Type;
+            
+            foreach (var (grainType, eventTypes) in allGAgentInfos)
+            {
+                // Skip self and MCP agents
+                var grainTypeString = grainType.ToString();
+                if (grainType.Equals(selfGrainType) || 
+                    grainTypeString.Contains("MCP", StringComparison.OrdinalIgnoreCase) ||
+                    grainTypeString.Contains("DynamicTool", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                // Get detailed info
+                var detailInfo = await _gAgentService.GetGAgentDetailInfoAsync(grainType);
+                if (detailInfo != null)
+                {
+                    gAgentList.Add(detailInfo);
+                }
+            }
+
+            Logger.LogInformation($"Found {gAgentList.Count} available GAgents for tool usage");
+            return gAgentList;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to get available GAgents");
+            return new List<GAgentDetailInfo>();
+        }
+    }
+
+    public async Task<bool> ConfigureGAgentToolsAsync(List<GrainType> selectedGAgents)
+    {
+        try
+        {
+            State.SelectedGAgents = selectedGAgents;
+            
+            RaiseEvent(new DynamicToolAIGAgentStateLogEvent());
+            await ConfirmEvents();
+
+            // Update kernel tools if brain is initialized
+            if (GetKernelFromBrain() != null)
+            {
+                await UpdateKernelToolsAsync();
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to configure GAgent tools");
+            return false;
+        }
     }
 
     public async Task<string> ChatAsync(string message)
@@ -351,6 +415,79 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
                 Logger.LogError(ex, $"Failed to register tools from server {serverName}");
             }
         }
+        // Register GAgent tools
+        if (State.SelectedGAgents != null && State.SelectedGAgents.Any())
+        {
+            var gAgentFunctions = new List<KernelFunction>();
+            
+            foreach (var grainType in State.SelectedGAgents)
+            {
+                try
+                {
+                    // Get GAgent information
+                    var gAgentInfo = await _gAgentService.GetGAgentDetailInfoAsync(grainType);
+                    if (gAgentInfo == null) continue;
+
+                    // Get event types for this GAgent
+                    var allGAgentInfos = await _gAgentService.GetAllAvailableGAgentInformation();
+                    if (!allGAgentInfos.TryGetValue(grainType, out var eventTypes)) continue;
+
+                    foreach (var eventType in eventTypes)
+                    {
+                        // Create function name
+                        var functionName = GenerateFunctionName(grainType, eventType);
+                        
+                        // Store mapping
+                        State.GAgentToolMapping[functionName] = $"{grainType}|{eventType.FullName}";
+
+                        // Get event properties to create parameters
+                        var eventProperties = eventType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                            .Where(p => p.CanWrite && p.Name != "CorrelationId" && p.Name != "PublisherGrainId")
+                            .ToList();
+
+                        // Create function with dynamic parameter binding
+                        var function = KernelFunctionFactory.CreateFromMethod(
+                            async (KernelArguments args) => 
+                            {
+                                // Convert KernelArguments to JSON for GAgent
+                                var parameters = new Dictionary<string, object>();
+                                foreach (var (key, value) in args)
+                                {
+                                    if (value != null)
+                                    {
+                                        parameters[key] = ConvertJsonElementToBasicType(value);
+                                    }
+                                }
+                                
+                                var parametersJson = JsonSerializer.Serialize(parameters);
+                                return await CallGAgentToolAsync(grainType, eventType, parametersJson);
+                            },
+                            functionName: functionName,
+                            description: GenerateFunctionDescription(grainType, eventType, gAgentInfo.Description),
+                            parameters: eventProperties.Select(p => new KernelParameterMetadata(p.Name)
+                            {
+                                Description = $"Parameter {p.Name} of type {p.PropertyType.Name}",
+                                IsRequired = true,
+                                ParameterType = p.PropertyType
+                            }).ToArray()
+                        );
+
+                        gAgentFunctions.Add(function);
+                        Logger.LogInformation($"Registered GAgent tool: {functionName} for {grainType}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"Failed to register GAgent tools for {grainType}");
+                }
+            }
+
+            if (gAgentFunctions.Any())
+            {
+                kernel.Plugins.AddFromFunctions("GAgentTools", gAgentFunctions);
+                Logger.LogInformation($"Registered {gAgentFunctions.Count} GAgent tools");
+            }
+        }
     }
     
     /// <summary>
@@ -446,8 +583,10 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
             {
                 if (value != null)
                 {
-                    toolArgs[key] = value;
-                    toolDetail.Arguments[key] = value;
+                    // Convert JsonElement to basic types
+                    var convertedValue = ConvertJsonElementToBasicType(value);
+                    toolArgs[key] = convertedValue;
+                    toolDetail.Arguments[key] = convertedValue;
                 }
             }
             
@@ -510,6 +649,145 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
         }
     }
 
+    private async Task<string> CallGAgentToolAsync(GrainType grainType, Type eventType, string parametersJson)
+    {
+        var toolStartTime = DateTime.UtcNow;
+        var toolDetail = new ToolCallDetail
+        {
+            ServerName = "GAgent",
+            ToolName = $"{grainType.ToString()}.{eventType.Name}",
+            Timestamp = toolStartTime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+            Arguments = new Dictionary<string, object>()
+        };
+
+        try
+        {
+            Logger.LogInformation("[{Timestamp}] Executing GAgent tool: {GrainType}.{EventType} with params: {Params}",
+                DateTime.UtcNow.ToString("HH:mm:ss.fff"),
+                grainType, eventType.Name, parametersJson);
+
+            // Parse parameters if provided
+            if (!string.IsNullOrEmpty(parametersJson))
+            {
+                try
+                {
+                    var parameters = JsonSerializer.Deserialize<Dictionary<string, object>>(parametersJson);
+                    if (parameters != null)
+                    {
+                        // Convert any JsonElement values to basic types
+                        var convertedParams = new Dictionary<string, object>();
+                        foreach (var (key, value) in parameters)
+                        {
+                            convertedParams[key] = ConvertJsonElementToBasicType(value);
+                        }
+                        toolDetail.Arguments = convertedParams;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Failed to parse parameters as JSON, using as string");
+                    toolDetail.Arguments["value"] = parametersJson;
+                }
+            }
+
+            // Create the event instance
+            EventBase? @event = Activator.CreateInstance(eventType) as EventBase;
+            if (@event == null)
+            {
+                throw new InvalidOperationException($"Failed to create instance of event type {eventType.Name}");
+            }
+            
+            // Set properties from parameters if provided
+            if (!string.IsNullOrEmpty(parametersJson))
+            {
+                try
+                {
+                    // Parse the JSON parameters
+                    using var doc = JsonDocument.Parse(parametersJson);
+                    var root = doc.RootElement;
+                    
+                    // If it's an object, map properties
+                    if (root.ValueKind == JsonValueKind.Object)
+                    {
+                        foreach (var property in root.EnumerateObject())
+                        {
+                            // Find the corresponding property on the event type
+                            var eventProperty = eventType.GetProperty(property.Name, 
+                                BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+                            
+                            if (eventProperty != null && eventProperty.CanWrite)
+                            {
+                                // Convert the JSON value to the property type
+                                var value = ConvertJsonElementToPropertyType(property.Value, eventProperty.PropertyType);
+                                eventProperty.SetValue(@event, value);
+                                
+                                Logger.LogDebug("Set property {PropertyName} = {Value} on event {EventType}", 
+                                    property.Name, value, eventType.Name);
+                            }
+                        }
+                    }
+                    // If it's a simple value, try to find a single writable property
+                    else
+                    {
+                        var writableProperties = eventType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                            .Where(p => p.CanWrite && p.Name != "CorrelationId" && p.Name != "PublisherGrainId")
+                            .ToList();
+                            
+                        if (writableProperties.Count == 1)
+                        {
+                            var value = ConvertJsonElementToPropertyType(root, writableProperties[0].PropertyType);
+                            writableProperties[0].SetValue(@event, value);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Failed to set event properties from parameters JSON: {Json}", parametersJson);
+                }
+            }
+
+            // Execute the GAgent event handler
+            var result = await _gAgentExecutor.ExecuteGAgentEventHandler(grainType, @event);
+
+            toolDetail.Result = result ?? "No result returned";
+            toolDetail.Success = true;
+            toolDetail.DurationMs = (long)(DateTime.UtcNow - toolStartTime).TotalMilliseconds;
+            _currentToolCalls.Add(toolDetail);
+
+            Logger.LogInformation("[{Timestamp}] GAgent tool execution completed in {Duration}ms: {GrainType}.{EventType}",
+                DateTime.UtcNow.ToString("HH:mm:ss.fff"),
+                toolDetail.DurationMs,
+                grainType, eventType.Name);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error calling GAgent tool {EventType} on {GrainType}", eventType.Name, grainType);
+            toolDetail.Result = $"Error: {ex.Message}";
+            toolDetail.Success = false;
+            toolDetail.DurationMs = (long)(DateTime.UtcNow - toolStartTime).TotalMilliseconds;
+            _currentToolCalls.Add(toolDetail);
+            return toolDetail.Result;
+        }
+    }
+
+    private string GenerateFunctionName(GrainType grainType, Type eventType)
+    {
+        // Semantic Kernel function names can only contain ASCII letters, digits, and underscores
+        var cleanGrainType = grainType.ToString()!
+            .Replace("/", "_")
+            .Replace(".", "_")
+            .Replace("-", "_");
+        
+        return $"{cleanGrainType}_{eventType.Name}";
+    }
+
+    private string GenerateFunctionDescription(GrainType grainType, Type eventType, string gAgentDescription)
+    {
+        return $"Execute {eventType.Name} on {grainType.ToString()} GAgent. {gAgentDescription}";
+    }
+
     private KernelParameterMetadata[] ConvertToKernelParameters(Dictionary<string, MCPParameterInfo> mcpParameters)
     {
         var parameters = new List<KernelParameterMetadata>();
@@ -519,7 +797,7 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
             parameters.Add(new KernelParameterMetadata(name)
             {
                 Description = param.Description,
-                DefaultValue = param.DefaultValue,
+                DefaultValue = param.DefaultValue != null ? ConvertJsonElementToBasicType(param.DefaultValue) : null,
                 IsRequired = param.Required
             });
         }
@@ -546,6 +824,117 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
         if (State.MCPAgents.Any() && GetKernelFromBrain() != null)
         {
             await UpdateKernelToolsAsync();
+        }
+    }
+    
+    private object ConvertJsonElementToBasicType(object value)
+    {
+        if (value is JsonElement jsonElement)
+        {
+            return jsonElement.ValueKind switch
+            {
+                JsonValueKind.String => jsonElement.GetString()!,
+                JsonValueKind.Number => jsonElement.TryGetInt64(out var longValue) ? longValue :
+                                       jsonElement.TryGetDouble(out var doubleValue) ? doubleValue : 
+                                       jsonElement.GetDecimal(),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.Null => null!,
+                JsonValueKind.Array => jsonElement.EnumerateArray()
+                    .Select(e => ConvertJsonElementToBasicType(e))
+                    .ToList(),
+                JsonValueKind.Object => jsonElement.EnumerateObject()
+                    .ToDictionary(prop => prop.Name, prop => ConvertJsonElementToBasicType(prop.Value)),
+                _ => jsonElement.ToString()
+            };
+        }
+        
+        // If it's a dictionary, recursively convert its values
+        if (value is Dictionary<string, object> dict)
+        {
+            return dict.ToDictionary(kvp => kvp.Key, kvp => ConvertJsonElementToBasicType(kvp.Value));
+        }
+        
+        // If it's a list, recursively convert its items
+        if (value is IEnumerable list && value is not string && value is not Dictionary<string, object>)
+        {
+            return list.Cast<object>().Select(ConvertJsonElementToBasicType).ToList();
+        }
+        
+        return value;
+    }
+    
+    private object? ConvertJsonElementToPropertyType(JsonElement element, Type targetType)
+    {
+        try
+        {
+            // Handle nullable types
+            if (targetType.IsGenericType && targetType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                if (element.ValueKind == JsonValueKind.Null)
+                    return null;
+                targetType = Nullable.GetUnderlyingType(targetType)!;
+            }
+
+            // Handle null values
+            if (element.ValueKind == JsonValueKind.Null)
+            {
+                return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
+            }
+
+            // Handle string type
+            if (targetType == typeof(string))
+            {
+                return element.GetString();
+            }
+
+            // Handle numeric types
+            if (targetType == typeof(int) || targetType == typeof(int?))
+            {
+                return element.GetInt32();
+            }
+            if (targetType == typeof(long) || targetType == typeof(long?))
+            {
+                return element.GetInt64();
+            }
+            if (targetType == typeof(double) || targetType == typeof(double?))
+            {
+                return element.GetDouble();
+            }
+            if (targetType == typeof(float) || targetType == typeof(float?))
+            {
+                return (float)element.GetDouble();
+            }
+            if (targetType == typeof(decimal) || targetType == typeof(decimal?))
+            {
+                return element.GetDecimal();
+            }
+
+            // Handle boolean type
+            if (targetType == typeof(bool) || targetType == typeof(bool?))
+            {
+                return element.GetBoolean();
+            }
+
+            // Handle DateTime
+            if (targetType == typeof(DateTime) || targetType == typeof(DateTime?))
+            {
+                return element.GetDateTime();
+            }
+
+            // Handle Guid
+            if (targetType == typeof(Guid) || targetType == typeof(Guid?))
+            {
+                return element.GetGuid();
+            }
+
+            // For complex types, try to deserialize
+            return JsonSerializer.Deserialize(element.GetRawText(), targetType);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Failed to convert JsonElement to type {TargetType}", targetType.Name);
+            return targetType.IsValueType ? Activator.CreateInstance(targetType) : null;
         }
     }
 }

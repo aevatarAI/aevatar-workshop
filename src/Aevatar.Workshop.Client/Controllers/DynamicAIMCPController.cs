@@ -1,15 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AIGAgent.Dtos;
-using Aevatar.GAgents.MCP;
 using Aevatar.GAgents.MCP.Options;
 using Aevatar.Workshop.GAgent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Orleans;
 
 namespace Aevatar.Workshop.Client.Controllers;
 
@@ -276,6 +270,112 @@ When using tools, be clear about the results and how they help answer the user's
             });
         }
     }
+
+    [HttpGet("available-gagents")]
+    public async Task<IActionResult> GetAvailableGAgents()
+    {
+        try
+        {
+            // Create a temporary agent to get available GAgents
+            var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>();
+            var gAgents = await agent.GetAvailableGAgentsAsync();
+            
+            return Ok(new
+            {
+                success = true,
+                gAgents = gAgents.Select(g => 
+                {
+                    // Parse alias and namespace from GrainType
+                    var grainTypeString = g.GrainType.ToString();
+                    var parts = grainTypeString.Split('/');
+                    var alias = parts.Length > 0 ? parts[0] : grainTypeString;
+                    var nameSpace = parts.Length > 1 ? parts[1] : "default";
+                    
+                    return new
+                    {
+                        grainType = grainTypeString,
+                        alias = alias,
+                        nameSpace = nameSpace,
+                        description = g.Description,
+                        eventHandlers = g.SupportedEventTypes.Select(e => new
+                        {
+                            eventType = e.Name,
+                            fullName = e.FullName
+                        }).ToList()
+                    };
+                }).ToList()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting available GAgents");
+            return Ok(new
+            {
+                success = false,
+                error = ex.Message
+            });
+        }
+    }
+
+    [HttpPost("configure-gagent-tools")]
+    public async Task<IActionResult> ConfigureGAgentTools([FromBody] ConfigureGAgentToolsRequest request)
+    {
+        try
+        {
+            var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
+            
+            // Convert string grain types to GrainType objects
+            var grainTypes = request.SelectedGAgents.Select(g => GrainType.Create(g)).ToList();
+            
+            var success = await agent.ConfigureGAgentToolsAsync(grainTypes);
+            
+            if (!success)
+            {
+                return BadRequest("Failed to configure GAgent tools");
+            }
+            
+            // Get all available tools (MCP + GAgent)
+            var mcpTools = await agent.GetAvailableToolsAsync();
+            
+            // Get configured GAgent info for response
+            var allGAgents = await agent.GetAvailableGAgentsAsync();
+            var configuredGAgents = allGAgents
+                .Where(g => request.SelectedGAgents.Contains(g.GrainType.ToString()))
+                .Select(g => 
+                {
+                    // Parse alias from GrainType
+                    var grainTypeString = g.GrainType.ToString();
+                    var parts = grainTypeString.Split('/');
+                    var alias = parts.Length > 0 ? parts[0] : grainTypeString;
+                    
+                    return new
+                    {
+                        grainType = grainTypeString,
+                        alias = alias,
+                        description = g.Description,
+                        eventCount = g.SupportedEventTypes.Count
+                    };
+                })
+                .ToList();
+            
+            return Ok(new
+            {
+                success = true,
+                message = $"Configured {request.SelectedGAgents.Count} GAgent tools",
+                configuredGAgents = configuredGAgents,
+                totalAvailableTools = mcpTools.Count
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error configuring GAgent tools");
+            return Ok(new
+            {
+                success = false,
+                error = ex.Message
+            });
+        }
+    }
 }
 
 public class InitializeAgentRequest
@@ -298,4 +398,10 @@ public class ChatRequest
 public class ClearHistoryRequest
 {
     public string AgentId { get; set; }
+}
+
+public class ConfigureGAgentToolsRequest
+{
+    public string AgentId { get; set; }
+    public List<string> SelectedGAgents { get; set; } = new();
 } 

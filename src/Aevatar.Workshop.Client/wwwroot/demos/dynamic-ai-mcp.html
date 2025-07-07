@@ -846,6 +846,16 @@
             <div id="connectStatus"></div>
         </div>
 
+        <!-- GAgent Tools Section -->
+        <div class="section" id="gagentSection" style="display: none;">
+            <div class="section-header">GAgent Tools</div>
+            <div id="gagentsList"></div>
+            <button class="button" id="configureGAgentsBtn" onclick="configureGAgentTools()" disabled>
+                Configure Selected GAgents
+            </button>
+            <div id="gagentStatus"></div>
+        </div>
+
         <!-- Available Tools Section -->
         <div class="section" id="toolsSection" style="display: none;">
             <div class="section-header">Available Tools</div>
@@ -916,6 +926,7 @@
 <script>
     let currentAgentId = null;
     const selectedServers = new Set();
+    const selectedGAgents = new Set();
     let availableTools = {};
     let isProcessing = false;
 
@@ -1006,6 +1017,10 @@
                 document.getElementById('serversSection').style.display = 'block';
                 populateServers();
 
+                // Show GAgent section and load available GAgents
+                document.getElementById('gagentSection').style.display = 'block';
+                loadAvailableGAgents();
+
                 // Add system message to chat
                 addMessage('system', `AI Agent initialized with ID: ${data.agentId}`);
             } else {
@@ -1056,6 +1071,86 @@
 
         // Update connect button state
         document.getElementById('connectBtn').disabled = selectedServers.size === 0;
+    }
+
+    async function loadAvailableGAgents() {
+        try {
+            const response = await fetch('/api/DynamicAIMCP/available-gagents');
+            const data = await response.json();
+
+            if (data.success) {
+                displayGAgents(data.gAgents);
+            } else {
+                document.getElementById('gagentStatus').innerHTML = 
+                    `<div class="status-message error">✗ Failed to load GAgents: ${data.error}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('gagentStatus').innerHTML = 
+                `<div class="status-message error">✗ Error loading GAgents: ${error.message}</div>`;
+        }
+    }
+
+    function displayGAgents(gAgents) {
+        const gagentsList = document.getElementById('gagentsList');
+        gagentsList.innerHTML = '';
+
+        // Filter and display useful GAgents
+        const usefulGAgents = gAgents.filter(g => {
+            const alias = g.alias.toLowerCase();
+            const nameSpace = g.nameSpace.toLowerCase();
+            // Show math, time converter, and other tool-like agents
+            return (alias.includes('math') || 
+                    alias.includes('time') || 
+                    alias.includes('converter') ||
+                    nameSpace.includes('tools')) &&
+                   !alias.includes('dynamictool') &&
+                   !alias.includes('mcp');
+        });
+
+        usefulGAgents.forEach(gagent => {
+            const card = document.createElement('div');
+            card.className = 'server-card';
+            card.dataset.gagent = gagent.grainType;
+            
+            // Choose icon based on alias
+            let icon = '🔧';
+            if (gagent.alias.toLowerCase().includes('math')) icon = '🔢';
+            else if (gagent.alias.toLowerCase().includes('time')) icon = '⏰';
+            
+            card.innerHTML = `
+                <div style="display: flex; align-items: start; gap: 12px;">
+                    <div style="font-size: 24px;">${icon}</div>
+                    <div style="flex: 1;">
+                        <div class="server-name">${gagent.alias}</div>
+                        <div class="server-description">${gagent.description}</div>
+                        <div class="server-status">
+                            <span style="font-size: 11px; color: var(--text-muted);">
+                                ${gagent.eventHandlers.length} event handler(s)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            card.onclick = () => toggleGAgent(gagent, card);
+            gagentsList.appendChild(card);
+        });
+
+        if (usefulGAgents.length === 0) {
+            gagentsList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No tool GAgents available</div>';
+        }
+    }
+
+    function toggleGAgent(gagent, element) {
+        if (selectedGAgents.has(gagent.grainType)) {
+            selectedGAgents.delete(gagent.grainType);
+            element.classList.remove('selected');
+        } else {
+            selectedGAgents.add(gagent.grainType);
+            element.classList.add('selected');
+        }
+
+        // Update configure button state
+        document.getElementById('configureGAgentsBtn').disabled = selectedGAgents.size === 0;
     }
 
     async function connectServers() {
@@ -1141,6 +1236,69 @@
         } finally {
             btn.disabled = false;
             btn.innerHTML = 'Connect Selected Servers';
+        }
+    }
+
+    async function configureGAgentTools() {
+        if (selectedGAgents.size === 0 || !currentAgentId) return;
+
+        const btn = document.getElementById('configureGAgentsBtn');
+        const status = document.getElementById('gagentStatus');
+
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Configuring...';
+
+        status.innerHTML = '<div class="status-message info"><div class="spinner"></div> Configuring GAgent tools...</div>';
+
+        try {
+            const response = await fetch('/api/DynamicAIMCP/configure-gagent-tools', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agentId: currentAgentId,
+                    selectedGAgents: Array.from(selectedGAgents)
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                status.innerHTML = `<div class="status-message success">✓ Configured ${data.configuredGAgents.length} GAgent tools</div>`;
+
+                // Mark configured GAgents
+                selectedGAgents.forEach(grainType => {
+                    const card = document.querySelector(`[data-gagent="${grainType}"]`);
+                    if (card) {
+                        card.classList.add('connected');
+                    }
+                });
+
+                // Add GAgent tools to available tools
+                if (!availableTools['GAgentTools']) {
+                    availableTools['GAgentTools'] = [];
+                }
+                
+                data.configuredGAgents.forEach(g => {
+                    // Add basic info about the GAgent as a tool
+                    availableTools['GAgentTools'].push({
+                        name: g.alias,
+                        description: `${g.description} (${g.eventCount} events)`
+                    });
+                });
+
+                // Refresh tools display
+                displayTools();
+
+                // Add system message
+                addMessage('system', `Configured ${data.configuredGAgents.length} GAgent tools. You can now use them in your queries.`);
+            } else {
+                status.innerHTML = `<div class="status-message error">✗ ${data.error}</div>`;
+            }
+        } catch (error) {
+            status.innerHTML = `<div class="status-message error">✗ ${error.message}</div>`;
+        } finally {
+            btn.disabled = selectedGAgents.size === 0;
+            btn.innerHTML = 'Configure Selected GAgents';
         }
     }
 
