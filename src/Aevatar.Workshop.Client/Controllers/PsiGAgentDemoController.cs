@@ -1,7 +1,9 @@
 using System.Text.Json;
 using Aevatar.Core.Abstractions;
+using Aevatar.GAgents.AI.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Orleans;
 using PsiGAgent.Common;
 using PsiGAgent.Common.Models;
@@ -15,18 +17,21 @@ public class PsiGAgentDemoController : ControllerBase
 {
     private readonly IGAgentFactory _gAgentFactory;
     private readonly ILogger<PsiGAgentDemoController> _logger;
-    
+    private readonly IOptions<SystemLLMConfigOptions> _systemLLMConfigs;
+
     // Store agent IDs in memory for demo purposes
     private static readonly Dictionary<string, string> _agentSessions = new();
-    
+
     public PsiGAgentDemoController(
         IGAgentFactory gAgentFactory,
-        ILogger<PsiGAgentDemoController> logger)
+        ILogger<PsiGAgentDemoController> logger,
+        IOptions<SystemLLMConfigOptions> systemLLMConfigs)
     {
         _gAgentFactory = gAgentFactory;
         _logger = logger;
+        _systemLLMConfigs = systemLLMConfigs;
     }
-    
+
     [HttpPost("create")]
     public async Task<IActionResult> CreateAgent([FromBody] CreateAgentRequest request)
     {
@@ -35,22 +40,23 @@ public class PsiGAgentDemoController : ControllerBase
             // Create PsiOmniGAgent
             var psi = await _gAgentFactory.GetGAgentAsync("omni", "psi");
             var publisher = await _gAgentFactory.GetGAgentAsync<IPublishingGAgent>(Guid.NewGuid());
-            
-            // Configure the agent
-            var config = GetAgentConfiguration();
+
+            // Configure the agent using SystemLLM config
+            var config = GetAgentConfiguration(request.SystemLLM);
             await publisher.PublishEventAsync(new AgentConfigEvent
             {
                 Configuration = config,
                 Tools = []
             }, psi);
-            
+
             var agentId = psi.GetGrainId().ToString();
             var sessionId = Guid.NewGuid().ToString();
             _agentSessions[sessionId] = agentId;
-            
-            _logger.LogInformation("Created PsiGAgent with ID: {AgentId}, Session: {SessionId}", agentId, sessionId);
-            
-            return Ok(new { sessionId, agentId });
+
+            _logger.LogInformation("Created PsiGAgent with ID: {AgentId}, Session: {SessionId}, LLM: {LLM}", 
+                agentId, sessionId, request.SystemLLM ?? "OpenAI");
+
+            return Ok(new { sessionId, agentId, systemLLM = request.SystemLLM ?? "OpenAI" });
         }
         catch (Exception ex)
         {
@@ -58,7 +64,10 @@ public class PsiGAgentDemoController : ControllerBase
             return StatusCode(500, new { error = ex.Message });
         }
     }
-    
+
+    // [HttpGet("available-llms")] - Deprecated: Use /api/llm-configs/list instead
+    // This endpoint is no longer needed as we now use the common LLM configs endpoint
+
     [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
     {
@@ -68,11 +77,11 @@ public class PsiGAgentDemoController : ControllerBase
             {
                 return BadRequest(new { error = "Invalid session ID" });
             }
-            
+
             var guid = GrainId.Parse(agentId);
             var psi = await _gAgentFactory.GetGAgentAsync(guid);
             var publisher = await _gAgentFactory.GetGAgentAsync<IPublishingGAgent>(Guid.NewGuid());
-            
+
             var callId = Guid.NewGuid().ToString();
             await publisher.PublishEventAsync(new UserMessageEvent
             {
@@ -81,9 +90,9 @@ public class PsiGAgentDemoController : ControllerBase
                 Content = request.Message,
                 ReplyToAgentId = null
             }, psi);
-            
+
             _logger.LogInformation("Sent message to agent {AgentId}: {Message}", agentId, request.Message);
-            
+
             return Ok(new { callId, message = "Message sent successfully" });
         }
         catch (Exception ex)
@@ -92,7 +101,7 @@ public class PsiGAgentDemoController : ControllerBase
             return StatusCode(500, new { error = ex.Message });
         }
     }
-    
+
     [HttpGet("state/{sessionId}")]
     public async Task<IActionResult> GetAgentState(string sessionId)
     {
@@ -102,11 +111,11 @@ public class PsiGAgentDemoController : ControllerBase
             {
                 return BadRequest(new { error = "Invalid session ID" });
             }
-            
+
             var guid = GrainId.Parse(agentId);
             var visited = new HashSet<string>();
             var agentStates = await GetAgentStatesRecursive(guid, visited);
-            
+
             return Ok(agentStates);
         }
         catch (Exception ex)
@@ -115,7 +124,7 @@ public class PsiGAgentDemoController : ControllerBase
             return StatusCode(500, new { error = ex.Message });
         }
     }
-    
+
     private async Task<List<AgentStateInfo>> GetAgentStatesRecursive(
         GrainId agentId, HashSet<string> visited, int depth = 0)
     {
@@ -124,12 +133,12 @@ public class PsiGAgentDemoController : ControllerBase
         {
             return result;
         }
-        
+
         try
         {
             var psi = await _gAgentFactory.GetGAgentAsync<IStateGAgent<PsiOmniGAgentState>>(agentId);
-            var state = (PsiOmniGAgentState)await psi.GetStateAsync();
-            
+            var state = await psi.GetStateAsync();
+
             var agentInfo = new AgentStateInfo
             {
                 Id = agentId.ToString(),
@@ -162,9 +171,9 @@ public class PsiGAgentDemoController : ControllerBase
                     ) ?? new Dictionary<string, ChildAgentDto>()
                 }
             };
-            
+
             result.Add(agentInfo);
-            
+
             // Recursively get child agent states
             if (state.Children != null && state.Children.Count > 0)
             {
@@ -179,22 +188,45 @@ public class PsiGAgentDemoController : ControllerBase
         {
             _logger.LogError(ex, "Error getting state for agent {AgentId}", agentId);
         }
-        
+
         return result;
     }
-    
-    private AgentConfiguration GetAgentConfiguration()
+
+    private AgentConfiguration GetAgentConfiguration(string systemLLM)
     {
-        // Try to get configuration from environment variables
-        var openAiApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-        var modelId = Environment.GetEnvironmentVariable("OPENAI_MODEL_ID") ?? "gpt-4o-mini";
-        
+        // Get configuration from SystemLLMConfig
+        if (_systemLLMConfigs.Value.SystemLLMConfigs == null ||
+            !_systemLLMConfigs.Value.SystemLLMConfigs.TryGetValue(systemLLM, out var llmConfig))
+        {
+            throw new InvalidOperationException($"LLM configuration not found for: {systemLLM}");
+        }
+
         var modelConfig = new ModelConfiguration
         {
-            ModelId = modelId,
-            ApiKey = openAiApiKey ?? "your-api-key-here"
+            ModelId = llmConfig.ModelName ?? "gpt-4o-mini",
+            ApiKey = llmConfig.ApiKey ?? throw new InvalidOperationException($"API key is required for {systemLLM}")
         };
-        
+
+        // Handle different LLM providers
+        switch (llmConfig.ProviderEnum)
+        {
+            case LLMProviderEnum.Azure:
+                modelConfig.Endpoint = llmConfig.Endpoint ?? throw new InvalidOperationException("Endpoint is required for Azure");
+                modelConfig.DeploymentName = llmConfig.ModelName;
+                break;
+                
+            case LLMProviderEnum.DeepSeek:
+                // DeepSeek uses OpenAI-compatible API but with a different base URL
+                // For PsiGAgent, we'll use BaseUrl for DeepSeek instead of Endpoint
+                modelConfig.BaseUrl = llmConfig.Endpoint ?? "https://api.deepseek.com";
+                break;
+                
+            case LLMProviderEnum.OpenAI:
+            default:
+                // OpenAI uses default endpoint, no need to set anything
+                break;
+        }
+
         return new AgentConfiguration
         {
             Temperature = 0.7,
@@ -203,26 +235,27 @@ public class PsiGAgentDemoController : ControllerBase
             //Depth = 0 // Root agent
         };
     }
-    
+
     // DTOs
     public class CreateAgentRequest
     {
         public string? InitialTask { get; set; }
+        public string? SystemLLM { get; set; }
     }
-    
+
     public class SendMessageRequest
     {
         public string SessionId { get; set; }
         public string Message { get; set; }
     }
-    
+
     public class AgentStateInfo
     {
         public string Id { get; set; }
         public int Depth { get; set; }
         public AgentStateDto State { get; set; }
     }
-    
+
     public class AgentStateDto
     {
         public string AgentId { get; set; }
@@ -233,24 +266,24 @@ public class PsiGAgentDemoController : ControllerBase
         public List<ExampleDto> Examples { get; set; }
         public Dictionary<string, ChildAgentDto> ChildAgents { get; set; }
     }
-    
+
     public class ChatMessageDto
     {
         public string Role { get; set; }
         public string Content { get; set; }
         public string Timestamp { get; set; }
     }
-    
+
     public class ExampleDto
     {
         public string Request { get; set; }
         public string Response { get; set; }
     }
-    
+
     public class ChildAgentDto
     {
         public string AgentId { get; set; }
         public string Description { get; set; }
         public string AgentType { get; set; }
     }
-} 
+}

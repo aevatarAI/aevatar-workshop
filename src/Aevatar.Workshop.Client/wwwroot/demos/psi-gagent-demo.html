@@ -319,6 +319,77 @@
             border-color: #667eea;
             transform: translateY(-2px);
         }
+        
+        .node-details {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 200px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+        
+        .node-details h3 {
+            color: #2b6cb0;
+            margin-bottom: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        
+        .node-details .detail-section {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .node-details .detail-label {
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 5px;
+        }
+        
+        .node-details .detail-value {
+            color: #2d3748;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .node-details .child-agent-item {
+            background: #e6f3ff;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .node-details .tool-item {
+            display: inline-block;
+            background: #e6fffa;
+            padding: 4px 10px;
+            margin: 3px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #234e52;
+        }
+        
+        .node-details .chat-message {
+            background: #f9f9f9;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            border-left: 3px solid #cbd5e0;
+        }
+        
+        .node-details .chat-message.user {
+            border-left-color: #4299e1;
+        }
+        
+        .node-details .chat-message.assistant {
+            border-left-color: #48bb78;
+        }
     </style>
 </head>
 <body>
@@ -335,6 +406,13 @@
                 <div class="info-box">
                     <h3>ℹ️ How it works</h3>
                     <p>PsiGAgent automatically decides whether to operate as an Orchestrator (delegating to child agents) or as a Specialized agent (performing specific tasks). Try giving it complex tasks to see it create a hierarchy of agents!</p>
+                </div>
+                
+                <div class="control-section">
+                    <h3>LLM Configuration</h3>
+                    <select id="llmSelect" class="btn" style="background: white; color: #333; border: 2px solid #e2e8f0; font-weight: normal; width: 100%; text-align: left;">
+                        <option value="">Loading LLMs...</option>
+                    </select>
                 </div>
                 
                 <div class="control-section">
@@ -404,6 +482,13 @@
             <h2>Agent Hierarchy Visualization</h2>
             <div id="agentGraph"></div>
         </div>
+        
+        <div class="panel" id="nodeDetailsPanel" style="display: none;">
+            <h2>Node Details</h2>
+            <div id="nodeDetails" class="node-details">
+                <p>Click on a node in the hierarchy to view its details here.</p>
+            </div>
+        </div>
     </div>
     
     <div class="tooltip" id="tooltip"></div>
@@ -413,16 +498,63 @@
         let network = null;
         let refreshInterval = null;
         let totalMessages = 0;
+        let availableLLMs = [];
+        let currentAgentStates = []; // Store the current agent states for node click handling
+        
+        // Load available LLMs on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadAvailableLLMs();
+        });
+        
+        async function loadAvailableLLMs() {
+            try {
+                const response = await fetch('/api/llm-configs/list');
+                const llmKeys = await response.json();
+                
+                const selectElement = document.getElementById('llmSelect');
+                selectElement.innerHTML = ''; // Clear existing options
+                
+                if (llmKeys && llmKeys.length > 0) {
+                    availableLLMs = llmKeys;
+                    llmKeys.forEach(key => {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = key;
+                        selectElement.appendChild(option);
+                    });
+                    
+                    // Set DeepSeek as default if it exists, otherwise first option
+                    if (llmKeys.includes('DeepSeek')) {
+                        selectElement.value = 'DeepSeek';
+                    }
+                } else {
+                    // Fallback option if no configs found
+                    const option = document.createElement('option');
+                    option.value = 'OpenAI';
+                    option.textContent = 'OpenAI (Default)';
+                    selectElement.appendChild(option);
+                }
+            } catch (error) {
+                console.error('Failed to load LLM configurations:', error);
+                // Fallback to default
+                const selectElement = document.getElementById('llmSelect');
+                selectElement.innerHTML = '<option value="OpenAI">OpenAI (Default)</option>';
+            }
+        }
         
         function createAgent() {
             const btn = document.getElementById('createAgentBtn');
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span> Creating...';
             
+            const selectedLLM = document.getElementById('llmSelect').value || 'OpenAI';
+            
             fetch('/api/PsiGAgentDemo/create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({})
+                body: JSON.stringify({
+                    systemLLM: selectedLLM
+                })
             })
             .then(response => response.json())
             .then(data => {
@@ -430,11 +562,11 @@
                 
                 sessionId = data.sessionId;
                 document.getElementById('statusIndicator').className = 'status-indicator status-active';
-                document.getElementById('statusText').textContent = 'Agent active';
+                document.getElementById('statusText').textContent = `Agent active (${data.systemLLM || selectedLLM})`;
                 document.getElementById('sendBtn').disabled = false;
                 document.getElementById('resetBtn').disabled = false;
                 
-                addMessage('system', `Agent created successfully! Session ID: ${sessionId}`);
+                addMessage('system', `Agent created successfully! Session ID: ${sessionId}, LLM: ${data.systemLLM || selectedLLM}`);
                 
                 // Start refreshing the agent state
                 startRefreshing();
@@ -508,6 +640,7 @@
                 .then(data => {
                     if (data.error) throw new Error(data.error);
                     
+                    currentAgentStates = data; // Store for node click handling
                     updateVisualization(data);
                     updateStats(data);
                     updateChatFromState(data);
@@ -575,6 +708,14 @@
             
             if (!network) {
                 network = new vis.Network(container, data, options);
+                
+                // Add click event handler
+                network.on('click', function(params) {
+                    if (params.nodes.length > 0) {
+                        const nodeId = params.nodes[0];
+                        showNodeDetails(nodeId);
+                    }
+                });
             } else {
                 network.setData(data);
             }
@@ -702,7 +843,12 @@
                 </div>
             `;
             
+            // Hide node details panel
+            document.getElementById('nodeDetailsPanel').style.display = 'none';
+            document.getElementById('nodeDetails').innerHTML = '<p>Click on a node in the hierarchy to view its details here.</p>';
+            
             totalMessages = 0;
+            currentAgentStates = [];
         }
         
         function setExampleTask(task) {
@@ -723,6 +869,130 @@
                 "'": '&#039;'
             };
             return text.replace(/[&<>"']/g, m => map[m]);
+        }
+        
+        function showNodeDetails(nodeId) {
+            const agent = currentAgentStates.find(a => a.id === nodeId);
+            if (!agent) return;
+            
+            const state = agent.state;
+            const detailsPanel = document.getElementById('nodeDetailsPanel');
+            const detailsDiv = document.getElementById('nodeDetails');
+            
+            // Highlight the selected node
+            if (network) {
+                const allNodes = network.body.data.nodes.get();
+                const updates = allNodes.map(node => ({
+                    id: node.id,
+                    borderWidth: node.id === nodeId ? 3 : 1,
+                    borderColor: node.id === nodeId ? '#ff6b6b' : '#000000'
+                }));
+                network.body.data.nodes.update(updates);
+            }
+            
+            // Show the panel
+            detailsPanel.style.display = 'block';
+            
+            // Build detailed HTML
+            let html = `<h3>${escapeHtml(state.agentId || 'Agent')}</h3>`;
+            
+            // Basic Information
+            html += `<div class="detail-section">`;
+            html += `<div class="detail-label">Type:</div>`;
+            html += `<div class="detail-value">${escapeHtml(state.realizationStatus || 'Unknown')}</div>`;
+            html += `</div>`;
+            
+            html += `<div class="detail-section">`;
+            html += `<div class="detail-label">Depth Level:</div>`;
+            html += `<div class="detail-value">${agent.depth}</div>`;
+            html += `</div>`;
+            
+            // Description
+            if (state.description) {
+                html += `<div class="detail-section">`;
+                html += `<div class="detail-label">Description:</div>`;
+                html += `<div class="detail-value">${escapeHtml(state.description)}</div>`;
+                html += `</div>`;
+            }
+            
+            // Tools
+            if (state.tools && state.tools.length > 0) {
+                html += `<div class="detail-section">`;
+                html += `<div class="detail-label">Tools (${state.tools.length}):</div>`;
+                html += `<div class="detail-value">`;
+                state.tools.forEach(tool => {
+                    html += `<span class="tool-item">${escapeHtml(tool)}</span>`;
+                });
+                html += `</div>`;
+                html += `</div>`;
+            }
+            
+            // Child Agents
+            if (state.childAgents && Object.keys(state.childAgents).length > 0) {
+                html += `<div class="detail-section">`;
+                html += `<div class="detail-label">Child Agents (${Object.keys(state.childAgents).length}):</div>`;
+                html += `<div class="detail-value">`;
+                Object.entries(state.childAgents).forEach(([id, child]) => {
+                    html += `<div class="child-agent-item">`;
+                    html += `<strong>${escapeHtml(child.agentType || 'Agent')}</strong><br>`;
+                    html += `${escapeHtml(child.description || 'No description')}<br>`;
+                    html += `<small>ID: ${escapeHtml(id)}</small>`;
+                    html += `</div>`;
+                });
+                html += `</div>`;
+                html += `</div>`;
+            }
+            
+            // Examples
+            if (state.examples && state.examples.length > 0) {
+                html += `<div class="detail-section">`;
+                html += `<div class="detail-label">Examples:</div>`;
+                html += `<div class="detail-value">`;
+                state.examples.forEach((example, idx) => {
+                    html += `<div style="margin-bottom: 10px;">`;
+                    html += `<strong>Example ${idx + 1}:</strong><br>`;
+                    html += `Request: ${escapeHtml(example.request)}<br>`;
+                    html += `Response: ${escapeHtml(example.response)}`;
+                    html += `</div>`;
+                });
+                html += `</div>`;
+                html += `</div>`;
+            }
+            
+            // Chat History
+            if (state.chatHistory && state.chatHistory.length > 0) {
+                html += `<div class="detail-section">`;
+                html += `<div class="detail-label">Chat History (${state.chatHistory.length} messages):</div>`;
+                html += `<div class="detail-value">`;
+                state.chatHistory.slice(-10).forEach(msg => { // Show last 10 messages
+                    html += `<div class="chat-message ${msg.role}">`;
+                    html += `<strong>${escapeHtml(msg.role)}:</strong> `;
+                    html += escapeHtml(msg.content.substring(0, 200));
+                    if (msg.content.length > 200) html += '...';
+                    html += `<br><small>${escapeHtml(msg.timestamp)}</small>`;
+                    html += `</div>`;
+                });
+                if (state.chatHistory.length > 10) {
+                    html += `<div style="text-align: center; color: #718096; margin-top: 10px;">`;
+                    html += `... and ${state.chatHistory.length - 10} more messages`;
+                    html += `</div>`;
+                }
+                html += `</div>`;
+                html += `</div>`;
+            }
+            
+            // Raw State (collapsed by default)
+            html += `<div class="detail-section">`;
+            html += `<details>`;
+            html += `<summary style="cursor: pointer; font-weight: bold; color: #4a5568;">Raw State Data (JSON)</summary>`;
+            html += `<pre style="margin-top: 10px; overflow-x: auto;">${escapeHtml(JSON.stringify(state, null, 2))}</pre>`;
+            html += `</details>`;
+            html += `</div>`;
+            
+            detailsDiv.innerHTML = html;
+            
+            // Scroll to the details panel
+            detailsPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
         
         // Handle Enter key in message input
