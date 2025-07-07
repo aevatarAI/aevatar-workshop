@@ -23,6 +23,7 @@ Connect to various MCP servers simultaneously:
 - **Memory Server**: Store and retrieve data
 - **Sequential Thinking**: Break down complex problems
 - **Everything Server**: Demo various MCP features
+- **Context7 Server**: General-purpose server with database, web search, and text utilities
 
 ## How It Works
 
@@ -37,6 +38,9 @@ Connect to various MCP servers simultaneously:
 - **Data Storage**: "Store my shopping list in memory"
 - **Complex Problem Solving**: "Help me plan a project step by step"
 - **Multi-tool Workflows**: "Read a file, analyze its content, and store the summary"
+- **Web Search** (Context7): "Search for recent developments in AI"
+- **Text Processing** (Context7): "Extract key points from this document"
+- **Database Operations** (Context7): "Query and manage data efficiently"
 
 ## Technical Details
 
