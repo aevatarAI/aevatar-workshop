@@ -958,56 +958,11 @@
     let availableTools = {};
     let isProcessing = false;
 
-    // Default MCP servers
-    const defaultServers = [
-        {
-            name: 'filesystem',
-            command: 'npx',
-            args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp', '/Users', '/System/Volumes/Data/Users'],
-            description: 'Access and manage files in allowed directories',
-            icon: '📁'
-        },
-        {
-            name: 'memory',
-            command: 'npx',
-            args: ['-y', '@modelcontextprotocol/server-memory'],
-            description: 'Store and retrieve data in temporary memory',
-            icon: '🧠'
-        },
-        {
-            name: 'sequential-thinking',
-            command: 'npx',
-            args: ['-y', '@modelcontextprotocol/server-sequential-thinking'],
-            description: 'Break down complex problems step by step',
-            icon: '🤔'
-        },
-        {
-            name: 'everything',
-            command: 'npx',
-            args: ['-y', '@modelcontextprotocol/server-everything'],
-            description: 'Test server with various demo tools',
-            icon: '🛠️'
-        },
-        {
-            name: 'context7',
-            command: 'npx',
-            args: ['-y', '@upstash/context7-mcp@latest'],
-            description: 'General-purpose MCP server with database access, web search, text utilities, and more',
-            icon: '🌟'
-        },
-        {
-            name: 'mcp-server-weread',
-            command: 'mcp-server-weread',
-            description: 'WeChat Reader - 获取微信读书的书籍、笔记和划线数据',
-            icon: '📖',
-            environment: {
-                "WEREAD_COOKIE": "wr_gid=208334893; wr_fp=3524540957; wr_skey=MaRwuWO3; wr_vid=18900658; wr_rt=web%40QPJ~rsju7MyVs7LbNd0_AL"
-            }
-        }
-    ];
+    // MCP servers will be loaded from the API
+    let defaultServers = [];
 
     // Initialize page
-    function initializePage() {
+    async function initializePage() {
         // Configure marked.js options
         marked.setOptions({
             breaks: true,
@@ -1024,8 +979,41 @@
         
         // Page is initialized with the assistant message
         
+        // Load MCP servers configuration
+        await loadMCPServers();
+        
         // Load available LLM configurations
         loadAvailableLLMs();
+    }
+    
+    // Load MCP servers from API
+    async function loadMCPServers() {
+        try {
+            const response = await fetch('/api/DynamicAIMCP/mcp-servers');
+            const data = await response.json();
+            
+            if (data.success && data.servers) {
+                defaultServers = data.servers.map(server => ({
+                    name: server.name,
+                    command: server.command,
+                    args: server.args || [],
+                    description: server.description,
+                    icon: server.icon || '🛠️',
+                    env: server.env,
+                    url: server.url
+                }));
+                
+                console.log('Loaded MCP servers:', defaultServers);
+            } else {
+                console.error('Failed to load MCP servers:', data.error);
+                // Use empty array as fallback
+                defaultServers = [];
+            }
+        } catch (error) {
+            console.error('Error loading MCP servers:', error);
+            // Use empty array as fallback
+            defaultServers = [];
+        }
     }
     
     // Load available LLM configurations
@@ -1120,6 +1108,12 @@
     function populateServers() {
         const serversList = document.getElementById('serversList');
         serversList.innerHTML = '';
+
+        // Check if servers are loaded
+        if (!defaultServers || defaultServers.length === 0) {
+            serversList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No MCP servers available. Please check configuration.</div>';
+            return;
+        }
 
         defaultServers.forEach(server => {
             const card = document.createElement('div');
@@ -1264,9 +1258,8 @@
                 command: s.command,
                 args: s.args,
                 description: s.description,
-                transportType: s.transportType,
-                sseUrl: s.sseUrl,
-                environment: s.environment
+                env: s.env,
+                url: s.url
             }));
 
         try {

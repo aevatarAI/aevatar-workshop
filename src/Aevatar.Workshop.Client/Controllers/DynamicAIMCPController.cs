@@ -3,7 +3,9 @@ using Aevatar.GAgents.AIGAgent.Dtos;
 using Aevatar.GAgents.MCP.Options;
 using Aevatar.Workshop.GAgent;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Text.Json.Serialization;
 
 namespace Aevatar.Workshop.Client.Controllers;
 
@@ -13,11 +15,65 @@ public class DynamicAIMCPController : ControllerBase
 {
     private readonly IGAgentFactory _gAgentFactory;
     private readonly ILogger<DynamicAIMCPController> _logger;
+    private readonly IConfiguration _configuration;
 
-    public DynamicAIMCPController(IGAgentFactory gAgentFactory, ILogger<DynamicAIMCPController> logger)
+    public DynamicAIMCPController(IGAgentFactory gAgentFactory, ILogger<DynamicAIMCPController> logger,
+        IConfiguration configuration)
     {
         _gAgentFactory = gAgentFactory;
         _logger = logger;
+        _configuration = configuration;
+    }
+
+    [HttpGet("mcp-servers")]
+    public IActionResult GetMCPServers()
+    {
+        try
+        {
+            var mcpServersSection = _configuration.GetSection("mcpServers");
+            var servers = new List<MCPServerUIConfig>();
+
+            foreach (var serverSection in mcpServersSection.GetChildren())
+            {
+                var serverConfig = new MCPServerUIConfig
+                {
+                    Name = serverSection.Key,
+                    Command = serverSection["command"] ?? string.Empty,
+                    Args = serverSection.GetSection("args").Get<List<string>>() ?? new List<string>(),
+                    Description = serverSection["description"] ?? string.Empty,
+                    Icon = serverSection["icon"] ?? "🛠️", // Default icon if not specified
+                    Env = serverSection.GetSection("env").Get<Dictionary<string, string>>(),
+                    Url = serverSection["url"]
+                };
+
+                servers.Add(serverConfig);
+            }
+
+            return Ok(new
+            {
+                success = true,
+                servers = servers.Select(s => new
+                {
+                    name = s.Name,
+                    command = s.Command,
+                    args = s.Args,
+                    description = s.Description,
+                    icon = s.Icon,
+                    env = s.Env,
+                    url = s.Url
+                })
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting MCP servers configuration");
+            return Ok(new
+            {
+                success = false,
+                error = ex.Message,
+                servers = new List<MCPServerUIConfig>()
+            });
+        }
     }
 
     [HttpPost("initialize")]
@@ -27,13 +83,14 @@ public class DynamicAIMCPController : ControllerBase
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>();
             var agentId = agent.GetPrimaryKey();
-            
+
             // Initialize the agent with system prompt
-            var systemPrompt = @"You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol).
+            var systemPrompt =
+                @"You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol).
 When asked to perform tasks, use the available tools to help provide accurate and complete responses.
 Always explain what tools you're using and why.
 When using tools, be clear about the results and how they help answer the user's question.";
-            
+
             await agent.InitializeAsync(new InitializeDto
             {
                 Instructions = systemPrompt,
@@ -42,10 +99,10 @@ When using tools, be clear about the results and how they help answer the user's
                     SystemLLM = request.SystemLLM // Use the selected LLM from the request
                 }
             });
-            
+
             // Also explicitly configure the brain to ensure it's initialized
             await agent.ConfigureBrainAsync(request.SystemLLM);
-            
+
             return Ok(new
             {
                 success = true,
@@ -70,28 +127,68 @@ When using tools, be clear about the results and how they help answer the user's
         try
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
-            
+
             // Configure MCP servers
-            var servers = request.Servers.Select(s => new MCPServerConfig
+            var servers = request.Servers.Select(s =>
             {
-                ServerName = s.ServerName,
-                Command = s.Command,
-                Args = s.Args?.ToList() ?? new List<string>(),
-                Environment = s.Environment?.ToDictionary(kv => kv.Key, kv => kv.Value ?? string.Empty) ?? new Dictionary<string, string>(),
-                TransportType = s.TransportType,
-                SseUrl = s.SseUrl
+                var config = new MCPServerConfig
+                {
+                    ServerName = s.ServerName,
+                    Command = s.Command,
+                    Args = s.Args?.ToList() ?? new List<string>(),
+                    Env = s.Env?.ToDictionary(kv => kv.Key, kv => kv.Value ?? string.Empty) ??
+                          new Dictionary<string, string>()
+                };
+
+                // Handle URL for SSE/HTTP servers
+                if (!string.IsNullOrEmpty(s.Url))
+                {
+                    config.Url = s.Url;
+
+                    // Auto-detect transport type based on URL
+                    if (s.Url.Contains("/sse") || s.Url.EndsWith("/events"))
+                    {
+                        config.TransportType = "sse";
+                    }
+                    else if (s.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                             s.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        config.TransportType = "http";
+                    }
+                }
+
+                // Also check if command is a URL (for backward compatibility)
+                if (string.IsNullOrEmpty(config.TransportType) &&
+                    (s.Command.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                     s.Command.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
+                {
+                    config.TransportType = "http";
+                    // If command is a URL and no separate URL is provided, use command as URL
+                    if (string.IsNullOrEmpty(config.Url))
+                    {
+                        config.Url = s.Command;
+                    }
+                }
+
+                // Default to stdio if no transport type is detected
+                if (string.IsNullOrEmpty(config.TransportType))
+                {
+                    config.TransportType = "stdio";
+                }
+
+                return config;
             }).ToList();
 
             var success = await agent.ConfigureMCPServersAsync(servers);
-            
+
             if (!success)
             {
                 return BadRequest("Failed to configure MCP servers");
             }
-            
+
             // Get available tools
             var tools = await agent.GetAvailableMCPToolsAsync();
-            
+
             return Ok(new
             {
                 success = true,
@@ -125,7 +222,7 @@ When using tools, be clear about the results and how they help answer the user's
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(agentId));
             var tools = await agent.GetAvailableMCPToolsAsync();
-            
+
             return Ok(new
             {
                 success = true,
@@ -149,7 +246,7 @@ When using tools, be clear about the results and how they help answer the user's
         try
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
-            
+
             // Ensure brain is configured (this is idempotent, so safe to call multiple times)
             var state = await agent.GetStateAsync();
             if (!string.IsNullOrEmpty(state.SystemLLM))
@@ -161,10 +258,10 @@ When using tools, be clear about the results and how they help answer the user's
                 // Use default if not configured
                 await agent.ConfigureBrainAsync("DeepSeek");
             }
-            
+
             // Process the chat message
             var response = await agent.ChatAsync(request.Message);
-            
+
             return Ok(new
             {
                 success = true,
@@ -189,7 +286,7 @@ When using tools, be clear about the results and how they help answer the user's
         try
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
-            
+
             // Ensure brain is configured (this is idempotent, so safe to call multiple times)
             var state = await agent.GetStateAsync();
             if (!string.IsNullOrEmpty(state.SystemLLM))
@@ -201,10 +298,10 @@ When using tools, be clear about the results and how they help answer the user's
                 // Use default if not configured
                 await agent.ConfigureBrainAsync("DeepSeek");
             }
-            
+
             // Process the chat message with tool call details
             var detailedResponse = await agent.ChatWithDetailsAsync(request.Message);
-            
+
             return Ok(new
             {
                 success = true,
@@ -232,7 +329,7 @@ When using tools, be clear about the results and how they help answer the user's
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(agentId));
             var state = await agent.GetStateAsync();
-            
+
             return Ok(new
             {
                 success = true,
@@ -257,7 +354,7 @@ When using tools, be clear about the results and how they help answer the user's
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(agentId));
             var state = await agent.GetStateAsync();
-            
+
             return Ok(new
             {
                 success = true,
@@ -282,7 +379,7 @@ When using tools, be clear about the results and how they help answer the user's
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
             // Clear conversation history - not implemented yet
-            
+
             return Ok(new
             {
                 success = true,
@@ -308,18 +405,18 @@ When using tools, be clear about the results and how they help answer the user's
             // Create a temporary agent to get available GAgents
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>();
             var gAgents = await agent.GetAvailableGAgentsAsync();
-            
+
             return Ok(new
             {
                 success = true,
-                gAgents = gAgents.Select(g => 
+                gAgents = gAgents.Select(g =>
                 {
                     // Parse alias and namespace from GrainType
                     var grainTypeString = g.GrainType.ToString();
                     var parts = grainTypeString.Split('/');
                     var alias = parts.Length > 0 ? parts[0] : grainTypeString;
                     var nameSpace = parts.Length > 1 ? parts[1] : "default";
-                    
+
                     return new
                     {
                         grainType = grainTypeString,
@@ -352,31 +449,31 @@ When using tools, be clear about the results and how they help answer the user's
         try
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
-            
+
             // Convert string grain types to GrainType objects
             var grainTypes = request.SelectedGAgents.Select(g => GrainType.Create(g)).ToList();
-            
+
             var success = await agent.ConfigureGAgentToolsAsync(grainTypes);
-            
+
             if (!success)
             {
                 return BadRequest("Failed to configure GAgent tools");
             }
-            
+
             // Get all available tools (MCP + GAgent)
             var mcpTools = await agent.GetAvailableMCPToolsAsync();
-            
+
             // Get configured GAgent info for response
             var allGAgents = await agent.GetAvailableGAgentsAsync();
             var configuredGAgents = allGAgents
                 .Where(g => request.SelectedGAgents.Contains(g.GrainType.ToString()))
-                .Select(g => 
+                .Select(g =>
                 {
                     // Parse alias from GrainType
                     var grainTypeString = g.GrainType.ToString();
                     var parts = grainTypeString.Split('/');
                     var alias = parts.Length > 0 ? parts[0] : grainTypeString;
-                    
+
                     return new
                     {
                         grainType = grainTypeString,
@@ -386,7 +483,7 @@ When using tools, be clear about the results and how they help answer the user's
                     };
                 })
                 .ToList();
-            
+
             return Ok(new
             {
                 success = true,
@@ -413,10 +510,10 @@ When using tools, be clear about the results and how they help answer the user's
         {
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(agentId));
             var state = await agent.GetStateAsync();
-            
+
             // Get MCP tools
             var mcpTools = await agent.GetAvailableMCPToolsAsync();
-            
+
             // Create the response
             var response = new
             {
@@ -435,7 +532,7 @@ When using tools, be clear about the results and how they help answer the user's
                 }).ToList(),
                 totalTools = mcpTools.Count + (state.RegisteredGAgentFunctions?.Count ?? 0)
             };
-            
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -452,7 +549,7 @@ When using tools, be clear about the results and how they help answer the user's
 
 public class InitializeAgentRequest
 {
-    public string SystemLLM { get; set; } = "DeepSeek"; // Default to DeepSeek if not provided
+    public string SystemLLM { get; set; } = "OpenAI";
 }
 
 public class ConfigureServersRequest
@@ -466,9 +563,8 @@ public class MCPServerConfigDto
     public string ServerName { get; set; } = string.Empty;
     public string Command { get; set; } = string.Empty;
     public List<string>? Args { get; set; }
-    public Dictionary<string, string>? Environment { get; set; }
-    public string? TransportType { get; set; }
-    public string? SseUrl { get; set; }
+    public Dictionary<string, string>? Env { get; set; }
+    public string? Url { get; set; }
 }
 
 public class ChatRequest
@@ -486,4 +582,21 @@ public class ConfigureGAgentToolsRequest
 {
     public string AgentId { get; set; }
     public List<string> SelectedGAgents { get; set; } = new();
-} 
+}
+
+public class MCPServerUIConfig
+{
+    [JsonPropertyName("name")] public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("command")] public string Command { get; set; } = string.Empty;
+
+    [JsonPropertyName("args")] public List<string> Args { get; set; } = new();
+
+    [JsonPropertyName("description")] public string Description { get; set; } = string.Empty;
+
+    [JsonPropertyName("icon")] public string? Icon { get; set; }
+
+    [JsonPropertyName("env")] public Dictionary<string, string>? Env { get; set; }
+
+    [JsonPropertyName("url")] public string? Url { get; set; }
+}

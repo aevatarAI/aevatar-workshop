@@ -60,7 +60,7 @@ public class MCPDemoController : ControllerBase
                     ServerName = s.ServerName ?? string.Empty,
                     Command = s.Command ?? string.Empty,
                     Args = s.Args?.Select(arg => arg?.ToString() ?? string.Empty).ToList() ?? new List<string>(),
-                    Environment = ConvertEnvironmentDictionary(s.Environment)
+                    Env = ConvertEnvironmentDictionary(s.Environment)
                 }).ToList()
             };
 
