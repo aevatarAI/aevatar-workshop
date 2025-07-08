@@ -14,6 +14,7 @@ public interface IDynamicToolAIGAgent : IAIGAgent, IStateGAgent<DynamicToolAIGAg
 {
     Task<bool> ConfigureBrainAsync(string systemLLM);
     Task<List<GAgentDetailInfo>> GetAvailableGAgentsAsync();
+    Task<bool> ConfigureGAgentToolsAsync(List<GrainType> selectedGAgents);
     Task<string> ChatAsync(string message);
     Task<ChatWithDetailsResponse> ChatWithDetailsAsync(string message);
 }
@@ -48,7 +49,7 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     }
 
     /// <summary>
-    /// Configure the brain with a specific LLM system - Simplified version
+    /// Configure the brain with a specific LLM system
     /// </summary>
     public async Task<bool> ConfigureBrainAsync(string systemLLM)
     {
@@ -56,17 +57,22 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
         {
             Logger.LogInformation("Configuring brain with system LLM: {SystemLLM}", systemLLM);
 
-            // Use the base class method to set system LLM
-            await SetSystemLLMAsync(systemLLM);
+            // Set the system LLM
+            State.SystemLLM = systemLLM;
+
+            // Enable tools by default for Dynamic AI Agent
+            State.EnableMCPTools = true;
+            State.EnableGAgentTools = true;
+
+            // Raise events to persist the tool enable flags
+            RaiseEvent(new SetEnableMCPToolsStateLogEvent { EnableMCPTools = true });
+            RaiseEvent(new SetEnableGAgentToolsStateLogEvent { EnableGAgentTools = true });
 
             // Set a default prompt template if not already set
             if (string.IsNullOrEmpty(State.PromptTemplate))
             {
-                var initDto = new InitializeDto
-                {
-                    LLMConfig = new LLMConfigDto { SystemLLM = systemLLM },
-                    Instructions =
-                        @"You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol) and other GAgent tools.
+                State.PromptTemplate =
+                    @"You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol) and other GAgent tools.
 
 When asked to perform tasks, use the available tools to help provide accurate and complete responses.
 
@@ -76,18 +82,30 @@ Before using any tool:
 - Use the exact tool names and parameter names as provided
 
 Always explain what tools you're using and why.
-When using tools, be clear about the results and how they help answer the user's question.",
-                    EnableMCPTools = true,
-                    EnableGAgentTools = true
-                };
-
-                // Use base class InitializeAsync which handles everything
-                return await InitializeAsync(initDto);
+When using tools, be clear about the results and how they help answer the user's question.";
             }
 
-            // If prompt template exists, just trigger brain initialization
+            RaiseEvent(new DynamicToolAIGAgentStateLogEvent());
+            await ConfirmEvents();
+
+            // Manually trigger brain initialization by calling the activation logic
             await OnAIGAgentActivateAsync(CancellationToken.None);
-            return GetKernelFromBrain() != null;
+
+            // Check if brain was initialized successfully
+            if (GetKernelFromBrain() != null)
+            {
+                Logger.LogInformation("Brain configured and initialized successfully");
+
+                // Update kernel with all enabled tools (MCP and GAgent)
+                await UpdateKernelWithAllToolsAsync();
+
+                return true;
+            }
+            else
+            {
+                Logger.LogError("Failed to initialize brain for system LLM: {SystemLLM}", systemLLM);
+                return false;
+            }
         }
         catch (Exception ex)
         {
@@ -136,22 +154,33 @@ When using tools, be clear about the results and how they help answer the user's
         }
     }
 
-    // Override the base class method to add logging
-    public override async Task<bool> ConfigureGAgentToolsAsync(List<GrainType> selectedGAgents)
+    public async Task<bool> ConfigureGAgentToolsAsync(List<GrainType> selectedGAgents)
     {
         try
         {
             Logger.LogInformation("Configuring GAgent tools with {Count} selected agents", selectedGAgents.Count);
 
-            // Use base class implementation which handles everything
-            var result = await base.ConfigureGAgentToolsAsync(selectedGAgents);
-
-            if (result)
+            // Set selected GAgents in state
+            State.SelectedGAgents = selectedGAgents;
+            RaiseEvent(new SetSelectedGAgentsStateLogEvent
             {
-                Logger.LogInformation("Successfully configured {Count} GAgent tools", selectedGAgents.Count);
-            }
+                SelectedGAgents = selectedGAgents
+            });
 
-            return result;
+            // Enable GAgent tools
+            State.EnableGAgentTools = true;
+            RaiseEvent(new SetEnableGAgentToolsStateLogEvent
+            {
+                EnableGAgentTools = true
+            });
+
+            await ConfirmEvents();
+
+            // Update kernel with all tools
+            await UpdateKernelWithAllToolsAsync();
+
+            Logger.LogInformation("Successfully configured {Count} GAgent tools", selectedGAgents.Count);
+            return true;
         }
         catch (Exception ex)
         {

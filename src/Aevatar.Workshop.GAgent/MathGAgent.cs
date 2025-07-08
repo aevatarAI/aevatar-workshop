@@ -27,7 +27,7 @@ public class MathCalculationLogEvent : MathStateLogEvent
 public class MathCalculateEvent : EventBase
 {
     [Id(0)] 
-    [System.ComponentModel.Description("Mathematical expression to evaluate. Examples: '2+2', '10*5', 'sqrt(16)', 'sin(3.14)', '2^3', 'log(10)'")]
+    [System.ComponentModel.Description("Mathematical expression to evaluate. Examples: '2+2', '10*5', 'sqrt(16)', 'sin(3.14)', '2^3', 'log(10)', '35^(1/3)' (cube root), 'cbrt(27)' (cube root function)")]
     public string Expression { get; set; } = string.Empty;
 }
 
@@ -42,7 +42,10 @@ public class MathGAgent : GAgentBase<MathGAgentState, MathStateLogEvent>, IMathG
     public override Task<string> GetDescriptionAsync()
     {
         return Task.FromResult(
-            "Mathematical calculation agent that can evaluate mathematical expressions and perform complex calculations");
+            "Mathematical calculation agent that can evaluate mathematical expressions and perform complex calculations. " +
+            "Supports: basic arithmetic (+,-,*,/), powers (^ or **), roots (sqrt, cbrt, nth root using ^(1/n)), " +
+            "trigonometry (sin, cos, tan), logarithms (log, ln), and more. " +
+            "Examples: '2+2', '10^3', '35^(1/3)' for cube root, 'cbrt(27)', 'sqrt(16)', 'sin(3.14159/2)'");
     }
 
     public async Task<double> CalculateAsync(string expression)
@@ -78,7 +81,8 @@ public class MathGAgent : GAgentBase<MathGAgentState, MathStateLogEvent>, IMathG
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error calculating expression: {Expression}", expression);
-            throw new InvalidOperationException($"Failed to calculate expression: {expression}", ex);
+            throw new InvalidOperationException($"Failed to calculate expression: {expression}. " +
+                "Please check the syntax. Examples of valid expressions: '2+2', '10^3', '35^(1/3)', 'sqrt(16)', 'sin(3.14)'", ex);
         }
     }
 
@@ -114,10 +118,13 @@ public class MathGAgent : GAgentBase<MathGAgentState, MathStateLogEvent>, IMathG
         expression = expression.Replace("power", "^", StringComparison.OrdinalIgnoreCase);
         expression = expression.Replace("squared", "^2", StringComparison.OrdinalIgnoreCase);
         expression = expression.Replace("cubed", "^3", StringComparison.OrdinalIgnoreCase);
+        expression = expression.Replace("**", "^"); // Support Python-style power operator
 
         // Handle mathematical functions
         expression = Regex.Replace(expression, @"square root of (\d+)", "sqrt($1)", RegexOptions.IgnoreCase);
+        expression = Regex.Replace(expression, @"cube root of (\d+)", "cbrt($1)", RegexOptions.IgnoreCase);
         expression = Regex.Replace(expression, @"sqrt\(([^)]+)\)", "Math.Sqrt($1)", RegexOptions.IgnoreCase);
+        expression = Regex.Replace(expression, @"cbrt\(([^)]+)\)", "Math.Cbrt($1)", RegexOptions.IgnoreCase);
         expression = Regex.Replace(expression, @"sin\(([^)]+)\)", "Math.Sin($1)", RegexOptions.IgnoreCase);
         expression = Regex.Replace(expression, @"cos\(([^)]+)\)", "Math.Cos($1)", RegexOptions.IgnoreCase);
         expression = Regex.Replace(expression, @"tan\(([^)]+)\)", "Math.Tan($1)", RegexOptions.IgnoreCase);
@@ -125,11 +132,38 @@ public class MathGAgent : GAgentBase<MathGAgentState, MathStateLogEvent>, IMathG
         expression = Regex.Replace(expression, @"ln\(([^)]+)\)", "Math.Log($1)", RegexOptions.IgnoreCase);
         expression = Regex.Replace(expression, @"exp\(([^)]+)\)", "Math.Exp($1)", RegexOptions.IgnoreCase);
         expression = Regex.Replace(expression, @"abs\(([^)]+)\)", "Math.Abs($1)", RegexOptions.IgnoreCase);
+        expression = Regex.Replace(expression, @"ceil\(([^)]+)\)", "Math.Ceiling($1)", RegexOptions.IgnoreCase);
+        expression = Regex.Replace(expression, @"floor\(([^)]+)\)", "Math.Floor($1)", RegexOptions.IgnoreCase);
+        expression = Regex.Replace(expression, @"round\(([^)]+)\)", "Math.Round($1)", RegexOptions.IgnoreCase);
 
-        // Replace ^ with Math.Pow
-        expression = Regex.Replace(expression, @"(\d+\.?\d*)\s*\^\s*(\d+\.?\d*)", "Math.Pow($1,$2)");
+        // Replace ^ with Math.Pow - improved regex to handle complex expressions
+        expression = ConvertPowerNotation(expression);
 
         return expression;
+    }
+
+    private string ConvertPowerNotation(string expression)
+    {
+        // Handle power operations recursively to support nested expressions
+        var result = expression;
+        
+        // Pattern to match base^exponent where base and exponent can be:
+        // - Simple numbers: 2^3
+        // - Decimal numbers: 2.5^3.2
+        // - Parenthesized expressions: (a+b)^(c/d)
+        // - Negative numbers: (-2)^3
+        var powerPattern = @"((?:\([^)]+\)|-?\d+\.?\d*))[ ]*\^[ ]*((?:\([^)]+\)|-?\d+\.?\d*))";
+        
+        int maxIterations = 10; // Prevent infinite loops
+        int iteration = 0;
+        
+        while (Regex.IsMatch(result, powerPattern) && iteration < maxIterations)
+        {
+            result = Regex.Replace(result, powerPattern, "Math.Pow($1,$2)");
+            iteration++;
+        }
+        
+        return result;
     }
 
     private double EvaluateExpression(string expression)
@@ -158,16 +192,33 @@ public class MathGAgent : GAgentBase<MathGAgentState, MathStateLogEvent>, IMathG
             // Replace Math functions with placeholders and evaluate
             var result = expression;
 
-            // Handle Math.Pow
-            while (result.Contains("Math.Pow"))
+            // Handle Math.Pow with nested expressions
+            int maxIterations = 20; // Prevent infinite loops
+            int iteration = 0;
+            
+            while (result.Contains("Math.Pow") && iteration < maxIterations)
             {
-                var match = Regex.Match(result, @"Math\.Pow\(([^,]+),([^)]+)\)");
+                var match = Regex.Match(result, @"Math\.Pow\(([^,()]+(?:\([^)]*\))?[^,()]*),([^,()]+(?:\([^)]*\))?[^,()]*)\)");
                 if (match.Success)
                 {
                     var baseVal = EvaluateSimpleExpression(match.Groups[1].Value);
                     var expVal = EvaluateSimpleExpression(match.Groups[2].Value);
                     var powResult = Math.Pow(baseVal, expVal);
                     result = result.Replace(match.Value, powResult.ToString());
+                }
+                else break;
+                iteration++;
+            }
+
+            // Handle Math.Cbrt (cube root)
+            while (result.Contains("Math.Cbrt"))
+            {
+                var match = Regex.Match(result, @"Math\.Cbrt\(([^)]+)\)");
+                if (match.Success)
+                {
+                    var arg = EvaluateSimpleExpression(match.Groups[1].Value);
+                    var cbrtResult = Math.Cbrt(arg);
+                    result = result.Replace(match.Value, cbrtResult.ToString());
                 }
                 else break;
             }
@@ -180,7 +231,8 @@ public class MathGAgent : GAgentBase<MathGAgentState, MathStateLogEvent>, IMathG
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Failed to evaluate complex expression: {expression}", ex);
+            throw new InvalidOperationException($"Failed to evaluate complex expression: {expression}. " +
+                "Try simplifying the expression or check for syntax errors.", ex);
         }
     }
 
@@ -194,7 +246,10 @@ public class MathGAgent : GAgentBase<MathGAgentState, MathStateLogEvent>, IMathG
             ["Math.Tan"] = Math.Tan,
             ["Math.Log"] = Math.Log,
             ["Math.Exp"] = Math.Exp,
-            ["Math.Abs"] = Math.Abs
+            ["Math.Abs"] = Math.Abs,
+            ["Math.Ceiling"] = Math.Ceiling,
+            ["Math.Floor"] = Math.Floor,
+            ["Math.Round"] = Math.Round
         };
 
         foreach (var func in functions)

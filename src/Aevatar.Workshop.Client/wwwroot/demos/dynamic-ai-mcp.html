@@ -1546,18 +1546,24 @@
     }
 
     function displayToolCall(toolCall) {
+        // Debug log to see the actual toolCall object
+        console.log('Tool call details:', toolCall);
+        console.log('Success field:', toolCall.success, 'Type:', typeof toolCall.success);
+        
         const messagesDiv = document.getElementById('chatMessages');
         const toolCallEl = document.createElement('div');
         toolCallEl.className = 'tool-call-container';
 
-        // Format arguments
+        // Format arguments - check both camelCase and PascalCase
+        const args = toolCall.arguments || toolCall.Arguments;
         let argsDisplay = '';
-        if (toolCall.arguments && Object.keys(toolCall.arguments).length > 0) {
-            argsDisplay = JSON.stringify(toolCall.arguments, null, 2);
+        if (args && Object.keys(args).length > 0) {
+            argsDisplay = JSON.stringify(args, null, 2);
         }
 
-        // Format result
-        let resultDisplay = toolCall.result || 'No result';
+        // Format result - check both camelCase and PascalCase
+        const result = toolCall.result !== undefined ? toolCall.result : toolCall.Result;
+        let resultDisplay = result || 'No result';
         try {
             // Try to parse and format JSON result
             const parsed = JSON.parse(resultDisplay);
@@ -1566,25 +1572,26 @@
             // Keep as is if not JSON
         }
 
-        // Determine status class
-        const statusClass = toolCall.success ? 'success' : 'error';
-        const statusText = toolCall.success ? 'Success' : 'Error';
+        // Determine status class - check both camelCase and PascalCase
+        const isSuccess = toolCall.success !== undefined ? toolCall.success : toolCall.Success;
+        const statusClass = isSuccess ? 'success' : 'error';
+        const statusText = isSuccess ? 'Success' : 'Error';
 
         toolCallEl.innerHTML = `
             <div class="tool-call-header">
                 <div class="tool-icon">🔧</div>
                 <div class="tool-info">
-                    <div class="tool-name">${escapeHtml(toolCall.toolName)}</div>
-                    <div class="tool-server">${escapeHtml(toolCall.serverName)}</div>
+                    <div class="tool-name">${escapeHtml(toolCall.toolName || toolCall.ToolName || '')}</div>
+                    <div class="tool-server">${escapeHtml(toolCall.serverName || toolCall.ServerName || '')}</div>
                 </div>
                 <div class="tool-status ${statusClass}">${statusText}</div>
             </div>
             ${argsDisplay ? `<div class="tool-arguments"><strong>Arguments:</strong>\n${escapeHtml(argsDisplay)}</div>` : ''}
-            <div class="tool-result ${toolCall.success ? '' : 'tool-error'}">
+            <div class="tool-result ${isSuccess ? '' : 'tool-error'}">
                 <strong>Result:</strong>\n${escapeHtml(resultDisplay)}
             </div>
             <div style="margin-top: 8px; font-size: 11px; color: #666;">
-                ${toolCall.timestamp} • ${toolCall.durationMs}ms
+                ${toolCall.timestamp || toolCall.Timestamp || 'N/A'} • ${toolCall.durationMs || toolCall.DurationMs || 0}ms
             </div>
         `;
 
