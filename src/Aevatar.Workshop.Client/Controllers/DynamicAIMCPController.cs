@@ -43,7 +43,9 @@ public class DynamicAIMCPController : ControllerBase
                     Description = serverSection["description"] ?? string.Empty,
                     Icon = serverSection["icon"] ?? "🛠️", // Default icon if not specified
                     Env = serverSection.GetSection("env").Get<Dictionary<string, string>>(),
-                    Url = serverSection["url"]
+                    Url = serverSection["url"],
+                    InitialDelayMs = serverSection.GetValue<int?>("initialDelayMs"),
+                    MaxRetries = serverSection.GetValue<int?>("maxRetries")
                 };
 
                 servers.Add(serverConfig);
@@ -137,7 +139,9 @@ When using tools, be clear about the results and how they help answer the user's
                     Command = s.Command,
                     Args = s.Args?.ToList() ?? new List<string>(),
                     Env = s.Env?.ToDictionary(kv => kv.Key, kv => kv.Value ?? string.Empty) ??
-                          new Dictionary<string, string>()
+                          new Dictionary<string, string>(),
+                    InitialDelayMs = s.InitialDelayMs,
+                    MaxRetries = s.MaxRetries
                 };
 
                 // Handle URL for SSE/HTTP servers
@@ -565,6 +569,8 @@ public class MCPServerConfigDto
     public List<string>? Args { get; set; }
     public Dictionary<string, string>? Env { get; set; }
     public string? Url { get; set; }
+    public int? InitialDelayMs { get; set; }
+    public int? MaxRetries { get; set; }
 }
 
 public class ChatRequest
@@ -599,4 +605,8 @@ public class MCPServerUIConfig
     [JsonPropertyName("env")] public Dictionary<string, string>? Env { get; set; }
 
     [JsonPropertyName("url")] public string? Url { get; set; }
+    
+    [JsonPropertyName("initialDelayMs")] public int? InitialDelayMs { get; set; }
+    
+    [JsonPropertyName("maxRetries")] public int? MaxRetries { get; set; }
 }
