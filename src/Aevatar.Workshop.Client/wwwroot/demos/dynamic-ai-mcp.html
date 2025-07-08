@@ -994,6 +994,15 @@
             args: ['-y', '@upstash/context7-mcp@latest'],
             description: 'General-purpose MCP server with database access, web search, text utilities, and more',
             icon: '🌟'
+        },
+        {
+            name: 'mcp-server-weread',
+            command: 'mcp-server-weread',
+            description: 'WeChat Reader - 获取微信读书的书籍、笔记和划线数据',
+            icon: '📖',
+            environment: {
+                "WEREAD_COOKIE": "wr_gid=208334893; wr_fp=3524540957; wr_skey=MaRwuWO3; wr_vid=18900658; wr_rt=web%40QPJ~rsju7MyVs7LbNd0_AL"
+            }
         }
     ];
 
@@ -1254,7 +1263,10 @@
                 serverName: s.name,
                 command: s.command,
                 args: s.args,
-                description: s.description
+                description: s.description,
+                transportType: s.transportType,
+                sseUrl: s.sseUrl,
+                environment: s.environment
             }));
 
         try {

@@ -77,7 +77,9 @@ When using tools, be clear about the results and how they help answer the user's
                 ServerName = s.ServerName,
                 Command = s.Command,
                 Args = s.Args?.ToList() ?? new List<string>(),
-                Environment = s.Environment?.ToDictionary(kv => kv.Key, kv => kv.Value ?? string.Empty) ?? new Dictionary<string, string>()
+                Environment = s.Environment?.ToDictionary(kv => kv.Key, kv => kv.Value ?? string.Empty) ?? new Dictionary<string, string>(),
+                TransportType = s.TransportType,
+                SseUrl = s.SseUrl
             }).ToList();
 
             var success = await agent.ConfigureMCPServersAsync(servers);
@@ -456,7 +458,17 @@ public class InitializeAgentRequest
 public class ConfigureServersRequest
 {
     public string AgentId { get; set; }
-    public List<MCPServerConfig> Servers { get; set; }
+    public List<MCPServerConfigDto> Servers { get; set; }
+}
+
+public class MCPServerConfigDto
+{
+    public string ServerName { get; set; } = string.Empty;
+    public string Command { get; set; } = string.Empty;
+    public List<string>? Args { get; set; }
+    public Dictionary<string, string>? Environment { get; set; }
+    public string? TransportType { get; set; }
+    public string? SseUrl { get; set; }
 }
 
 public class ChatRequest

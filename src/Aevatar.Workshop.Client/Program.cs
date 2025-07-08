@@ -11,8 +11,25 @@ Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
 var builder = WebApplication.CreateBuilder(args);
 
 // Add configuration from both appsettings.json and appsettings.secrets.json
+// Try to find the Host directory
+var hostPath = Path.Combine(Directory.GetCurrentDirectory(), "src/Aevatar.Workshop.Host");
+if (!Directory.Exists(hostPath))
+{
+    // If running from the src/Aevatar.Workshop.Client directory
+    hostPath = Path.Combine(Directory.GetCurrentDirectory(), "../Aevatar.Workshop.Host");
+}
+
+if (Directory.Exists(hostPath))
+{
+    builder.Configuration
+        .SetBasePath(hostPath)
+        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+        .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
+}
+
+// Also check current directory
 builder.Configuration
-    .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../Aevatar.Workshop.Host"))
+    .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
     .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
 
