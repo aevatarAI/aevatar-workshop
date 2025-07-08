@@ -238,6 +238,67 @@
             50% { opacity: 0.5; }
         }
 
+        /* GAgent Cards */
+        .gagent-card {
+            background-color: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            height: 100%;
+            min-height: 80px;
+        }
+
+        .gagent-card:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--scrollbar-thumb);
+            transform: translateY(-1px);
+        }
+
+        .gagent-card.selected {
+            background-color: #1e3a8a;
+            border-color: var(--accent-blue);
+        }
+
+        [data-theme="light"] .gagent-card.selected {
+            background-color: #dbeafe;
+            border-color: var(--accent-blue);
+        }
+
+        .gagent-card.connected {
+            border-color: var(--accent-green);
+        }
+
+        .gagent-card-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .gagent-card-description {
+            font-size: 11px;
+            color: var(--text-secondary);
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-height: 1.3;
+        }
+
+        .gagent-card-info {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+
         /* Tools Panel */
         .tools-panel {
             background-color: var(--pre-bg);
@@ -925,7 +986,7 @@
                     <div class="message-role">Assistant</div>
                 </div>
                 <div class="message-content">
-                    Hello! I'm your AI assistant with dynamic MCP tool capabilities. Initialize me and connect to MCP servers to get started.
+                    Hello! I'm your AI assistant with dynamic MCP tool capabilities. Initialize me to start chatting. You can optionally connect to MCP servers and configure GAgent tools to enhance my capabilities.
                 </div>
             </div>
         </div>
@@ -935,7 +996,7 @@
                     <textarea
                             class="chat-input"
                             id="chatInput"
-                            placeholder="Ask me to use any available tool..."
+                            placeholder="Type your message here..."
                             onkeydown="handleChatKeydown(event)"
                             oninput="autoResize(this)"
                             disabled
@@ -1092,8 +1153,12 @@
                 document.getElementById('gagentSection').style.display = 'block';
                 loadAvailableGAgents();
 
+                // Enable chat immediately after initialization
+                document.getElementById('chatInput').disabled = false;
+                document.getElementById('sendBtn').disabled = false;
+
                 // Add system message to chat
-                addMessage('system', `AI Agent initialized with ID: ${data.agentId}`);
+                addMessage('system', `AI Agent initialized with ID: ${data.agentId}. You can now start chatting!`);
             } else {
                 status.innerHTML = `<div class="status-message error">✗ ${data.error}</div>`;
             }
@@ -1171,49 +1236,50 @@
         const gagentsList = document.getElementById('gagentsList');
         gagentsList.innerHTML = '';
 
-        // Filter and display useful GAgents
-        const usefulGAgents = gAgents.filter(g => {
+        // Filter out only internal/system GAgents
+        const displayableGAgents = gAgents.filter(g => {
             const alias = g.alias.toLowerCase();
             const nameSpace = g.nameSpace.toLowerCase();
-            // Show math, time converter, and other tool-like agents
-            return (alias.includes('math') || 
-                    alias.includes('time') || 
-                    alias.includes('converter') ||
-                    nameSpace.includes('tools')) &&
-                   !alias.includes('dynamictool') &&
-                   !alias.includes('mcp');
+            // Exclude only internal agents like dynamictool and mcp-related
+            return !alias.includes('dynamictool') &&
+                   !alias.includes('mcp') &&
+                   !nameSpace.includes('aevatar.gagents.mcp');
         });
 
-        usefulGAgents.forEach(gagent => {
+        // Sort by alias for better organization
+        displayableGAgents.sort((a, b) => a.alias.localeCompare(b.alias));
+
+        // Create a compact grid layout container
+        const gridContainer = document.createElement('div');
+        gridContainer.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px;';
+        
+        displayableGAgents.forEach(gagent => {
             const card = document.createElement('div');
-            card.className = 'server-card';
+            card.className = 'gagent-card';
             card.dataset.gagent = gagent.grainType;
             
-            // Choose icon based on alias
-            let icon = '🔧';
-            if (gagent.alias.toLowerCase().includes('math')) icon = '🔢';
-            else if (gagent.alias.toLowerCase().includes('time')) icon = '⏰';
-            
+            // Create a more compact card without icons
             card.innerHTML = `
-                <div style="display: flex; align-items: start; gap: 12px;">
-                    <div style="font-size: 24px;">${icon}</div>
-                    <div style="flex: 1;">
-                        <div class="server-name">${gagent.alias}</div>
-                        <div class="server-description">${gagent.description}</div>
-                        <div class="server-status">
-                            <span style="font-size: 11px; color: var(--text-muted);">
-                                ${gagent.eventHandlers.length} event handler(s)
-                            </span>
-                        </div>
-                    </div>
+                <div class="gagent-card-title">${gagent.alias}</div>
+                <div class="gagent-card-description">${gagent.description || 'No description'}</div>
+                <div class="gagent-card-info">
+                    ${gagent.eventHandlers.length} handler(s)
                 </div>
             `;
             card.onclick = () => toggleGAgent(gagent, card);
-            gagentsList.appendChild(card);
+            gridContainer.appendChild(card);
         });
 
-        if (usefulGAgents.length === 0) {
-            gagentsList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No tool GAgents available</div>';
+        gagentsList.appendChild(gridContainer);
+
+        if (displayableGAgents.length === 0) {
+            gagentsList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No GAgents available</div>';
+        } else {
+            // Add a summary at the top
+            const summary = document.createElement('div');
+            summary.style.cssText = 'color: var(--text-secondary); font-size: 12px; margin-bottom: 10px;';
+            summary.textContent = `${displayableGAgents.length} GAgents available. Click to select:`;
+            gagentsList.insertBefore(summary, gridContainer);
         }
     }
 
@@ -1290,9 +1356,7 @@
                 availableTools = data.availableTools;
                 displayTools();
 
-                // Enable chat
-                document.getElementById('chatInput').disabled = false;
-                document.getElementById('sendBtn').disabled = false;
+                // Show tools section (chat is already enabled)
                 document.getElementById('toolsSection').style.display = 'block';
 
                 // Add system message
