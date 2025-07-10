@@ -34,7 +34,8 @@ public class AevatarWorkshopTestBaseModule : AbpModule
             new GAgentManager(context.Services.GetRequiredService<ClusterFixture>().Cluster.Client,
                 context.Services.GetRequiredService<IPluginGAgentManager>()));
         context.Services.AddSingleton<IGAgentExecutor>(sp =>
-            new GAgentExecutor(context.Services.GetRequiredService<ClusterFixture>().Cluster.Client));
+            new GAgentExecutor(context.Services.GetRequiredService<ClusterFixture>().Cluster.Client,
+                context.Services.GetRequiredService<IGAgentService>()));
         context.Services.AddSingleton<IEventDispatcher, DefaultEventDispatcher>();
         Configure<AbpAutoMapperOptions>(options => { options.AddMaps<AevatarWorkshopTestBaseModule>(); });
     }

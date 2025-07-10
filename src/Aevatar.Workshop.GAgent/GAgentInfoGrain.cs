@@ -27,6 +27,7 @@ public class GAgentExecutionRequest
     [Id(0)] public string GrainType { get; set; } = string.Empty;
     [Id(1)] public string EventTypeName { get; set; } = string.Empty;
     [Id(2)] public string EventDataJson { get; set; } = string.Empty;
+    [Id(3)] public Type? ExpectedResultType { get; set; }
 }
 
 /// <summary>
@@ -199,10 +200,13 @@ public class GAgentInfoGrain : Grain, IGAgentInfoGrain
             var publishingGAgent = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>();
 
             // Set up ResultGAgent
-            await resultGAgent.SetExecutionContextAsync(
-                resultGAgentId.ToString(),
-                AevatarCoreConstants.StreamProvider,
-                AevatarGAgentExecutorConstants.GAgentExecutorStreamNamespace);
+            await resultGAgent.ConfigAsync(new ResultGAgentConfiguration
+            {
+                ExecutionId = resultGAgentId.ToString(),
+                StreamProvider = AevatarCoreConstants.StreamProvider,
+                StreamNamespace = AevatarGAgentExecutorConstants.GAgentExecutorStreamNamespace,
+                ExpectedResultType = request.ExpectedResultType
+            });
 
             // Subscribe ResultGAgent to the target GAgent
             await targetGAgent.RegisterAsync(resultGAgent);

@@ -1,5 +1,10 @@
-﻿using Aevatar.Workshop.TestBase;
+﻿using Aevatar.Core.Abstractions;
+using Aevatar.Workshop.TestBase;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aevatar.Workshop.Tests;
 
-public abstract class AevatarWorkshopTestBase : AevatarWorkshopTestBase<AevatarWorkshopTestModule>;
+public abstract class AevatarWorkshopTestBase : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
+{
+    protected IGAgentFactory GAgentFactory => ServiceProvider.GetRequiredService<IGAgentFactory>();
+}

@@ -119,7 +119,8 @@ public class ClusterFixture : IDisposable, ISingletonDependency
                     services.AddSingleton<IStateProjector, TestStateProjector>();
                     services.AddSingleton<IStateDispatcher, StateDispatcher>();
 
-                    services.Configure<PluginGAgentLoadOptions>(services.GetConfiguration().GetSection("Plugins"));
+                    services.Configure<PluginGAgentLoadOptions>(configuration.GetSection("Plugins"));
+
                     services.AddTransient<ITenantPluginCodeRepository, TenantPluginCodeRepository>();
                     services.AddTransient<IPluginCodeStorageRepository, PluginCodeStorageRepository>();
                     services.AddTransient<TenantPluginCodeMongoDbContext>();

@@ -7,6 +7,7 @@ using Serilog;
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .AddJsonFile("appsettings.secrets.json", optional: true)
+    .AddEnvironmentVariables()
     .Build();
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -34,8 +35,10 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
         .ConfigureAppConfiguration((hostingContext, config) =>
         {
             config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                  .AddJsonFile("appsettings.container.json", optional: true, reloadOnChange: true) // 添加容器化配置
                   .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-                  .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
+                  .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
+                  .AddEnvironmentVariables(); // 添加环境变量支持
         })
         .ConfigureServices((_, services) => { services.AddApplication<WorkshopHostModule>(); })
         .UseOrleansConfiguration()

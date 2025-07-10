@@ -42,14 +42,16 @@ graph TD
 3. **Stream Setup**: Creates a subscription to monitor for execution completion
 4. **Event Publishing**: PublishingGAgent forwards the event to both the target GAgent and ResultGAgent
 5. **Result Collection**: ResultGAgent processes the execution result and publishes it to the stream
-6. **Timeout Handling**: If no result is received within 5 minutes, a TimeoutException is thrown
+6. **Result Type Filtering**: If expectedResultType is specified, ResultGAgent only collects events of that specific type
+7. **Timeout Handling**: If no result is received within 5 minutes, a TimeoutException is thrown
 
 1. **初始化**：GAgentExecutor 创建唯一的执行 ID 并设置结果流
 2. **GAgent 解析**：使用 IGAgentFactory 获取目标 GAgent、ResultGAgent 和 PublishingGAgent
 3. **流设置**：创建订阅以监控执行完成
 4. **事件发布**：PublishingGAgent 将事件转发给目标 GAgent 和 ResultGAgent
 5. **结果收集**：ResultGAgent 处理执行结果并将其发布到流
-6. **超时处理**：如果在 5 分钟内未收到结果，将抛出 TimeoutException
+6. **结果类型过滤**：如果指定了 expectedResultType，ResultGAgent 仅收集该特定类型的事件
+7. **超时处理**：如果在 5 分钟内未收到结果，将抛出 TimeoutException
 
 ## API Reference / API 参考
 
@@ -58,14 +60,34 @@ graph TD
 ```csharp
 public interface IGAgentExecutor
 {
-    Task<string> ExecuteGAgentEventHandler(GrainId grainId, EventBase @event);
-    Task<string> ExecuteGAgentEventHandler(GrainType grainType, EventBase @event);
+    // Standard methods with EventBase parameter
+    Task<string> ExecuteGAgentEventHandler(IGAgent gAgent, EventBase @event, Type? expectedResultType = null);
+    Task<string> ExecuteGAgentEventHandler(GrainId grainId, EventBase @event, Type? expectedResultType = null);
+    Task<string> ExecuteGAgentEventHandler(GrainType grainType, EventBase @event, Type? expectedResultType = null);
+    
+    // Enhanced methods with event type name and JSON parameters
+    Task<string> ExecuteGAgentEventHandler(IGAgent gAgent, string eventTypeName, string eventJson, Type? expectedResultType = null);
+    Task<string> ExecuteGAgentEventHandler(GrainId grainId, string eventTypeName, string eventJson, Type? expectedResultType = null);
+    Task<string> ExecuteGAgentEventHandler(GrainType grainType, string eventTypeName, string eventJson, Type? expectedResultType = null);
 }
 ```
 
 ### Methods / 方法
 
-#### ExecuteGAgentEventHandler(GrainId, EventBase)
+#### ExecuteGAgentEventHandler(IGAgent, EventBase, Type?)
+Executes an event handler on a specific GAgent instance.
+
+在特定的 GAgent 实例上执行事件处理器。
+
+**Parameters / 参数:**
+- `gAgent`: The target GAgent instance / 目标 GAgent 实例
+- `@event`: The event to be processed / 要处理的事件
+- `expectedResultType`: Optional expected result event type to wait for / 可选，等待的预期结果事件类型
+
+**Returns / 返回:** 
+- `Task<string>`: The execution result as a string / 以字符串形式返回的执行结果
+
+#### ExecuteGAgentEventHandler(GrainId, EventBase, Type?)
 Executes an event handler on a specific GAgent instance identified by GrainId.
 
 在由 GrainId 标识的特定 GAgent 实例上执行事件处理器。
@@ -73,11 +95,12 @@ Executes an event handler on a specific GAgent instance identified by GrainId.
 **Parameters / 参数:**
 - `grainId`: The unique identifier of the target GAgent / 目标 GAgent 的唯一标识符
 - `@event`: The event to be processed / 要处理的事件
+- `expectedResultType`: Optional expected result event type to wait for / 可选，等待的预期结果事件类型
 
 **Returns / 返回:** 
 - `Task<string>`: The execution result as a string / 以字符串形式返回的执行结果
 
-#### ExecuteGAgentEventHandler(GrainType, EventBase)
+#### ExecuteGAgentEventHandler(GrainType, EventBase, Type?)
 Executes an event handler on a new GAgent instance of the specified type.
 
 在指定类型的新 GAgent 实例上执行事件处理器。
@@ -85,6 +108,49 @@ Executes an event handler on a new GAgent instance of the specified type.
 **Parameters / 参数:**
 - `grainType`: The type of GAgent to create and execute on / 要创建和执行的 GAgent 类型
 - `@event`: The event to be processed / 要处理的事件
+- `expectedResultType`: Optional expected result event type to wait for / 可选，等待的预期结果事件类型
+
+**Returns / 返回:**
+- `Task<string>`: The execution result as a string / 以字符串形式返回的执行结果
+
+#### ExecuteGAgentEventHandler(IGAgent, string, string, Type?)
+Executes an event handler on a specific GAgent instance using event type name and JSON.
+
+使用事件类型名称和JSON在特定的 GAgent 实例上执行事件处理器。
+
+**Parameters / 参数:**
+- `gAgent`: The target GAgent instance / 目标 GAgent 实例
+- `eventTypeName`: The name of the event type to execute / 要执行的事件类型名称
+- `eventJson`: JSON string containing the event data / 包含事件数据的JSON字符串
+- `expectedResultType`: Optional expected result event type to wait for / 可选，等待的预期结果事件类型
+
+**Returns / 返回:** 
+- `Task<string>`: The execution result as a string / 以字符串形式返回的执行结果
+
+#### ExecuteGAgentEventHandler(GrainId, string, string, Type?)
+Executes an event handler on a specific GAgent instance identified by GrainId using event type name and JSON.
+
+使用事件类型名称和JSON在由 GrainId 标识的特定 GAgent 实例上执行事件处理器。
+
+**Parameters / 参数:**
+- `grainId`: The unique identifier of the target GAgent / 目标 GAgent 的唯一标识符
+- `eventTypeName`: The name of the event type to execute / 要执行的事件类型名称
+- `eventJson`: JSON string containing the event data / 包含事件数据的JSON字符串
+- `expectedResultType`: Optional expected result event type to wait for / 可选，等待的预期结果事件类型
+
+**Returns / 返回:** 
+- `Task<string>`: The execution result as a string / 以字符串形式返回的执行结果
+
+#### ExecuteGAgentEventHandler(GrainType, string, string, Type?)
+Executes an event handler on a new GAgent instance of the specified type using event type name and JSON.
+
+使用事件类型名称和JSON在指定类型的新 GAgent 实例上执行事件处理器。
+
+**Parameters / 参数:**
+- `grainType`: The type of GAgent to create and execute on / 要创建和执行的 GAgent 类型
+- `eventTypeName`: The name of the event type to execute / 要执行的事件类型名称
+- `eventJson`: JSON string containing the event data / 包含事件数据的JSON字符串
+- `expectedResultType`: Optional expected result event type to wait for / 可选，等待的预期结果事件类型
 
 **Returns / 返回:**
 - `Task<string>`: The execution result as a string / 以字符串形式返回的执行结果
@@ -135,6 +201,84 @@ public class MyService
         var result = await _gAgentExecutor.ExecuteGAgentEventHandler(grainId, greetingEvent);
         Console.WriteLine($"Execution result: {result}");
     }
+
+    // Execute with expected result type / 执行并指定预期结果类型
+    public async Task ExecuteWithExpectedResultTypeExample()
+    {
+        var grainType = GrainType.Create("EventHandlerDemoGAgent");
+        var requestEvent = new RequestEvent 
+        { 
+            RequestId = Guid.NewGuid().ToString(),
+            Data = "Process this data"
+        };
+        
+        // Wait specifically for ResponseEvent type
+        var result = await _gAgentExecutor.ExecuteGAgentEventHandler(
+            grainType, 
+            requestEvent, 
+            typeof(ResponseEvent)
+        );
+        Console.WriteLine($"Response received: {result}");
+    }
+
+    // Execute with IGAgent instance / 使用 IGAgent 实例执行
+    public async Task ExecuteWithIGAgentExample()
+    {
+        var gAgent = await _gAgentFactory.GetGAgentAsync<IEventHandlerDemoGAgent>();
+        var greetingEvent = new GreetingEvent 
+        { 
+            Greeting = "Hello from IGAgent instance!" 
+        };
+        
+        var result = await _gAgentExecutor.ExecuteGAgentEventHandler(gAgent, greetingEvent);
+        Console.WriteLine($"Execution result: {result}");
+    }
+
+    // Execute with event type name and JSON / 使用事件类型名称和JSON执行
+    public async Task ExecuteWithEventTypeNameAndJsonExample()
+    {
+        var grainType = GrainType.Create("EventHandlerDemoGAgent");
+        var eventTypeName = "GreetingEvent";
+        var eventJson = """
+        {
+            "Greeting": "Hello from JSON!",
+            "Timestamp": "2024-01-01T00:00:00Z"
+        }
+        """;
+        
+        var result = await _gAgentExecutor.ExecuteGAgentEventHandler(
+            grainType, 
+            eventTypeName, 
+            eventJson
+        );
+        Console.WriteLine($"Execution result: {result}");
+    }
+
+    // Execute with event type name, JSON and expected result type / 使用事件类型名称、JSON和预期结果类型执行
+    public async Task ExecuteWithEventTypeNameJsonAndExpectedResultExample()
+    {
+        var grainId = GrainId.Create(
+            GrainType.Create("EventHandlerDemoGAgent"), 
+            Guid.NewGuid().ToString()
+        );
+        var eventTypeName = "RequestEvent";
+        var eventJson = """
+        {
+            "RequestId": "12345",
+            "Data": "Process this data",
+            "Priority": "High"
+        }
+        """;
+        
+        // Wait specifically for ResponseEvent type
+        var result = await _gAgentExecutor.ExecuteGAgentEventHandler(
+            grainId, 
+            eventTypeName, 
+            eventJson, 
+            typeof(ResponseEvent)
+        );
+        Console.WriteLine($"Response received: {result}");
+    }
 }
 ```
 
@@ -164,9 +308,82 @@ public async Task ExecuteGAgentEventHandler_ShouldProcessEvent()
     var state = await targetGAgent.GetStateAsync();
     state.Content.ShouldContain(greetingEvent.Greeting);
 }
+
+[Fact]
+public async Task ExecuteGAgentEventHandler_WithExpectedResultType_ShouldWaitForSpecificEvent()
+{
+    // Arrange
+    var targetGAgent = await _gAgentFactory.GetGAgentAsync<IMockExecutorGAgent>();
+    var requestEvent = new MockExecutorTestEvent
+    {
+        Message = "Test with expected result type"
+    };
+
+    // Act - Wait specifically for MockExecutorTestResponseEvent
+    var result = await _gAgentExecutor.ExecuteGAgentEventHandler(
+        targetGAgent, 
+        requestEvent, 
+        typeof(MockExecutorTestResponseEvent)
+    );
+
+    // Assert
+    result.ShouldNotBeNull();
+    result.ShouldContain("Processed: Test with expected result type");
+}
+
+[Fact]
+public async Task ExecuteGAgentEventHandler_WithIGAgent_ShouldExecuteSuccessfully()
+{
+    // Arrange
+    var targetGAgent = await _gAgentFactory.GetGAgentAsync<IMockExecutorGAgent>();
+    var testEvent = new MockExecutorTestEvent
+    {
+        Message = "Test with IGAgent instance"
+    };
+
+    // Act
+    var result = await _gAgentExecutor.ExecuteGAgentEventHandler(targetGAgent, testEvent);
+
+    // Assert
+    result.ShouldNotBeNull();
+    result.ShouldContain("Processed: Test with IGAgent instance");
+}
 ```
 
 ## Events and Result Handling / 事件和结果处理
+
+### Expected Result Type Parameter / 预期结果类型参数
+
+The `expectedResultType` parameter allows you to specify which event type to wait for as the execution result. This is particularly useful when:
+
+`expectedResultType` 参数允许您指定等待哪种事件类型作为执行结果。这在以下情况下特别有用：
+
+- **Selective Result Collection**: Only collect results from specific event types
+- **Event Filtering**: Filter out unwanted events and focus on the expected response
+- **Async Operations**: Wait for completion events from long-running operations
+- **Multi-step Processes**: Wait for specific step completion events
+
+- **选择性结果收集**：仅收集特定事件类型的结果
+- **事件过滤**：过滤掉不需要的事件，专注于预期的响应
+- **异步操作**：等待长时间运行操作的完成事件
+- **多步骤流程**：等待特定步骤完成事件
+
+**Usage Examples / 使用示例:**
+
+```csharp
+// Wait for a specific response event type
+var result = await _gAgentExecutor.ExecuteGAgentEventHandler(
+    grainType, 
+    requestEvent, 
+    typeof(ResponseEvent)
+);
+
+// Execute without waiting for specific result type (collects any event)
+var result = await _gAgentExecutor.ExecuteGAgentEventHandler(
+    grainType, 
+    requestEvent
+);
+```
 
 ### ExecutionCompletedEvent
 
@@ -183,6 +400,52 @@ public class ExecutionCompletedEvent
 }
 ```
 
+## Advanced Features / 高级功能
+
+### Expected Result Type Filtering / 预期结果类型过滤
+
+The `expectedResultType` parameter enhances the GAgentExecutor by providing selective result collection. When specified, the ResultGAgent will only collect and return events of the specified type, ignoring all other events published during execution.
+
+`expectedResultType` 参数通过提供选择性结果收集来增强 GAgentExecutor。当指定时，ResultGAgent 将仅收集并返回指定类型的事件，忽略执行期间发布的所有其他事件。
+
+**Benefits / 优势:**
+- **Precise Control**: Wait for specific completion events
+- **Noise Reduction**: Filter out intermediate or debug events
+- **Better Performance**: Avoid collecting unnecessary events
+- **Clearer Contracts**: Define explicit result expectations
+
+- **精确控制**：等待特定的完成事件
+- **减少噪音**：过滤掉中间或调试事件
+- **更好的性能**：避免收集不必要的事件
+- **更清晰的契约**：定义明确的结果期望
+
+### Dynamic Event Execution / 动态事件执行
+
+The enhanced methods with `eventTypeName` and `eventJson` parameters enable dynamic event execution without requiring compile-time knowledge of event types. This is particularly useful for:
+
+使用 `eventTypeName` 和 `eventJson` 参数的增强方法支持动态事件执行，无需在编译时了解事件类型。这在以下情况下特别有用：
+
+- **API Integration**: Execute events from external APIs or web services
+- **Dynamic Workflows**: Build event-driven workflows at runtime
+- **Plugin Systems**: Allow plugins to execute events on GAgents
+- **Serialization Flexibility**: Work with JSON data from various sources
+
+- **API集成**：从外部API或Web服务执行事件
+- **动态工作流**：在运行时构建事件驱动的工作流
+- **插件系统**：允许插件在GAgent上执行事件
+- **序列化灵活性**：处理来自各种来源的JSON数据
+
+**Features / 特性:**
+- **Type Discovery**: Automatically discovers event types from GAgent metadata
+- **JSON Deserialization**: Converts JSON strings to strongly-typed events
+- **Error Handling**: Provides detailed error messages for type resolution failures
+- **Logging**: Comprehensive logging for debugging and monitoring
+
+- **类型发现**：从GAgent元数据自动发现事件类型
+- **JSON反序列化**：将JSON字符串转换为强类型事件
+- **错误处理**：为类型解析失败提供详细的错误消息
+- **日志记录**：用于调试和监控的综合日志记录
+
 ## Configuration / 配置
 
 ### Dependency Injection / 依赖注入
@@ -192,7 +455,17 @@ Register GAgentExecutor in your service configuration:
 在服务配置中注册 GAgentExecutor：
 
 ```csharp
+// Register required services
+services.AddTransient<IGAgentService, GAgentService>();
 services.AddTransient<IGAgentExecutor, GAgentExecutor>();
+
+// Or if using the enhanced constructor with logging
+services.AddTransient<IGAgentExecutor>(provider => 
+    new GAgentExecutor(
+        provider.GetRequiredService<IClusterClient>(),
+        provider.GetRequiredService<IGAgentService>(),
+        provider.GetRequiredService<ILogger<GAgentExecutor>>()
+    ));
 ```
 
 ### Stream Provider / 流提供程序

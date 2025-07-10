@@ -138,8 +138,9 @@ When using tools, be clear about the results and how they help answer the user's
                     ServerName = s.ServerName,
                     Command = s.Command,
                     Args = s.Args?.ToList() ?? new List<string>(),
-                    Env = s.Env?.ToDictionary(kv => kv.Key, kv => kv.Value ?? string.Empty) ??
+                    Env = s.Env?.ToDictionary(kv => kv.Key, kv => kv.Value) ??
                           new Dictionary<string, string>(),
+                    Description = s.Description ?? string.Empty,
                     InitialDelayMs = s.InitialDelayMs,
                     MaxRetries = s.MaxRetries
                 };
@@ -568,6 +569,7 @@ public class MCPServerConfigDto
     public string Command { get; set; } = string.Empty;
     public List<string>? Args { get; set; }
     public Dictionary<string, string>? Env { get; set; }
+    public string? Description { get; set; }
     public string? Url { get; set; }
     public int? InitialDelayMs { get; set; }
     public int? MaxRetries { get; set; }

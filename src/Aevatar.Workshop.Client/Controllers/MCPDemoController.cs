@@ -33,10 +33,11 @@ public class MCPDemoController : ControllerBase
 
     public MCPDemoController(
         IClusterClient clusterClient,
+        IGAgentService gAgentService,
         ILogger<MCPDemoController> logger)
     {
         _gAgentFactory = new GAgentFactory(clusterClient);
-        _gAgentExecutor = new GAgentExecutor(clusterClient);
+        _gAgentExecutor = new GAgentExecutor(clusterClient, gAgentService);
         _logger = logger;
     }
 
@@ -55,13 +56,13 @@ public class MCPDemoController : ControllerBase
             {
                 EnableToolDiscovery = true,
                 RequestTimeout = TimeSpan.FromSeconds(request.TimeoutSeconds ?? 30),
-                Servers = request.Servers.Select(s => new MCPServerConfig
+                Server = request.Servers.Select(s => new MCPServerConfig
                 {
                     ServerName = s.ServerName ?? string.Empty,
                     Command = s.Command ?? string.Empty,
                     Args = s.Args?.Select(arg => arg?.ToString() ?? string.Empty).ToList() ?? new List<string>(),
                     Env = ConvertEnvironmentDictionary(s.Environment)
-                }).ToList()
+                }).First()
             };
 
             // Create MCP GAgent
@@ -152,7 +153,7 @@ public class MCPDemoController : ControllerBase
                 {
                     _logger.LogInformation("Raw result JSON: {Json}", resultJson);
                     response = System.Text.Json.JsonSerializer.Deserialize<MCPToolResponseEvent>(resultJson);
-                    _logger.LogInformation("Parsed response. Success: {Success}, Result type: {Type}, Result: {Result}", 
+                    _logger.LogInformation("Parsed response. Success: {Success}, Result type: {Type}, Result: {Result}",
                         response?.Success, response?.Result?.GetType().Name, response?.Result);
                 }
                 catch (Exception ex)
@@ -197,9 +198,9 @@ public class MCPDemoController : ControllerBase
                 // Add result in a highlighted section if successful
                 if (response?.Success == true && response.Result != null)
                 {
-                    _logger.LogInformation("Tool call successful. Result type: {Type}, Result: {Result}", 
+                    _logger.LogInformation("Tool call successful. Result type: {Type}, Result: {Result}",
                         response.Result?.GetType().Name, response.Result);
-                    
+
                     return Ok(new
                     {
                         success = true,
@@ -413,43 +414,43 @@ public class MCPDemoController : ControllerBase
         public string? ErrorMessage { get; set; }
         public DateTime Timestamp { get; set; }
     }
-    
+
     /// <summary>
     /// Convert JsonElement objects to basic .NET types that Orleans can serialize
     /// </summary>
     private Dictionary<string, object> ConvertJsonElementToBasicTypes(Dictionary<string, object> input)
     {
         var result = new Dictionary<string, object>();
-        
+
         foreach (var kvp in input)
         {
             result[kvp.Key] = ConvertValue(kvp.Value);
         }
-        
+
         return result;
     }
-    
+
     /// <summary>
     /// Convert environment dictionary ensuring all values are strings
     /// </summary>
     private Dictionary<string, string> ConvertEnvironmentDictionary(Dictionary<string, string>? input)
     {
         if (input == null) return new Dictionary<string, string>();
-        
+
         var result = new Dictionary<string, string>();
         foreach (var kvp in input)
         {
             // The value should already be a string, but ensure it's not null
             result[kvp.Key] = kvp.Value ?? string.Empty;
         }
-        
+
         return result;
     }
-    
+
     private object? ConvertValue(object? value)
     {
         if (value == null) return null;
-        
+
         if (value is JsonElement element)
         {
             switch (element.ValueKind)
@@ -476,6 +477,7 @@ public class MCPDemoController : ControllerBase
                     {
                         list.Add(ConvertValue(item));
                     }
+
                     return list;
                 case JsonValueKind.Object:
                     var dict = new Dictionary<string, object>();
@@ -483,26 +485,27 @@ public class MCPDemoController : ControllerBase
                     {
                         dict[prop.Name] = ConvertValue(prop.Value);
                     }
+
                     return dict;
                 default:
                     return element.ToString();
             }
         }
-        
+
         // If it's already a basic type, return as-is
         return value;
     }
-    
+
     /// <summary>
     /// Format result for better display in UI
     /// </summary>
     private object FormatResultForDisplay(object? result)
     {
-        _logger.LogInformation("FormatResultForDisplay called with type: {Type}, value: {Value}", 
+        _logger.LogInformation("FormatResultForDisplay called with type: {Type}, value: {Value}",
             result?.GetType().Name ?? "null", result);
-            
+
         if (result == null) return new { type = "null", value = "" };
-        
+
         // Handle different result types
         if (result is string str)
         {
@@ -512,7 +515,8 @@ public class MCPDemoController : ControllerBase
                 try
                 {
                     var parsed = JsonSerializer.Deserialize<JsonElement>(str);
-                    var formatted = JsonSerializer.Serialize(parsed, new JsonSerializerOptions { WriteIndented = true });
+                    var formatted =
+                        JsonSerializer.Serialize(parsed, new JsonSerializerOptions { WriteIndented = true });
                     return new
                     {
                         type = "json",
@@ -526,7 +530,7 @@ public class MCPDemoController : ControllerBase
                     // Not valid JSON, treat as regular string
                 }
             }
-            
+
             // For multiline strings, provide line count
             var lines = str.Split('\n');
             if (lines.Length > 1)
@@ -539,10 +543,10 @@ public class MCPDemoController : ControllerBase
                     preview = lines.Length > 5 ? string.Join("\n", lines.Take(5)) + "\n..." : str
                 };
             }
-            
+
             return new { type = "string", value = str };
         }
-        
+
         if (result is IList list)
         {
             var items = new List<object>();
@@ -550,6 +554,7 @@ public class MCPDemoController : ControllerBase
             {
                 items.Add(FormatResultForDisplay(item));
             }
+
             return new
             {
                 type = "array",
@@ -557,7 +562,7 @@ public class MCPDemoController : ControllerBase
                 items = items
             };
         }
-        
+
         if (result is Dictionary<string, object> dict)
         {
             return new
@@ -567,7 +572,7 @@ public class MCPDemoController : ControllerBase
                 properties = dict.ToDictionary(kvp => kvp.Key, kvp => FormatResultForDisplay(kvp.Value))
             };
         }
-        
+
         if (result is bool || result is int || result is long || result is double || result is decimal)
         {
             return new
@@ -576,7 +581,7 @@ public class MCPDemoController : ControllerBase
                 value = result
             };
         }
-        
+
         // For complex objects, try to serialize to JSON
         try
         {
