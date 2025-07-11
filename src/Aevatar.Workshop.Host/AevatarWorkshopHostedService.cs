@@ -1,10 +1,10 @@
+using Aevatar.GAgents.PsiOmni.Interfaces;
+using Aevatar.GAgents.PsiOmni.Plugins;
 using Microsoft.Extensions.Hosting;
 using Volo.Abp;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Web.Google;
 using Microsoft.SemanticKernel.Plugins.Web.Tavily;
-using PsiGAgent.Common.Interfaces;
-using PsiGAgent.Plugins;
 
 namespace Aevatar.Workshop.Host;
 

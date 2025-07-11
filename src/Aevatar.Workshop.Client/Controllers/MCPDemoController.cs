@@ -1,19 +1,14 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Aevatar.Core;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.Executor;
-using Aevatar.GAgents.MCP.GAgents;
+using Aevatar.GAgents.MCP.Core;
+using Aevatar.GAgents.MCP.Core.GEvents;
 using Aevatar.GAgents.MCP.GEvents;
-using Aevatar.GAgents.MCP.Model;
 using Aevatar.GAgents.MCP.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Orleans.Runtime;
 
 namespace Aevatar.Workshop.Client.Controllers;
 

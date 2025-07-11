@@ -1,13 +1,13 @@
 using System.Text.Json;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.AIGAgent.Dtos;
+using Aevatar.GAgents.PsiOmni;
+using Aevatar.GAgents.PsiOmni.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Orleans;
-using PsiGAgent.Common;
-using PsiGAgent.Common.Models;
-using PsiGAgent.Omni;
 
 namespace Aevatar.Workshop.Client.Controllers;
 
@@ -38,10 +38,23 @@ public class PsiGAgentDemoController : ControllerBase
         try
         {
             // Create PsiOmniGAgent
-            var psi = await _gAgentFactory.GetGAgentAsync("omni", "psi");
+            var psi = await _gAgentFactory.GetGAgentAsync<IPshOmniGAgent>();
             var publisher = await _gAgentFactory.GetGAgentAsync<IPublishingGAgent>(Guid.NewGuid());
 
-            // Configure the agent using SystemLLM config
+            // // Create configuration for the agent with Brain support
+            // var psiConfig = new PsiOmniGAgentConfig
+            // {
+            //     MemberName = "PsiOmniAgent",
+            //     Depth = 0, // Root agent
+            //     LLMConfig = new LLMConfigDto
+            //     {
+            //         SystemLLM = request.SystemLLM ?? "gpt-4" // Use Brain mode with system LLM
+            //     }
+            // };
+            //
+            // // Configure the agent - this will now initialize the Brain
+            // await psi.ConfigAsync(psiConfig);
+            
             var config = GetAgentConfiguration(request.SystemLLM);
             await publisher.PublishEventAsync(new AgentConfigEvent
             {
@@ -53,10 +66,10 @@ public class PsiGAgentDemoController : ControllerBase
             var sessionId = Guid.NewGuid().ToString();
             _agentSessions[sessionId] = agentId;
 
-            _logger.LogInformation("Created PsiGAgent with ID: {AgentId}, Session: {SessionId}, LLM: {LLM}", 
-                agentId, sessionId, request.SystemLLM ?? "OpenAI");
+            _logger.LogInformation("Created PsiGAgent with Brain mode - ID: {AgentId}, Session: {SessionId}, LLM: {LLM}", 
+                agentId, sessionId, request.SystemLLM);
 
-            return Ok(new { sessionId, agentId, systemLLM = request.SystemLLM ?? "OpenAI" });
+            return Ok(new { sessionId, agentId, systemLLM = request.SystemLLM });
         }
         catch (Exception ex)
         {
@@ -64,9 +77,6 @@ public class PsiGAgentDemoController : ControllerBase
             return StatusCode(500, new { error = ex.Message });
         }
     }
-
-    // [HttpGet("available-llms")] - Deprecated: Use /api/llm-configs/list instead
-    // This endpoint is no longer needed as we now use the common LLM configs endpoint
 
     [HttpPost("send-message")]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
@@ -80,7 +90,7 @@ public class PsiGAgentDemoController : ControllerBase
 
             var guid = GrainId.Parse(agentId);
             var psi = await _gAgentFactory.GetGAgentAsync(guid);
-            var publisher = await _gAgentFactory.GetGAgentAsync<IPublishingGAgent>(Guid.NewGuid());
+            var publisher = await _gAgentFactory.GetGAgentAsync<IPublishingGAgent>();
 
             var callId = Guid.NewGuid().ToString();
             await publisher.PublishEventAsync(new UserMessageEvent

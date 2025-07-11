@@ -1,7 +1,10 @@
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.Executor;
 using Aevatar.GAgents.MCP;
-using Aevatar.GAgents.MCP.Provider;
+using Aevatar.GAgents.PsiOmni.Interfaces;
+using Aevatar.GAgents.PsiOmni.Plugins;
+using Aevatar.GAgents.PsiOmni.Plugins.Services;
 using Aevatar.GAgents.SemanticKernel.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -9,12 +12,7 @@ using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.Modularity;
-using Aevatar.Workshop.GAgent;
-using Aevatar.Workshop.AIRouterWorkflowGAgent.Researcher;
 using Microsoft.Extensions.Configuration;
-using PsiGAgent.Common.Interfaces;
-using PsiGAgent.Plugins;
-using PsiGAgent.Plugins.Services;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Aws;
 
@@ -40,6 +38,7 @@ public class WorkshopHostModule : AbpModule
         context.Services.AddHttpClient();
         context.Services.AddSingleton<IEventDispatcher, DefaultEventDispatcher>();
         context.Services.AddSingleton<IBlobContainer, MockBlobContainer>();
+        context.Services.AddSingleton<IGAgentExecutor, GAgentExecutor>();
         
         // Configure SystemLLMConfigOptions with merged configurations
         context.Services.Configure<SystemLLMConfigOptions>(options =>

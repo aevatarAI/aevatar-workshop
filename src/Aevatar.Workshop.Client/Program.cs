@@ -1,9 +1,15 @@
 ﻿using System.Diagnostics;
+using Aevatar.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Aevatar.Core.Abstractions;
+using Aevatar.Core.Abstractions.Plugin;
 using Aevatar.Workshop.Client;
 using Microsoft.AspNetCore.Builder;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.Executor;
+using Aevatar.Plugins;
+using Aevatar.Plugins.DbContexts;
+using Aevatar.Plugins.Repositories;
 using Microsoft.Extensions.Configuration;
 
 Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
@@ -17,7 +23,16 @@ builder.Configuration
     .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-
+// builder.Services.AddSingleton<IGAgentExecutor, GAgentExecutor>();
+// builder.Services.AddSingleton<IGAgentService, GAgentService>();
+// builder.Services.AddSingleton<IGAgentManager, GAgentManager>();
+// builder.Services.AddSingleton<IPluginGAgentManager, PluginGAgentManager>();
+// builder.Services.AddTransient<ITenantPluginCodeRepository, TenantPluginCodeRepository>();
+// builder.Services.AddTransient<IPluginCodeStorageRepository, PluginCodeStorageRepository>();
+// builder.Services.AddTransient<IPluginLoadStatusRepository, PluginLoadStatusRepository>();
+// builder.Services.AddTransient<TenantPluginCodeMongoDbContext>();
+// builder.Services.AddTransient<PluginCodeStorageMongoDbContext>();
+// builder.Services.AddTransient<PluginLoadStatusMongoDbContext>();
 
 builder.Services.AddControllers();
 

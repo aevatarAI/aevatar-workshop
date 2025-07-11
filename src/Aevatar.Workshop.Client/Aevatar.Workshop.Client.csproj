@@ -23,6 +23,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.MCP\Aevatar.GAgents.MCP.csproj" />
         <ProjectReference Include="..\Aevatar.Workshop.AIRouterWorkflowGAgent\Aevatar.Workshop.AIRouterWorkflowGAgent.csproj" />
         <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
     </ItemGroup>
