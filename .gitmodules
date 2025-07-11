@@ -2,7 +2,3 @@
 	path = gAgents
 	url = aelf:aevatarAI/aevatar-gagents.git
 	branch = feature/tool-calling
-[submodule "psi-omni"]
-	path = psi-omni
-	url = aelf:eanzhao/psi-omni
-	branch = feature/integrate
