@@ -1,0 +1,87 @@
+# Build artifacts
+**/bin/
+**/obj/
+**/out/
+**/TestResults/
+
+# IDE files
+.vscode/
+.vs/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+host.log
+client.log
+client_*.log
+logs/
+Logs/
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Docker files (exclude them from copying)
+Dockerfile*
+docker-compose*
+.dockerignore
+quickstart-docker.sh
+shutdown-docker.sh
+
+# Documentation (exclude to reduce image size)
+README*.md
+*.md
+!appsettings*.json
+docs/
+
+# Test files (exclude test projects from runtime)
+**/test/
+**/tests/
+**/*.Test/
+**/*.Tests/
+**/Test*/
+
+# Keep only production configuration
+appsettings.Development.json
+appsettings.Local.json
+client_debug.log
+client_new.log
+test-*.sh
+test-*.ps1
+
+# Scripts (exclude build/test scripts)
+quickstart.sh
+shutdown.sh
+docs.sh
+*.bat
+*.ps1
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Coverage reports
+coverage/
+*.coverage
+*.coveragexml
+
+# Package files
+*.nupkg
+*.snupkg
+
+# Keep psi-omni (don't exclude it)
+!psi-omni/src/**/*.csproj
+!psi-omni/src/**/*.cs

@@ -9,10 +9,10 @@ namespace Aevatar.Workshop.Client.Controllers;
 public class LlmConfigController : ControllerBase
 {
     private static readonly string configPath =
-        Path.Combine(Directory.GetCurrentDirectory(), "../Aevatar.Workshop.Host/appsettings.json");
+        Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
     
     private static readonly string secretsPath =
-        Path.Combine(Directory.GetCurrentDirectory(), "../Aevatar.Workshop.Host/appsettings.secrets.json");
+        Path.Combine(Directory.GetCurrentDirectory(), "appsettings.secrets.json");
 
     [HttpGet]
     public async Task<IActionResult> GetLlmConfigs()

@@ -10,28 +10,14 @@ Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add configuration from both appsettings.json and appsettings.secrets.json
-// Try to find the Host directory
-var hostPath = Path.Combine(Directory.GetCurrentDirectory(), "src/Aevatar.Workshop.Host");
-if (!Directory.Exists(hostPath))
-{
-    // If running from the src/Aevatar.Workshop.Client directory
-    hostPath = Path.Combine(Directory.GetCurrentDirectory(), "../Aevatar.Workshop.Host");
-}
-
-if (Directory.Exists(hostPath))
-{
-    builder.Configuration
-        .SetBasePath(hostPath)
-        .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-        .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
-}
-
-// Also check current directory
+// Add configuration files
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+
 
 builder.Services.AddControllers();
 
@@ -84,15 +70,17 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 // Launch browser on startup
-const string url = "http://localhost:5000";
-app.Urls.Add(url);
+// Let the application use ASPNETCORE_URLS from environment variables
+// app.Urls.Add(url); // Commented out to use Docker environment variable
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     try
     {
+        // Get the actual URL from configuration
+        var urls = app.Urls.FirstOrDefault() ?? "http://localhost:80";
         var psi = new ProcessStartInfo
         {
-            FileName = url,
+            FileName = urls.Replace("+", "localhost").Replace("*", "localhost").Replace("0.0.0.0", "localhost"),
             UseShellExecute = true
         };
         Process.Start(psi);

@@ -26,4 +26,14 @@
         <ProjectReference Include="..\Aevatar.Workshop.AIRouterWorkflowGAgent\Aevatar.Workshop.AIRouterWorkflowGAgent.csproj" />
         <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+        <None Update="appsettings.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="appsettings.secrets.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
 </Project>

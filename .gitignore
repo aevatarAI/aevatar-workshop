@@ -257,3 +257,5 @@ paket-files/
 .DS_Store
 
 appsettings.secrets.json
+
+.docker-temp/

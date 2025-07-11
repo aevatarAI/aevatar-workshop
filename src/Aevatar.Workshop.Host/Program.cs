@@ -17,7 +17,8 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Log.Information("Starting Silo");
-    await CreateHostBuilder(args).RunConsoleAsync();
+    var host = CreateHostBuilder(args).Build();
+    await host.RunAsync();
     return 0;
 }
 catch (Exception ex)
