@@ -18,6 +18,7 @@
       <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.Basic\Aevatar.GAgents.Basic.csproj" />
       <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.Executor\Aevatar.GAgents.Executor.csproj" />
       <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.PsiOmni\Aevatar.GAgents.PsiOmni.csproj" />
+      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.GroupChat\Aevatar.GAgents.GroupChat.csproj" />
     </ItemGroup>
 
 </Project>

@@ -166,6 +166,24 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.GroupChat",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.AIGAgent.Core", "gAgents\src\Aevatar.GAgents.AIGAgent.Core\Aevatar.GAgents.AIGAgent.Core.csproj", "{FE674881-1F28-4295-8B95-04D7E2B4AB5E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resource", "resource", "{14083CD4-97B1-4C74-A934-A4C4DE12DD67}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Packages.props = Directory.Packages.props
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.GroupChat.GroupMember", "gAgents\src\Aevatar.GAgents.GroupChat.GroupMember\Aevatar.GAgents.GroupChat.GroupMember.csproj", "{89F3DD04-A8D8-4C98-B29F-B4024FC48977}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.InputGAgent", "gAgents\src\Aevatar.GAgents.InputGAgent\Aevatar.GAgents.InputGAgent.csproj", "{E805D0C5-DFE5-481E-ADD7-CD705A30C997}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{0F1BF856-8777-4C91-B0C1-DA1D9D70F226}"
+	ProjectSection(SolutionItems) = preProject
+		shutdown.sh = shutdown.sh
+		quickstart.sh = quickstart.sh
+		shutdown-docker.sh = shutdown-docker.sh
+		docker-quickstart.sh = docker-quickstart.sh
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -213,6 +231,8 @@ Global
 		{FFA4BFA3-B3CA-4D54-83AE-64E550750CC2} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
 		{10AAF73B-D33D-4D89-A24A-13C9AF2750A7} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
 		{FE674881-1F28-4295-8B95-04D7E2B4AB5E} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
+		{89F3DD04-A8D8-4C98-B29F-B4024FC48977} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
+		{E805D0C5-DFE5-481E-ADD7-CD705A30C997} = {FEC84E8E-9998-4231-BD56-30E32F94C311}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C531EDB6-7441-49A4-B250-75718BEDB2C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -291,5 +311,13 @@ Global
 		{FE674881-1F28-4295-8B95-04D7E2B4AB5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE674881-1F28-4295-8B95-04D7E2B4AB5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE674881-1F28-4295-8B95-04D7E2B4AB5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89F3DD04-A8D8-4C98-B29F-B4024FC48977}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89F3DD04-A8D8-4C98-B29F-B4024FC48977}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89F3DD04-A8D8-4C98-B29F-B4024FC48977}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89F3DD04-A8D8-4C98-B29F-B4024FC48977}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E805D0C5-DFE5-481E-ADD7-CD705A30C997}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E805D0C5-DFE5-481E-ADD7-CD705A30C997}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E805D0C5-DFE5-481E-ADD7-CD705A30C997}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E805D0C5-DFE5-481E-ADD7-CD705A30C997}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

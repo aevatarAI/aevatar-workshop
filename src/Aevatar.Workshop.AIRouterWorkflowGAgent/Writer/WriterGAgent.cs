@@ -36,8 +36,8 @@ public class WriterGAgent : AIGAgentBase<WriterState, WriterStateLogEvent>, IWri
         {
             Message = $"[Prompt for Writer]: \n{prompt}",
         });
-        var chatResult = await ChatWithHistory(prompt);
-        var article = chatResult?[0].Content;
+        var chatResult = await ChatWithHistoryAndToolsAsync(prompt);
+        var article = chatResult.Response;
 
         RaiseEvent(new SetArticleStateLogEvent
         {

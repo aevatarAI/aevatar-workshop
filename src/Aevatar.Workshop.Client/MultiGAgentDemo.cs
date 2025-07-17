@@ -1,4 +1,5 @@
 using Aevatar.Core.Abstractions;
+using Aevatar.GAgents.Basic.PublishGAgent;
 using Aevatar.Workshop.GAgent;
 using Aevatar.GAgents.AIGAgent.Dtos;
 
@@ -27,7 +28,7 @@ public static class MultiGAgentDemo
         var recorder = await gAgentFactory.GetGAgentAsync<IStateGAgent<RecorderGAgentState>>();
         Common.SetRecorder("MultiGAgentDemo", recorder);
 
-        var publisher = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>();
+        var publisher = await gAgentFactory.GetGAgentAsync<Core.Abstractions.IPublishingGAgent>();
         await publisher.RegisterAsync(alice);
         await publisher.RegisterAsync(bob);
         await publisher.RegisterAsync(recorder);

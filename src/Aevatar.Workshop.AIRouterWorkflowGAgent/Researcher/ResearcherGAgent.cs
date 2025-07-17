@@ -31,8 +31,8 @@ public class ResearcherGAgent : AIGAgentBase<ResearcherState, ResearcherStateLog
         {
             Message = $"[Prompt for Researcher]: \n{prompt}",
         });
-        var chatResult = await ChatWithHistory(prompt);
-        var researchResult = chatResult?[0].Content;
+        var chatResult = await ChatWithHistoryAndToolsAsync(prompt);
+        var researchResult = chatResult.Response;
 
         RaiseEvent(new SetResearchResultStateLogEvent
         {
