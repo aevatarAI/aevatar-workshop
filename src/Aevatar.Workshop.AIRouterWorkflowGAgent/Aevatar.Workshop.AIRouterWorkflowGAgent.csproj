@@ -6,17 +6,22 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(UseLocalProjects)' != 'true'">
         <PackageReference Include="Aevatar.Core.Abstractions"/>
         <PackageReference Include="Aevatar.Core"/>
         <PackageReference Include="Aevatar.EventSourcing.Core"/>
+        <PackageReference Include="Aevatar.GAgents.Router"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(UseLocalProjects)' == 'true'">
+        <ProjectReference Include="..\..\..\aevatar-station\framework\src\Aevatar.Core.Abstractions\Aevatar.Core.Abstractions.csproj" />
+        <ProjectReference Include="..\..\..\aevatar-station\framework\src\Aevatar.Core\Aevatar.Core.csproj" />
+        <ProjectReference Include="..\..\..\aevatar-station\framework\src\Aevatar.EventSourcing.Core\Aevatar.EventSourcing.Core.csproj" />
+        <ProjectReference Include="..\..\..\aevatar-gagents\src\Aevatar.GAgents.Router\Aevatar.GAgents.Router.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.AI.Abstractions\Aevatar.GAgents.AI.Abstractions.csproj" />
-      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.Basic\Aevatar.GAgents.Basic.csproj" />
-      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.Router\Aevatar.GAgents.Router.csproj" />
-      <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
+        <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
     </ItemGroup>
 
 </Project>

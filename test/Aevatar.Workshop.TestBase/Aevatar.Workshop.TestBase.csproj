@@ -31,8 +31,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.AIGAgent\Aevatar.GAgents.AIGAgent.csproj" />
-      <ProjectReference Include="..\..\gAgents\src\Aevatar.GAgents.Executor\Aevatar.GAgents.Executor.csproj" />
       <ProjectReference Include="..\..\src\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
     </ItemGroup>
 

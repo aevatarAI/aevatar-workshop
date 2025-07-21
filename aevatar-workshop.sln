@@ -138,43 +138,43 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gAgents", "gAgents", "{EC10
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FEC84E8E-9998-4231-BD56-30E32F94C311}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.Executor", "gAgents\src\Aevatar.GAgents.Executor\Aevatar.GAgents.Executor.csproj", "{5C5C2F72-78D2-4569-B254-829506DF9384}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.Executor", "..\aevatar-gagents\src\Aevatar.GAgents.Executor\Aevatar.GAgents.Executor.csproj", "{5C5C2F72-78D2-4569-B254-829506DF9384}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.Basic", "gAgents\src\Aevatar.GAgents.Basic\Aevatar.GAgents.Basic.csproj", "{1AD01989-DBD7-41DD-9EFC-A5C19BBB43FB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.Basic", "..\aevatar-gagents\src\Aevatar.GAgents.Basic\Aevatar.GAgents.Basic.csproj", "{1AD01989-DBD7-41DD-9EFC-A5C19BBB43FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.AIGAgent", "gAgents\src\Aevatar.GAgents.AIGAgent\Aevatar.GAgents.AIGAgent.csproj", "{BF80FA69-56C8-4523-BDEB-F82D54033408}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.AIGAgent", "..\aevatar-gagents\src\Aevatar.GAgents.AIGAgent\Aevatar.GAgents.AIGAgent.csproj", "{BF80FA69-56C8-4523-BDEB-F82D54033408}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.AI.Abstractions", "gAgents\src\Aevatar.GAgents.AI.Abstractions\Aevatar.GAgents.AI.Abstractions.csproj", "{1F2662A8-6BA9-4AC7-A1F0-35BAA76AA7E6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.AI.Abstractions", "..\aevatar-gagents\src\Aevatar.GAgents.AI.Abstractions\Aevatar.GAgents.AI.Abstractions.csproj", "{1F2662A8-6BA9-4AC7-A1F0-35BAA76AA7E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.SemanticKernel", "gAgents\src\Aevatar.GAgents.SemanticKernel\Aevatar.GAgents.SemanticKernel.csproj", "{23834328-FE38-41B6-B9B4-D2888A6D540F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.SemanticKernel", "..\aevatar-gagents\src\Aevatar.GAgents.SemanticKernel\Aevatar.GAgents.SemanticKernel.csproj", "{23834328-FE38-41B6-B9B4-D2888A6D540F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.Router", "gAgents\src\Aevatar.GAgents.Router\Aevatar.GAgents.Router.csproj", "{0F99E373-897A-4DBF-A517-DD0433DDF7D8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.Router", "..\aevatar-gagents\src\Aevatar.GAgents.Router\Aevatar.GAgents.Router.csproj", "{0F99E373-897A-4DBF-A517-DD0433DDF7D8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{C0AB7953-B9AD-4208-84B1-71438AB38819}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.MCP", "gAgents\src\Aevatar.GAgents.MCP\Aevatar.GAgents.MCP.csproj", "{FBEB8856-B7A3-47D8-B470-87F2E7B9200B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.MCP", "..\aevatar-gagents\src\Aevatar.GAgents.MCP\Aevatar.GAgents.MCP.csproj", "{FBEB8856-B7A3-47D8-B470-87F2E7B9200B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.PsiOmni", "gAgents\src\Aevatar.GAgents.PsiOmni\Aevatar.GAgents.PsiOmni.csproj", "{D8C167F4-F036-42DD-8A83-6A879E66F6AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.PsiOmni", "..\aevatar-gagents\src\Aevatar.GAgents.PsiOmni\Aevatar.GAgents.PsiOmni.csproj", "{D8C167F4-F036-42DD-8A83-6A879E66F6AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.PsiOmni.Plugins", "gAgents\src\Aevatar.GAgents.PsiOmni.Plugins\Aevatar.GAgents.PsiOmni.Plugins.csproj", "{6AB8F4EC-8BF9-4252-9966-0C3F17131C1B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.PsiOmni.Plugins", "..\aevatar-gagents\src\Aevatar.GAgents.PsiOmni.Plugins\Aevatar.GAgents.PsiOmni.Plugins.csproj", "{6AB8F4EC-8BF9-4252-9966-0C3F17131C1B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.GroupChat.Core", "gAgents\src\Aevatar.GAgents.GroupChat.Core\Aevatar.GAgents.GroupChat.Core.csproj", "{7842F2A9-283D-4F87-9E3D-FDAD884A55BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.GroupChat.Core", "..\aevatar-gagents\src\Aevatar.GAgents.GroupChat.Core\Aevatar.GAgents.GroupChat.Core.csproj", "{7842F2A9-283D-4F87-9E3D-FDAD884A55BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.MCP.Core", "gAgents\src\Aevatar.GAgents.MCP.Core\Aevatar.GAgents.MCP.Core.csproj", "{FFA4BFA3-B3CA-4D54-83AE-64E550750CC2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.MCP.Core", "..\aevatar-gagents\src\Aevatar.GAgents.MCP.Core\Aevatar.GAgents.MCP.Core.csproj", "{FFA4BFA3-B3CA-4D54-83AE-64E550750CC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.GroupChat", "gAgents\src\Aevatar.GAgents.GroupChat\Aevatar.GAgents.GroupChat.csproj", "{10AAF73B-D33D-4D89-A24A-13C9AF2750A7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.GroupChat", "..\aevatar-gagents\src\Aevatar.GAgents.GroupChat\Aevatar.GAgents.GroupChat.csproj", "{10AAF73B-D33D-4D89-A24A-13C9AF2750A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.AIGAgent.Core", "gAgents\src\Aevatar.GAgents.AIGAgent.Core\Aevatar.GAgents.AIGAgent.Core.csproj", "{FE674881-1F28-4295-8B95-04D7E2B4AB5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.AIGAgent.Core", "..\aevatar-gagents\src\Aevatar.GAgents.AIGAgent.Core\Aevatar.GAgents.AIGAgent.Core.csproj", "{FE674881-1F28-4295-8B95-04D7E2B4AB5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.GroupChat.GroupMember", "..\aevatar-gagents\src\Aevatar.GAgents.GroupChat.GroupMember\Aevatar.GAgents.GroupChat.GroupMember.csproj", "{89F3DD04-A8D8-4C98-B29F-B4024FC48977}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.InputGAgent", "..\aevatar-gagents\src\Aevatar.GAgents.InputGAgent\Aevatar.GAgents.InputGAgent.csproj", "{E805D0C5-DFE5-481E-ADD7-CD705A30C997}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "resource", "resource", "{14083CD4-97B1-4C74-A934-A4C4DE12DD67}"
 	ProjectSection(SolutionItems) = preProject
 		Directory.Packages.props = Directory.Packages.props
 		Directory.Build.props = Directory.Build.props
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.GroupChat.GroupMember", "gAgents\src\Aevatar.GAgents.GroupChat.GroupMember\Aevatar.GAgents.GroupChat.GroupMember.csproj", "{89F3DD04-A8D8-4C98-B29F-B4024FC48977}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aevatar.GAgents.InputGAgent", "gAgents\src\Aevatar.GAgents.InputGAgent\Aevatar.GAgents.InputGAgent.csproj", "{E805D0C5-DFE5-481E-ADD7-CD705A30C997}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{0F1BF856-8777-4C91-B0C1-DA1D9D70F226}"
 	ProjectSection(SolutionItems) = preProject
