@@ -405,8 +405,7 @@
       'host-log': 'Host Log',
       'client-log': 'Client Log',
       'refresh-log': 'Refresh Log',
-      'multigagent-messages': 'MultiGAgentDemo AI Messages',
-      'router-messages': 'RouterDemo AI Messages',
+      // Removed translation keys for deleted demos
 
     },
     zh: {
@@ -444,8 +443,7 @@
       'host-log': '主机日志',
       'client-log': '客户端日志',
       'refresh-log': '刷新日志',
-      'multigagent-messages': 'MultiGAgentDemo AI 消息',
-      'router-messages': 'RouterDemo AI 消息',
+      // Removed translation keys for deleted demos
 
     }
   };
@@ -478,53 +476,7 @@
   const llmConfigMsg = document.getElementById('llmConfigMsg');
   let llmConfigData = {};
   // --- Demo definitions ---
-  const demos = [
-    {
-      key: 'EventHandlerDemo',
-      name: { en: 'EventHandler Demo', zh: 'EventHandler Demo' },
-      desc: { en: 'demodesc/EventHandlerDemo.md', zh: 'demodesc/EventHandlerDemo.zh.md' },
-      form: [
-        { type: 'text', id: 'greeting', label: { en: 'Greeting', zh: '问候语' }, default: 'Hello, Aevatar!' }
-      ],
-      notebookCells: [
-        { type: 'markdown', contentKey: 'desc' },
-        { type: 'input', fieldsKey: 'form' },
-        { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
-        { type: 'output' }
-      ]
-    },
-    {
-      key: 'MultiGAgentDemo',
-      name: { en: 'Multi-GAgent Demo', zh: 'Multi-GAgent Demo' },
-      desc: { en: 'demodesc/MultiGAgentDemo.md', zh: 'demodesc/MultiGAgentDemo.zh.md' },
-      form: [
-        { type: 'number', id: 'number', label: { en: 'Secret Number (1-100)', zh: '神秘数字 (1-100)' }, default: 42, min: 1, max: 100 },
-        { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
-      ],
-      notebookCells: [
-        { type: 'markdown', contentKey: 'desc' },
-        { type: 'input', fieldsKey: 'form' },
-        { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
-        { type: 'output' },
-        { type: 'chat', chatKey: 'MultiGAgentDemo' }
-      ]
-    },
-    {
-      key: 'RouterDemo',
-      name: { en: 'Router Demo', zh: 'Router Demo' },
-      desc: { en: 'demodesc/RouterDemo.md', zh: 'demodesc/RouterDemo.zh.md' },
-      form: [
-        { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
-      ],
-      notebookCells: [
-        { type: 'markdown', contentKey: 'desc' },
-        { type: 'input', fieldsKey: 'form' },
-        { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
-        { type: 'output' },
-        { type: 'chat', chatKey: 'RouterDemo' }
-      ]
-    },
-
+  const basicDemos = [
     {
       key: 'GAgentServiceDemo',
       name: { en: 'GAgent Service Demo', zh: 'GAgent Service 演示' },
@@ -542,7 +494,10 @@
       name: { en: 'MCP Demo', zh: 'MCP 演示' },
       desc: { en: 'demodesc/MCPDemo.md', zh: 'demodesc/MCPDemo.zh.md' },
       isCustom: true // Custom rendering for MCP demo
-    },
+    }
+  ];
+
+  const advancedDemos = [
     {
       key: 'DynamicAIMCPDemo',
       name: { en: 'Dynamic AI MCP Integration', zh: '动态 AI MCP 集成' },
@@ -554,14 +509,12 @@
       name: { en: 'PsiGAgent Demo', zh: 'PsiGAgent 演示' },
       desc: { en: 'demodesc/PsiGAgentDemo.md', zh: 'demodesc/PsiGAgentDemo.zh.md' },
       isCustom: true // Custom rendering for PsiGAgent demo
-    },
-    {
-      key: 'WorkflowDemo',
-      name: { en: 'Workflow Demo', zh: 'Workflow 编排演示' },
-      desc: { en: 'demodesc/WorkflowDemo.md', zh: 'demodesc/WorkflowDemo.zh.md' },
-      isCustom: true // Custom rendering for workflow demo
-    },
+    }
   ];
+
+  // Combine all demos for compatibility with existing code
+  const demos = [...basicDemos, ...advancedDemos];
+  
   const logs = [
     { key: 'HostLog', name: 'Host Log' },
     { key: 'ClientLog', name: 'Client Log' }
@@ -572,8 +525,9 @@
   const mainContent = document.getElementById('main-content');
   let selectedKey = demos[0].key;
   let logInterval = null;
-  let multichatInterval = null;
-  let routerchatInterval = null;
+  // Remove multichatInterval and routerchatInterval as they're no longer needed
+  // let multichatInterval = null;
+  // let routerchatInterval = null;
 
   // markdown -> html
   function simpleMarkdownToHtml(md) {
@@ -599,13 +553,52 @@
   function renderSidebar() {
     console.log('DEBUG: renderSidebar called');
     sidebarList.innerHTML = '';
-    demos.forEach(demo => {
+    
+    // Basic Demos section
+    const basicTitle = document.createElement('div');
+    basicTitle.style.padding = '8px 16px';
+    basicTitle.style.color = '#94a3b8';
+    basicTitle.style.fontSize = '0.85rem';
+    basicTitle.style.fontWeight = 'bold';
+    basicTitle.style.textTransform = 'uppercase';
+    basicTitle.style.letterSpacing = '0.05em';
+    basicTitle.textContent = currentLanguage === 'zh' ? '基础功能' : 'Basic Features';
+    sidebarList.appendChild(basicTitle);
+    
+    basicDemos.forEach(demo => {
       const li = document.createElement('li');
       li.className = 'sidebar-item' + (selectedKey === demo.key ? ' selected' : '');
       li.textContent = demo.name[currentLanguage] || demo.name['en'];
       li.onclick = () => { selectSidebar(demo.key); };
       sidebarList.appendChild(li);
     });
+    
+    // Divider between basic and advanced demos
+    const demosDivider = document.createElement('div');
+    demosDivider.style.height = '1px';
+    demosDivider.style.background = '#334155';
+    demosDivider.style.margin = '18px 0 12px 0';
+    sidebarList.appendChild(demosDivider);
+    
+    // Advanced Demos section
+    const advancedTitle = document.createElement('div');
+    advancedTitle.style.padding = '8px 16px';
+    advancedTitle.style.color = '#94a3b8';
+    advancedTitle.style.fontSize = '0.85rem';
+    advancedTitle.style.fontWeight = 'bold';
+    advancedTitle.style.textTransform = 'uppercase';
+    advancedTitle.style.letterSpacing = '0.05em';
+    advancedTitle.textContent = currentLanguage === 'zh' ? '进阶功能' : 'Advanced Demos';
+    sidebarList.appendChild(advancedTitle);
+    
+    advancedDemos.forEach(demo => {
+      const li = document.createElement('li');
+      li.className = 'sidebar-item' + (selectedKey === demo.key ? ' selected' : '');
+      li.textContent = demo.name[currentLanguage] || demo.name['en'];
+      li.onclick = () => { selectSidebar(demo.key); };
+      sidebarList.appendChild(li);
+    });
+    
     // Divider between demos and logs
     const divider = document.createElement('div');
     divider.style.height = '1px';
@@ -677,8 +670,8 @@
   // --- Main content rendering ---
   async function renderMainContent() {
     clearInterval(logInterval);
-    clearInterval(multichatInterval);
-    clearInterval(routerchatInterval);
+    // clearInterval(multichatInterval);
+    // clearInterval(routerchatInterval);
     mainContent.innerHTML = '';
     if (selectedKey === 'HostLog' || selectedKey === 'ClientLog') {
       renderLogPanel(selectedKey);
@@ -710,11 +703,6 @@
 
     if (demo.isCustom && demo.key === 'PsiGAgentDemo') {
       renderPsiGAgentDemo(demo);
-      return;
-    }
-
-    if (demo.isCustom && demo.key === 'WorkflowDemo') {
-      renderWorkflowDemo(demo);
       return;
     }
 
@@ -819,25 +807,9 @@
         runBtn.textContent = cell.label[currentLanguage] || cell.label['en'];
         runBtn.style.display = 'block';
         runBtn.style.margin = '0 auto';
-        // 新增 LLM System 状态提示
-        let llmStatus = null;
-        if (demo.key === 'MultiGAgentDemo' || demo.key === 'RouterDemo') {
-          llmStatus = document.createElement('div');
-          llmStatus.style.marginTop = '10px';
-          llmStatus.style.fontSize = '1rem';
-          llmStatus.style.color = '#0ea5e9';
-          llmStatus.style.textAlign = 'center';
-          llmStatus.style.fontWeight = 'bold';
-          llmStatus.style.minHeight = '22px';
-          btnWrapper.appendChild(llmStatus);
-        }
+        // Remove LLM System status display as it's no longer needed
         runBtn.onclick = async function() {
           state.running = true;
-          // 运行前立即显示 LLM System
-          if (llmStatus) {
-            const llmVal = state.input['systemLLM'] || (demo.form.find(f => f.id === 'systemLLM')?.default ?? '');
-            llmStatus.textContent = llmVal ? `Using LLM System: ${llmVal}` : '';
-          }
           renderMainContent();
           let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
           for (const field of demo.form) {
@@ -894,36 +866,7 @@
         resultBox.textContent = state.running ? 'Running...' : (state.output || '');
         notebook.appendChild(resultBox);
       } else if (cell.type === 'chat') {
-        const chatPanel = document.createElement('div');
-        chatPanel.className = 'chat-panel';
-        const chatTitle = document.createElement('div');
-        chatTitle.className = 'chat-title';
-        let titleKey = 'router-messages';
-        let titleText = 'RouterDemo AI Messages';
-        if (cell.chatKey === 'MultiGAgentDemo') {
-          titleKey = 'multigagent-messages';
-          titleText = 'MultiGAgentDemo AI Messages';
-        }
-        chatTitle.setAttribute('data-i18n-key', titleKey);
-        chatTitle.textContent = titleText;
-        const chatBox = document.createElement('div');
-        chatBox.className = 'chatBox';
-        chatBox.textContent = 'Loading...';
-        chatPanel.appendChild(chatTitle);
-        chatPanel.appendChild(chatBox);
-        notebook.appendChild(chatPanel);
-        // Auto-refresh chat
-        const fetchChat = async () => {
-          chatBox.textContent = 'Loading...';
-          const resp = await fetch(`/api/log/chat?demo=${cell.chatKey}`);
-          let text = await resp.text();
-          text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
-          chatBox.innerHTML = text;
-        };
-        fetchChat();
-        if (cell.chatKey === 'MultiGAgentDemo') multichatInterval = setInterval(fetchChat, 5000);
-        if (cell.chatKey === 'RouterDemo') routerchatInterval = setInterval(fetchChat, 5000);
-
+        // Chat type is no longer used after removing MultiGAgentDemo and RouterDemo
       }
     }
     mainContent.appendChild(notebook);
@@ -1382,7 +1325,7 @@
   renderMainContent();
   setLanguage(currentLanguage); // Apply initial language
 
-  const multichatBox = document.getElementById('multichatBox');
+  // Removed multichatBox as MultiGAgentDemo is deleted
   const configModal = document.getElementById('configModal');
   const modalRestartBtn = document.getElementById('modalRestartBtn');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
@@ -1416,24 +1359,7 @@
     // the 'renderLogPanel' function.
   }
 
-  async function fetchMultichat() {
-    multichatBox.textContent = 'Loading...';
-    try {
-      const resp = await fetch('/api/log/chat?demo=MultiGAgentDemo');
-      const result = await handleFetchResponse(resp, multichatBox);
-      if (result && typeof result === 'string') {
-        let text = result;
-        text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
-        multichatBox.innerHTML = text;
-      }
-    } catch (error) {
-      console.error('Error fetching multichat:', error);
-      multichatBox.innerHTML = `
-      <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px;">
-        An error occurred while processing your request. Please try again later.
-      </div>`;
-    }
-  }
+  // Removed fetchMultichat function as MultiGAgentDemo is deleted
 
   const configLlmBtn = document.getElementById('configLlmBtn');
   function renderLlmConfigForm() {

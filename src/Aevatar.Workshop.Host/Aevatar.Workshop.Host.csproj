@@ -35,6 +35,5 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
-        <ProjectReference Include="..\Aevatar.Workshop.AIRouterWorkflowGAgent\Aevatar.Workshop.AIRouterWorkflowGAgent.csproj" />
     </ItemGroup>
 </Project>

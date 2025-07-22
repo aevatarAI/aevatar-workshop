@@ -112,33 +112,40 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
 
             // Build kernel based on provider
             var kernelBuilder = Kernel.CreateBuilder();
-            
+
             switch (config.ProviderEnum)
             {
                 case LLMProviderEnum.DeepSeek:
                     // DeepSeek uses OpenAI-compatible API with custom endpoint
                     var deepSeekClient = new OpenAI.OpenAIClient(
-                        new System.ClientModel.ApiKeyCredential(config.ApiKey ?? throw new InvalidOperationException("API key is required")),
-                        new OpenAI.OpenAIClientOptions { Endpoint = new Uri(config.Endpoint ?? "https://api.deepseek.com") }
+                        new System.ClientModel.ApiKeyCredential(config.ApiKey ??
+                                                                throw new InvalidOperationException(
+                                                                    "API key is required")),
+                        new OpenAI.OpenAIClientOptions
+                            { Endpoint = new Uri(config.Endpoint ?? "https://api.deepseek.com") }
                     );
-                    
+
                     kernelBuilder.AddOpenAIChatCompletion(
                         modelId: string.IsNullOrEmpty(config.ModelName) ? "deepseek-chat" : config.ModelName,
                         openAIClient: deepSeekClient);
                     break;
-                    
+
                 case LLMProviderEnum.Azure:
                     // Azure OpenAI
                     kernelBuilder.AddAzureOpenAIChatCompletion(
-                        deploymentName: config.ModelName ?? throw new InvalidOperationException("Model name (deployment name) is required for Azure"),
-                        endpoint: config.Endpoint ?? throw new InvalidOperationException("Endpoint is required for Azure"),
+                        deploymentName: config.ModelName ??
+                                        throw new InvalidOperationException(
+                                            "Model name (deployment name) is required for Azure"),
+                        endpoint: config.Endpoint ??
+                                  throw new InvalidOperationException("Endpoint is required for Azure"),
                         apiKey: config.ApiKey ?? throw new InvalidOperationException("API key is required"));
                     break;
-                    
+
                 case LLMProviderEnum.Google:
                     // Google Gemini - would need Google AI SDK
-                    throw new NotSupportedException("Google Gemini provider is not yet supported in this implementation");
-                    
+                    throw new NotSupportedException(
+                        "Google Gemini provider is not yet supported in this implementation");
+
                 case LLMProviderEnum.OpenAI:
                 default:
                     // OpenAI
@@ -147,12 +154,13 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                         apiKey: config.ApiKey ?? throw new InvalidOperationException("API key is required"));
                     break;
             }
-            
+
             _kernel = kernelBuilder.Build();
-            
-            Logger.LogInformation("Kernel built successfully with provider: {Provider}, model: {Model}", 
-                config.ProviderEnum, 
-                config.ModelName ?? (config.ProviderEnum == LLMProviderEnum.DeepSeek ? "deepseek-chat" : "gpt-3.5-turbo"));
+
+            Logger.LogInformation("Kernel built successfully with provider: {Provider}, model: {Model}",
+                config.ProviderEnum,
+                config.ModelName ??
+                (config.ProviderEnum == LLMProviderEnum.DeepSeek ? "deepseek-chat" : "gpt-3.5-turbo"));
 
             // Register tools
             await RegisterToolsAsync();
@@ -194,9 +202,9 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                         var result = await _mathGAgent.CalculateAsync(expression);
                         Logger.LogInformation("[{Timestamp}] Tool 'calculate_math' completed with result: {Result}",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), result);
-                        
+
                         var output = $"The result of {expression} is {result}";
-                        
+
                         // Record tool call
                         RaiseEvent(new ToolCallLogEvent
                         {
@@ -205,7 +213,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                             Output = output,
                             Timestamp = DateTime.UtcNow
                         });
-                        
+
                         return output;
                     }
                     catch (Exception ex)
@@ -213,7 +221,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                         Logger.LogError(ex, "[{Timestamp}] Tool 'calculate_math' failed for expression: '{Expression}'",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), expression);
                         var error = $"Error calculating {expression}: {ex.Message}";
-                        
+
                         // Record failed tool call
                         RaiseEvent(new ToolCallLogEvent
                         {
@@ -222,7 +230,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                             Output = error,
                             Timestamp = DateTime.UtcNow
                         });
-                        
+
                         return error;
                     }
                 },
@@ -252,7 +260,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                     {
                         var result = await _timeGAgent.ConvertTimeAsync(time, fromZone, toZone);
                         var output = $"Time conversion result: {result}";
-                        
+
                         // Record tool call
                         RaiseEvent(new ToolCallLogEvent
                         {
@@ -261,13 +269,13 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                             Output = output,
                             Timestamp = DateTime.UtcNow
                         });
-                        
+
                         return output;
                     }
                     catch (Exception ex)
                     {
                         var error = $"Error converting time: {ex.Message}";
-                        
+
                         // Record failed tool call
                         RaiseEvent(new ToolCallLogEvent
                         {
@@ -276,7 +284,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                             Output = error,
                             Timestamp = DateTime.UtcNow
                         });
-                        
+
                         return error;
                     }
                 },
@@ -320,9 +328,9 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                         var result = await _timeGAgent.GetTimeInZoneAsync(timeZone);
                         Logger.LogInformation("[{Timestamp}] Tool 'get_time_in_zone' completed with result: {Result}",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), result);
-                        
+
                         var output = $"Current time in {timeZone}: {result}";
-                        
+
                         // Record tool call
                         RaiseEvent(new ToolCallLogEvent
                         {
@@ -331,7 +339,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                             Output = output,
                             Timestamp = DateTime.UtcNow
                         });
-                        
+
                         return output;
                     }
                     catch (Exception ex)
@@ -339,7 +347,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                         Logger.LogError(ex, "[{Timestamp}] Tool 'get_time_in_zone' failed for timezone: '{TimeZone}'",
                             DateTime.UtcNow.ToString("HH:mm:ss.fff"), timeZone);
                         var error = $"Error getting time in {timeZone}: {ex.Message}";
-                        
+
                         // Record failed tool call
                         RaiseEvent(new ToolCallLogEvent
                         {
@@ -348,7 +356,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                             Output = error,
                             Timestamp = DateTime.UtcNow
                         });
-                        
+
                         return error;
                     }
                 },
@@ -563,6 +571,7 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
                 {
                     state.ToolCallHistory.RemoveAt(0);
                 }
+
                 break;
         }
     }

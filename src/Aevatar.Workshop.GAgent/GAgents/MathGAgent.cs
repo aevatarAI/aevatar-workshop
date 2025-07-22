@@ -93,17 +93,6 @@ public class MathGAgent : GAgentBase<MathGAgentState, MathStateLogEvent>, IMathG
         await CalculateAsync(eventData.Expression);
     }
 
-    [EventHandler]
-    public async Task HandleGreetingEventAsync(GreetingEvent eventData)
-    {
-        // Handle expressions sent as greeting events (for compatibility)
-        if (!string.IsNullOrWhiteSpace(eventData.Greeting))
-        {
-            Logger.LogInformation("Received math expression via greeting: {Expression}", eventData.Greeting);
-            await CalculateAsync(eventData.Greeting);
-        }
-    }
-
     private string CleanExpression(string expression)
     {
         // Remove any non-mathematical characters and standardize the expression

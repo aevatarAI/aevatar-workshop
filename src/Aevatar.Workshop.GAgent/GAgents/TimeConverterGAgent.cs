@@ -182,35 +182,6 @@ public class TimeConverterGAgent : GAgentBase<TimeConverterGAgentState, TimeConv
         await ConvertTimeAsync(eventData.TimeInput, eventData.FromTimeZone, eventData.ToTimeZone);
     }
 
-    [EventHandler]
-    public async Task HandleGreetingEventAsync(GreetingEvent eventData)
-    {
-        // Handle time-related requests sent as greeting events
-        if (!string.IsNullOrWhiteSpace(eventData.Greeting))
-        {
-            Logger.LogInformation("Received time request via greeting: {Request}", eventData.Greeting);
-
-            // Try to parse the request and determine what to do
-            var request = eventData.Greeting.ToLower();
-
-            if (request.Contains("convert") || request.Contains("time in"))
-            {
-                // Extract time and timezone information from the request
-                await HandleNaturalLanguageTimeRequest(eventData.Greeting);
-            }
-            else if (request.Contains("difference"))
-            {
-                // Handle time difference calculation
-                await HandleTimeDifferenceRequest(eventData.Greeting);
-            }
-            else
-            {
-                // Default: show current time in UTC
-                await GetTimeInZoneAsync("UTC");
-            }
-        }
-    }
-
     private async Task HandleNaturalLanguageTimeRequest(string request)
     {
         // Simple natural language processing for time requests

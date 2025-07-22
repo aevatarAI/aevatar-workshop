@@ -1,19 +1,10 @@
-using System.Collections;
-using System.ComponentModel;
-using System.Reflection;
-using System.Text.Json;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AIGAgent.Agent;
+using Aevatar.GAgents.AIGAgent.Dtos;
 using Aevatar.GAgents.AIGAgent.State;
-using Aevatar.GAgents.MCP.GAgents;
-using Aevatar.GAgents.MCP.Model;
-using Aevatar.GAgents.MCP.Options;
 using Aevatar.GAgents.Executor;
-using Aevatar.GAgents.AI.BrainFactory;
-using Aevatar.GAgents.AI.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
@@ -38,39 +29,14 @@ public class DynamicToolAIGAgentStateLogEvent : StateLogEventBase<DynamicToolAIG
 {
 }
 
-// State log events are now in the base class
-
-[GenerateSerializer]
-public class ChatWithDetailsResponse
-{
-    [Id(0)] public string Response { get; set; } = string.Empty;
-    [Id(1)] public List<ToolCallDetail> ToolCalls { get; set; } = new();
-    [Id(2)] public long TotalDurationMs { get; set; }
-}
-
-[GenerateSerializer]
-public class ToolCallDetail
-{
-    [Id(0)] public string ToolName { get; set; } = string.Empty;
-    [Id(1)] public string ServerName { get; set; } = string.Empty;
-    [Id(2)] public Dictionary<string, object> Arguments { get; set; } = new();
-    [Id(3)] public string Result { get; set; } = string.Empty;
-    [Id(4)] public bool Success { get; set; }
-    [Id(5)] public long DurationMs { get; set; }
-    [Id(6)] public string Timestamp { get; set; } = string.Empty;
-}
-
 [GAgent("dynamictoolai", "demo")]
 public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, DynamicToolAIGAgentStateLogEvent>,
     IDynamicToolAIGAgent
 {
-    private readonly ILogger<DynamicToolAIGAgent> _logger;
     private readonly IGAgentService _gAgentService;
-    private List<ToolCallDetail> _currentToolCalls = new(); // Track tool calls for current request
 
     public DynamicToolAIGAgent()
     {
-        _logger = ServiceProvider.GetRequiredService<ILogger<DynamicToolAIGAgent>>();
         _gAgentService = ServiceProvider.GetRequiredService<IGAgentService>();
     }
 
@@ -78,23 +44,27 @@ public class DynamicToolAIGAgent : AIGAgentBase<DynamicToolAIGAgentState, Dynami
     {
         return Task.FromResult("Dynamic AI agent that can use MCP tools at runtime");
     }
-    
+
     /// <summary>
-    /// Configure the brain with a specific LLM system
+    /// Configure the brain with a specific LLM system - Simplified version
     /// </summary>
     public async Task<bool> ConfigureBrainAsync(string systemLLM)
     {
         try
         {
             Logger.LogInformation("Configuring brain with system LLM: {SystemLLM}", systemLLM);
-            
-            // Set the system LLM
-            State.SystemLLM = systemLLM;
-            
+
+            // Use the base class method to set system LLM
+            await SetSystemLLMAsync(systemLLM);
+
             // Set a default prompt template if not already set
             if (string.IsNullOrEmpty(State.PromptTemplate))
             {
-                State.PromptTemplate = @"You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol) and other GAgent tools.
+                var initDto = new InitializeDto
+                {
+                    LLMConfig = new LLMConfigDto { SystemLLM = systemLLM },
+                    Instructions =
+                        @"You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol) and other GAgent tools.
 
 When asked to perform tasks, use the available tools to help provide accurate and complete responses.
 
@@ -104,26 +74,16 @@ Before using any tool:
 - Use the exact tool names and parameter names as provided
 
 Always explain what tools you're using and why.
-When using tools, be clear about the results and how they help answer the user's question.";
+When using tools, be clear about the results and how they help answer the user's question.",
+                };
+
+                // Use base class InitializeAsync which handles everything
+                return await InitializeAsync(initDto);
             }
-            
-            RaiseEvent(new DynamicToolAIGAgentStateLogEvent());
-            await ConfirmEvents();
-            
-            // Manually trigger brain initialization by calling the activation logic
+
+            // If prompt template exists, just trigger brain initialization
             await OnAIGAgentActivateAsync(CancellationToken.None);
-            
-            // Check if brain was initialized successfully
-            if (GetKernelFromBrain() != null)
-            {
-                Logger.LogInformation("Brain configured and initialized successfully");
-                return true;
-            }
-            else
-            {
-                Logger.LogError("Failed to initialize brain for system LLM: {SystemLLM}", systemLLM);
-                return false;
-            }
+            return GetKernelFromBrain() != null;
         }
         catch (Exception ex)
         {
@@ -142,12 +102,12 @@ When using tools, be clear about the results and how they help answer the user's
 
             // Filter out self and MCP-related agents
             var selfGrainType = this.GetGrainId().Type;
-            
+
             foreach (var (grainType, eventTypes) in allGAgentInfos)
             {
                 // Skip self and MCP agents
                 var grainTypeString = grainType.ToString();
-                if (grainType.Equals(selfGrainType) || 
+                if (grainType.Equals(selfGrainType) ||
                     grainTypeString.Contains("MCP", StringComparison.OrdinalIgnoreCase) ||
                     grainTypeString.Contains("DynamicTool", StringComparison.OrdinalIgnoreCase))
                 {
@@ -172,6 +132,30 @@ When using tools, be clear about the results and how they help answer the user's
         }
     }
 
+    // Override the base class method to add logging
+    public override async Task<bool> ConfigureGAgentToolsAsync(List<GrainType> selectedGAgents)
+    {
+        try
+        {
+            Logger.LogInformation("Configuring GAgent tools with {Count} selected agents", selectedGAgents.Count);
+
+            // Use base class implementation which handles everything
+            var result = await base.ConfigureGAgentToolsAsync(selectedGAgents);
+
+            if (result)
+            {
+                Logger.LogInformation("Successfully configured {Count} GAgent tools", selectedGAgents.Count);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to configure GAgent tools");
+            return false;
+        }
+    }
+
     public async Task<string> ChatAsync(string message)
     {
         var detailedResponse = await ChatWithDetailsAsync(message);
@@ -182,14 +166,14 @@ When using tools, be clear about the results and how they help answer the user's
     {
         var response = new ChatWithDetailsResponse();
         var overallStartTime = DateTime.UtcNow;
-        
-        // Clear tool calls from previous request
-        _currentToolCalls.Clear();
+
+        // Clear tool calls from previous request using base class method
+        ClearToolCalls();
 
         try
         {
             Logger.LogInformation("Processing chat message with details: {Message}", message);
-            
+
             // Get the kernel from brain
             var kernel = GetKernelFromBrain();
             if (kernel == null)
@@ -200,28 +184,28 @@ When using tools, be clear about the results and how they help answer the user's
                 response.TotalDurationMs = (long)(DateTime.UtcNow - overallStartTime).TotalMilliseconds;
                 return response;
             }
-            
+
             // Get chat completion service from kernel
             var chatService = kernel.GetRequiredService<IChatCompletionService>();
-            
+
             // Create chat history
             var chatHistory = new ChatHistory();
-            
+
             // Add system message
-            var systemMessage = State.PromptTemplate ?? 
-                "You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol). " +
-                "When asked to perform tasks, use the available tools to help provide accurate and complete responses. " +
-                "Always explain what tools you're using and why. " +
-                "When using tools, be clear about the results and how they help answer the user's question.";
-            
+            var systemMessage = State.PromptTemplate ??
+                                "You are a helpful AI assistant with access to various tools through MCP (Model Context Protocol). " +
+                                "When asked to perform tasks, use the available tools to help provide accurate and complete responses. " +
+                                "Always explain what tools you're using and why. " +
+                                "When using tools, be clear about the results and how they help answer the user's question.";
+
             chatHistory.AddSystemMessage(systemMessage);
-            
+
             // Add user message
             chatHistory.AddUserMessage(message);
-            
+
             Logger.LogInformation("Available tools in kernel: {Tools}",
                 string.Join(", ", kernel.Plugins.SelectMany(p => p.Select(f => f.Name))));
-            
+
             // Configure execution settings for automatic tool calling
             var executionSettings = new OpenAIPromptExecutionSettings
             {
@@ -229,31 +213,31 @@ When using tools, be clear about the results and how they help answer the user's
                 Temperature = 0.1,
                 MaxTokens = 2000
             };
-            
+
             // Get response with automatic tool invocation
             Logger.LogInformation("[{Timestamp}] Starting LLM call with auto tool invocation",
                 DateTime.UtcNow.ToString("HH:mm:ss.fff"));
-            
+
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-            
+
             var chatResponse = await chatService.GetChatMessageContentAsync(
                 chatHistory,
                 executionSettings,
                 kernel,
                 cts.Token);
-            
+
             response.Response = chatResponse.Content ?? "I couldn't generate a response.";
-            
-            // Copy collected tool calls to response
-            response.ToolCalls = new List<ToolCallDetail>(_currentToolCalls);
-            
+
+            // Copy collected tool calls from base class tracking
+            response.ToolCalls = new List<ToolCallDetail>(CurrentToolCalls);
+
             response.TotalDurationMs = (long)(DateTime.UtcNow - overallStartTime).TotalMilliseconds;
-            
+
             Logger.LogInformation("[{Timestamp}] Chat completed with {ToolCount} tool calls in {Duration}ms",
                 DateTime.UtcNow.ToString("HH:mm:ss.fff"),
                 response.ToolCalls.Count,
                 response.TotalDurationMs);
-            
+
             return response;
         }
         catch (TaskCanceledException)
@@ -282,9 +266,9 @@ When using tools, be clear about the results and how they help answer the user's
 
     private bool IsNetworkRelatedError(Exception ex)
     {
-        return ex is TaskCanceledException || 
-               ex is HttpRequestException || 
-               ex is System.IO.IOException ||
+        return ex is TaskCanceledException ||
+               ex is HttpRequestException ||
+               ex is IOException ||
                (ex.InnerException != null && IsNetworkRelatedError(ex.InnerException));
     }
 }
