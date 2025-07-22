@@ -21,7 +21,7 @@
     <PackageReference Include="Volo.Abp.AutoMapper" />
     <PackageReference Include="Volo.Abp.TestBase" />
     <PackageReference Include="Volo.Abp.Authorization" />
-    <ProjectReference Include="../../../aevatar-station/framework/src/Aevatar/Aevatar.csproj" />
+    <PackageReference Include="Aevatar" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

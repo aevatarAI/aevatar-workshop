@@ -23,7 +23,7 @@
         <PackageReference Include="OrleansDashboard" />
         <PackageReference Include="Aevatar.GAgents.MCP" />
         <PackageReference Include="Aevatar.GAgents.PsiOmni.Plugins" />
-        <ProjectReference Include="../../../aevatar-station/framework/src/Aevatar/Aevatar.csproj" />
+        <PackageReference Include="Aevatar" />
     </ItemGroup>
     <ItemGroup>
         <None Update="appsettings.json">
