@@ -1,27 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>$(DefaultTargetFramework)</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
-    <ItemGroup Condition="'$(UseLocalProjects)' != 'true'">
-        <PackageReference Include="Aevatar.Core.Abstractions"/>
-        <PackageReference Include="Aevatar.Core"/>
-        <PackageReference Include="Aevatar.EventSourcing.Core"/>
-        <PackageReference Include="Aevatar.GAgents.Router"/>
+    <ItemGroup>
+        <PackageReference Include="Aevatar.GAgents.Router" />
+        <ProjectReference Include="../../../aevatar-station/framework/src/Aevatar.Core.Abstractions/Aevatar.Core.Abstractions.csproj" />
+        <ProjectReference Include="../../../aevatar-station/framework/src/Aevatar.Core/Aevatar.Core.csproj" />
+        <ProjectReference Include="../../../aevatar-station/framework/src/Aevatar.EventSourcing.Core/Aevatar.EventSourcing.Core.csproj" />
     </ItemGroup>
-
-    <ItemGroup Condition="'$(UseLocalProjects)' == 'true'">
-        <ProjectReference Include="..\..\..\aevatar-station\framework\src\Aevatar.Core.Abstractions\Aevatar.Core.Abstractions.csproj" />
-        <ProjectReference Include="..\..\..\aevatar-station\framework\src\Aevatar.Core\Aevatar.Core.csproj" />
-        <ProjectReference Include="..\..\..\aevatar-station\framework\src\Aevatar.EventSourcing.Core\Aevatar.EventSourcing.Core.csproj" />
-        <ProjectReference Include="..\..\..\aevatar-gagents\src\Aevatar.GAgents.Router\Aevatar.GAgents.Router.csproj" />
-    </ItemGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
     </ItemGroup>
-
 </Project>
