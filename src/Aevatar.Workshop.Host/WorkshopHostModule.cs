@@ -15,6 +15,13 @@ using Volo.Abp.Modularity;
 using Microsoft.Extensions.Configuration;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.Aws;
+using Aevatar.Workshop.Host.Options;
+using Aevatar.Workshop.Host.Services;
+using Aevatar.Workshop.GAgent;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using Volo.Abp;
 
 namespace Aevatar.Workshop.Host;
 
@@ -74,37 +81,55 @@ public class WorkshopHostModule : AbpModule
             }
         });
         
+        // Configure MCPServerOptions
+        context.Services.Configure<MCPServerOptions>(options =>
+        {
+            var mcpServers = new Dictionary<string, MCPServerConfig>();
+            
+            // Load from appsettings.json
+            var section = configuration.GetSection("MCPServers");
+            if (section.Exists())
+            {
+                var configs = section.Get<Dictionary<string, MCPServerConfig>>();
+                if (configs != null)
+                {
+                    foreach (var kvp in configs)
+                    {
+                        mcpServers[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+            
+            options.MCPServers = mcpServers;
+            
+            // Log loaded MCP server configurations
+            Log.Information("Loaded {Count} MCPServers:", mcpServers.Count);
+            foreach (var kvp in mcpServers)
+            {
+                Log.Information("  - {Key}: {Command} ({Description})", 
+                    kvp.Key, 
+                    kvp.Value.Command,
+                    kvp.Value.Description ?? "No description");
+            }
+        });
+        
+        // Register configuration update service
+        context.Services.AddSingleton<IConfigurationUpdateService, ConfigurationUpdateService>();
+        
+        // Register configuration handler for GAgent
+        context.Services.AddSingleton<IConfigurationHandler, WorkshopConfigurationHandler>();
+        
         context.Services.AddSemanticKernel();
         context.Services.AddSingleton<IKernelFactory, KernelFactory>();
         context.Services.AddSingleton<IKernelFunctionRegistry, KernelFunctionRegistry>();
         
-        // Register web search services
+        // Register web content fetcher service
         context.Services.AddHttpClient<WebContentFetcher>();
         context.Services.AddSingleton<IWebContentFetcher, WebContentFetcher>();
         
-        // Register all search engines
-        context.Services
-            .AddSingleton<ISearchEngine, GoogleSearchEngine>(); // GoogleSearchEngine now uses built-in GoogleTextSearch
-        context.Services.AddHttpClient<DuckDuckGoSearchEngine>();
-        context.Services.AddHttpClient<BingSearchEngine>();
-        context.Services.AddSingleton<ISearchEngine, DuckDuckGoSearchEngine>();
-        context.Services.AddSingleton<ISearchEngine, BingSearchEngine>();
-        
-        // Register main web search service
-        context.Services.AddSingleton<IWebSearchService, WebSearchService>();
-        Configure<AbpBlobStoringOptions>(options =>
-        {
-            options.Containers.ConfigureDefault(container =>
-            {
-                var configSection = configuration.GetSection("AwsS3");
-                container.UseAws(o =>
-                {
-                    o.AccessKeyId = configSection.GetValue<string>("AccessKeyId");
-                    o.SecretAccessKey = configSection.GetValue<string>("SecretAccessKey");
-                    o.Region = configSection.GetValue<string>("Region");
-                    o.ContainerName = configSection.GetValue<string>("ContainerName");
-                });
-            });
-        });
+        // Note: Additional search engines and providers configuration has been removed
+        // as they are not essential for the configuration management functionality
     }
+
+    // Remove OnApplicationInitialization override since we don't need Web API endpoints
 }

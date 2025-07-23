@@ -5,8 +5,7 @@
         <OrleansVersion>9.0.1</OrleansVersion>
         <SkVersion>1.57.0-alpha</SkVersion>
         <AevatarCoreVersion>1.5.2-tool.1</AevatarCoreVersion>
-        <AevatarGAgentsVersion>1.5.1-toolworkflow.8</AevatarGAgentsVersion>
-        <AevatarSignalRVersion>1.5.6-upgrade-core.0</AevatarSignalRVersion>
+        <AevatarGAgentsVersion>1.5.2-alpha.1</AevatarGAgentsVersion>
     </PropertyGroup>
     <ItemGroup>
         <!-- aevatar-framework package versions -->
@@ -16,7 +15,7 @@
         <PackageVersion Include="Aevatar.EventSourcing.Core" Version="$(AevatarCoreVersion)" />
 
         <!-- aevatar-signalR package versions -->
-        <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarSignalRVersion)" />
+        <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarCoreVersion)" />
 
         <!-- aevatar-gagents package versions -->
         <PackageVersion Include="Aevatar.GAgents.AI.Abstractions" Version="$(AevatarGAgentsVersion)" />

@@ -10,6 +10,8 @@ using Aevatar.PermissionManagement.Extensions;
 using Aevatar.Plugins;
 using Aevatar.Plugins.DbContexts;
 using Aevatar.Plugins.Repositories;
+using Aevatar.Workshop.GAgent;
+using Aevatar.Workshop.Tests;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -76,6 +78,10 @@ public class ClusterFixture : IDisposable, ISingletonDependency
                     {
                         logging.AddConsole(); // Adds console logger
                     });
+                    
+                    // Register mock configuration handler for testing
+                    services.AddSingleton<IConfigurationHandler, MockConfigurationHandler>();
+                    
                     services.OnExposing(onServiceExposingContext =>
                     {
                         var implementedTypes = ReflectionHelper.GetImplementedGenericTypes(
@@ -137,8 +143,10 @@ public class ClusterFixture : IDisposable, ISingletonDependency
                         .AddAzureOpenAITextEmbedding();
 
                     services.AddTransient<IGAgentExecutor, GAgentExecutor>();
+                    services.AddTransient<IGAgentService, GAgentService>();
+                    services.AddSingleton<IConfigurationHandler, MockConfigurationHandler>();
                 })
-                .UseAevatar()
+                .UseAevatar(true)
                 .UseAevatarPermissionManagement()
                 .AddMemoryStreams("Aevatar")
                 .AddMemoryStreams("AevatarSignalR")

@@ -26,11 +26,15 @@ public class DynamicAIMCPController : ControllerBase
     }
 
     [HttpGet("mcp-servers")]
-    public IActionResult GetMCPServers()
+    public async Task<IActionResult> GetMCPServers()
     {
         try
         {
-            var mcpServersSection = _configuration.GetSection("mcpServers");
+            // For now, use local configuration directly
+            // In a production scenario, you might want to get this from ConfigManagerGAgent
+            // using a proper request/response pattern or dedicated methods
+            
+            var mcpServersSection = _configuration.GetSection("MCPServers");
             var servers = new List<MCPServerUIConfig>();
 
             foreach (var serverSection in mcpServersSection.GetChildren())
@@ -48,7 +52,11 @@ public class DynamicAIMCPController : ControllerBase
                     MaxRetries = serverSection.GetValue<int?>("maxRetries")
                 };
 
-                servers.Add(serverConfig);
+                // Only include enabled servers
+                if (serverSection.GetValue<bool>("enabled", true))
+                {
+                    servers.Add(serverConfig);
+                }
             }
 
             return Ok(new

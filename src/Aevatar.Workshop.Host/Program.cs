@@ -5,10 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
 var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .AddJsonFile("appsettings.secrets.json", optional: true)
+    .SetBasePath(Directory.GetCurrentDirectory())
     .AddEnvironmentVariables()
     .Build();
+
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .ReadFrom.Configuration(configuration)
@@ -16,7 +16,7 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
-    Log.Information("Starting Silo");
+    Log.Information("Starting Aevatar Workshop Host (Orleans Silo)");
     var host = CreateHostBuilder(args).Build();
     await host.RunAsync();
     return 0;
@@ -35,13 +35,13 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
     Host.CreateDefaultBuilder(args)
         .ConfigureAppConfiguration((hostingContext, config) =>
         {
-            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                  .AddJsonFile("appsettings.container.json", optional: true, reloadOnChange: true) // 添加容器化配置
-                  .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true)
-                  .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
-                  .AddEnvironmentVariables(); // 添加环境变量支持
+            config.SetBasePath(Directory.GetCurrentDirectory())
+                  .AddEnvironmentVariables();
         })
-        .ConfigureServices((_, services) => { services.AddApplication<WorkshopHostModule>(); })
+        .ConfigureServices((_, services) => 
+        { 
+            services.AddApplication<WorkshopHostModule>(); 
+        })
         .UseOrleansConfiguration()
         .UseAutofac()
         .UseSerilog();

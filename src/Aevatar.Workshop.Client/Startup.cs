@@ -14,7 +14,7 @@ public static class Startup
 {
     public static async Task<IServiceProvider> RunAsync(string[] args)
     {
-        var builder = Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args)
+        var builder = Host.CreateDefaultBuilder(args)
             .UseOrleansClient(client =>
             {
                 var gatewayHost = Environment.GetEnvironmentVariable("ORLEANS_GATEWAY_HOST") ?? "localhost";

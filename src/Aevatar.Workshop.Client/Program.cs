@@ -11,6 +11,7 @@ using Aevatar.Plugins;
 using Aevatar.Plugins.DbContexts;
 using Aevatar.Plugins.Repositories;
 using Microsoft.Extensions.Configuration;
+using Aevatar.Workshop.Client.Services;
 
 Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
 
@@ -35,6 +36,9 @@ builder.Configuration
 // builder.Services.AddTransient<PluginLoadStatusMongoDbContext>();
 
 builder.Services.AddControllers();
+
+// Remove HttpClient registration as ConfigSyncService now uses GAgent
+// builder.Services.AddHttpClient();
 
 // Configure SystemLLMConfigOptions
 builder.Services.Configure<SystemLLMConfigOptions>(options =>
@@ -65,6 +69,9 @@ builder.Services.Configure<SystemLLMConfigOptions>(options =>
     }
 });
 
+// Add configuration sync service
+builder.Services.AddHostedService<ConfigSyncService>();
+
 // Orleans client setup
 var serviceProvider = await Startup.RunAsync(args);
 
@@ -89,18 +96,26 @@ app.MapControllerRoute(
 // app.Urls.Add(url); // Commented out to use Docker environment variable
 app.Lifetime.ApplicationStarted.Register(() =>
 {
+    var urls = app.Urls;
+    var url = urls.FirstOrDefault() ?? "http://localhost:5000";
+
+    Console.WriteLine($"Application started. Access the demos at: {url}");
+    Console.WriteLine(
+        $"Host is expected at: {Environment.GetEnvironmentVariable("HOST_URL") ?? "http://localhost:5277"}");
+
+    // Try to open browser (may not work in Docker)
     try
     {
-        // Get the actual URL from configuration
-        var urls = app.Urls.FirstOrDefault() ?? "http://localhost:80";
-        var psi = new ProcessStartInfo
+        Process.Start(new ProcessStartInfo
         {
-            FileName = urls.Replace("+", "localhost").Replace("*", "localhost").Replace("0.0.0.0", "localhost"),
+            FileName = url,
             UseShellExecute = true
-        };
-        Process.Start(psi);
+        });
     }
-    catch { }
+    catch
+    {
+        Console.WriteLine($"Could not launch browser. Please open {url} manually.");
+    }
 });
 
 await app.RunAsync();
