@@ -2803,21 +2803,6 @@
     title.textContent = demo.name[currentLanguage] || demo.name['en'];
     demoCard.appendChild(title);
 
-    // Description
-    const desc = document.createElement('div');
-    desc.className = 'demo-desc desc-content';
-    desc.innerHTML = 'Loading...';
-    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
-    fetch(descPath).then(r => r.text()).then(md => {
-      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
-      if (window.hljs) {
-        desc.querySelectorAll('pre code').forEach(block => {
-          hljs.highlightElement(block);
-        });
-      }
-    });
-    demoCard.appendChild(desc);
-
     // Link to standalone demo
     const linkContainer = document.createElement('div');
     linkContainer.style.marginTop = '20px';
@@ -2844,6 +2829,21 @@
 
     linkContainer.appendChild(link);
     demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
 
     // Demo iframe
     const iframeContainer = document.createElement('div');
@@ -2883,21 +2883,6 @@
     title.textContent = demo.name[currentLanguage] || demo.name['en'];
     demoCard.appendChild(title);
 
-    // Description
-    const desc = document.createElement('div');
-    desc.className = 'demo-desc desc-content';
-    desc.innerHTML = 'Loading...';
-    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
-    fetch(descPath).then(r => r.text()).then(md => {
-      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
-      if (window.hljs) {
-        desc.querySelectorAll('pre code').forEach(block => {
-          hljs.highlightElement(block);
-        });
-      }
-    });
-    demoCard.appendChild(desc);
-
     // Link to standalone demo
     const linkContainer = document.createElement('div');
     linkContainer.style.marginTop = '20px';
@@ -2924,6 +2909,21 @@
 
     linkContainer.appendChild(link);
     demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
 
     // Demo iframe
     const iframeContainer = document.createElement('div');

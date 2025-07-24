@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Text.Json;
 using Aevatar.Core;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.Executor;
@@ -7,6 +5,7 @@ using Aevatar.GAgents.MCP.Core;
 using Aevatar.GAgents.MCP.Core.GEvents;
 using Aevatar.GAgents.MCP.GEvents;
 using Aevatar.GAgents.MCP.Options;
+using Aevatar.Workshop.GAgent;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -56,7 +55,7 @@ public class MCPDemoController : ControllerBase
                     ServerName = s.ServerName ?? string.Empty,
                     Command = s.Command ?? string.Empty,
                     Args = s.Args?.Select(arg => arg?.ToString() ?? string.Empty).ToList() ?? new List<string>(),
-                    Env = ConvertEnvironmentDictionary(s.Environment)
+                    Env = JsonConversionHelper.ConvertEnvironmentDictionary(s.Environment)
                 }).First()
             };
 
@@ -134,7 +133,8 @@ public class MCPDemoController : ControllerBase
             {
                 ServerName = request.ServerName,
                 ToolName = request.ToolName,
-                Arguments = ConvertJsonElementToBasicTypes(request.Arguments ?? new Dictionary<string, object>())
+                Arguments = JsonConversionHelper.ConvertToBasicTypes(request.Arguments ??
+                                                                     new Dictionary<string, object>())
             };
 
             try
@@ -205,7 +205,7 @@ public class MCPDemoController : ControllerBase
                             hasResult = true,
                             resultType = response.Result?.GetType().Name ?? "Unknown",
                             resultContent = response.Result,
-                            formattedResult = FormatResultForDisplay(response.Result)
+                            formattedResult = JsonConversionHelper.FormatResultForDisplay(response.Result)
                         }
                     });
                 }
@@ -408,196 +408,5 @@ public class MCPDemoController : ControllerBase
         public object? Result { get; set; }
         public string? ErrorMessage { get; set; }
         public DateTime Timestamp { get; set; }
-    }
-
-    /// <summary>
-    /// Convert JsonElement objects to basic .NET types that Orleans can serialize
-    /// </summary>
-    private Dictionary<string, object> ConvertJsonElementToBasicTypes(Dictionary<string, object> input)
-    {
-        var result = new Dictionary<string, object>();
-
-        foreach (var kvp in input)
-        {
-            result[kvp.Key] = ConvertValue(kvp.Value);
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// Convert environment dictionary ensuring all values are strings
-    /// </summary>
-    private Dictionary<string, string> ConvertEnvironmentDictionary(Dictionary<string, string>? input)
-    {
-        if (input == null) return new Dictionary<string, string>();
-
-        var result = new Dictionary<string, string>();
-        foreach (var kvp in input)
-        {
-            // The value should already be a string, but ensure it's not null
-            result[kvp.Key] = kvp.Value ?? string.Empty;
-        }
-
-        return result;
-    }
-
-    private object? ConvertValue(object? value)
-    {
-        if (value == null) return null;
-
-        if (value is JsonElement element)
-        {
-            switch (element.ValueKind)
-            {
-                case JsonValueKind.String:
-                    return element.GetString();
-                case JsonValueKind.Number:
-                    if (element.TryGetInt32(out var intValue))
-                        return intValue;
-                    if (element.TryGetInt64(out var longValue))
-                        return longValue;
-                    if (element.TryGetDouble(out var doubleValue))
-                        return doubleValue;
-                    return element.GetDecimal();
-                case JsonValueKind.True:
-                    return true;
-                case JsonValueKind.False:
-                    return false;
-                case JsonValueKind.Null:
-                    return null;
-                case JsonValueKind.Array:
-                    var list = new List<object?>();
-                    foreach (var item in element.EnumerateArray())
-                    {
-                        list.Add(ConvertValue(item));
-                    }
-
-                    return list;
-                case JsonValueKind.Object:
-                    var dict = new Dictionary<string, object>();
-                    foreach (var prop in element.EnumerateObject())
-                    {
-                        dict[prop.Name] = ConvertValue(prop.Value);
-                    }
-
-                    return dict;
-                default:
-                    return element.ToString();
-            }
-        }
-
-        // If it's already a basic type, return as-is
-        return value;
-    }
-
-    /// <summary>
-    /// Format result for better display in UI
-    /// </summary>
-    private object FormatResultForDisplay(object? result)
-    {
-        _logger.LogInformation("FormatResultForDisplay called with type: {Type}, value: {Value}",
-            result?.GetType().Name ?? "null", result);
-
-        if (result == null) return new { type = "null", value = "" };
-
-        // Handle different result types
-        if (result is string str)
-        {
-            // Check if it's JSON string
-            if ((str.StartsWith("{") && str.EndsWith("}")) || (str.StartsWith("[") && str.EndsWith("]")))
-            {
-                try
-                {
-                    var parsed = JsonSerializer.Deserialize<JsonElement>(str);
-                    var formatted =
-                        JsonSerializer.Serialize(parsed, new JsonSerializerOptions { WriteIndented = true });
-                    return new
-                    {
-                        type = "json",
-                        value = str,
-                        raw = str,
-                        formatted = formatted
-                    };
-                }
-                catch
-                {
-                    // Not valid JSON, treat as regular string
-                }
-            }
-
-            // For multiline strings, provide line count
-            var lines = str.Split('\n');
-            if (lines.Length > 1)
-            {
-                return new
-                {
-                    type = "multiline_string",
-                    value = str,
-                    lineCount = lines.Length,
-                    preview = lines.Length > 5 ? string.Join("\n", lines.Take(5)) + "\n..." : str
-                };
-            }
-
-            return new { type = "string", value = str };
-        }
-
-        if (result is IList list)
-        {
-            var items = new List<object>();
-            foreach (var item in list)
-            {
-                items.Add(FormatResultForDisplay(item));
-            }
-
-            return new
-            {
-                type = "array",
-                count = list.Count,
-                items = items
-            };
-        }
-
-        if (result is Dictionary<string, object> dict)
-        {
-            return new
-            {
-                type = "object",
-                propertyCount = dict.Count,
-                properties = dict.ToDictionary(kvp => kvp.Key, kvp => FormatResultForDisplay(kvp.Value))
-            };
-        }
-
-        if (result is bool || result is int || result is long || result is double || result is decimal)
-        {
-            return new
-            {
-                type = result.GetType().Name.ToLower(),
-                value = result
-            };
-        }
-
-        // For complex objects, try to serialize to JSON
-        try
-        {
-            var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
-            return new
-            {
-                type = "complex_object",
-                typeName = result.GetType().Name,
-                value = json,
-                formatted = json,
-                parsed = JsonSerializer.Deserialize<JsonElement>(json)
-            };
-        }
-        catch
-        {
-            return new
-            {
-                type = "unknown",
-                typeName = result.GetType().Name,
-                value = result.ToString() ?? ""
-            };
-        }
     }
 }

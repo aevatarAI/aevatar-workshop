@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Aevatar.Core.Abstractions;
-using Aevatar.GAgents.AIGAgent.Dtos;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 using Aevatar.Workshop.GAgent;
 
 namespace Aevatar.Workshop.Client.Controllers;
