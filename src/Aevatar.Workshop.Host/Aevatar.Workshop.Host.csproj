@@ -21,9 +21,9 @@
         <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
         <PackageReference Include="Microsoft.SemanticKernel.Plugins.Web" />
         <PackageReference Include="OrleansDashboard" />
-        <PackageReference Include="Aevatar.GAgents.MCP" />
-        <PackageReference Include="Aevatar.GAgents.PsiOmni" />
-        <PackageReference Include="Aevatar.GAgents.PsiOmni.Plugins" />
+        <ProjectReference Include="../../../aevatar-gagents/src/Aevatar.GAgents.MCP/Aevatar.GAgents.MCP.csproj" />
+        <ProjectReference Include="../../../aevatar-gagents/src/Aevatar.GAgents.PsiOmni/Aevatar.GAgents.PsiOmni.csproj" />
+        <ProjectReference Include="../../../aevatar-gagents/src/Aevatar.GAgents.PsiOmni.Plugins/Aevatar.GAgents.PsiOmni.Plugins.csproj" />
         <PackageReference Include="Aevatar" />
     </ItemGroup>
     <ItemGroup>

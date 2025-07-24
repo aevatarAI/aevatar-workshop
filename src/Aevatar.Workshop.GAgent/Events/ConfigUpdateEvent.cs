@@ -7,14 +7,13 @@ public class ConfigUpdateEvent : EventWithResponseBase<ConfigResponseEvent>
 {
     [Id(0)] public string ConfigType { get; set; } = string.Empty; // e.g., "SystemLLMConfigs", "MCPServerOptions"
     [Id(1)] public string ConfigJson { get; set; } = string.Empty; // JSON serialized configuration
-    [Id(2)] public string? ConfigKey { get; set; } // Optional: specific key within the config (e.g., "OpenAI")
 }
 
 [GenerateSerializer]
 public class ConfigRequestEvent : EventWithResponseBase<ConfigResponseEvent>
 {
-    [Id(0)] public string ConfigType { get; set; } = string.Empty;
-    [Id(1)] public string ConfigKey { get; set; } = string.Empty;
+    [Id(0)] public string ConfigType { get; set; } = string.Empty; // e.g., "SystemLLMConfigs", "MCPServerOptions"
+    [Id(1)] public string? ConfigKey { get; set; } // Optional: specific key within the config
 }
 
 [GenerateSerializer]

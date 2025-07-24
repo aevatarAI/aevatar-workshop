@@ -1,7 +1,5 @@
-using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Linq;
 using Aevatar.Core.Abstractions;
 using Aevatar.Extensions;
 using Aevatar.GAgents.Executor;
@@ -25,12 +23,12 @@ public static class OrleansHostExtension
                 var siloPort = int.Parse(Environment.GetEnvironmentVariable("ORLEANS_SILO_PORT") ?? "11111");
                 var gatewayPort = int.Parse(Environment.GetEnvironmentVariable("ORLEANS_GATEWAY_PORT") ?? "30000");
                 var isDocker = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"));
-                
+
                 if (isDocker)
                 {
                     // 容器环境：使用特殊配置
                     var advertisedHost = Environment.GetEnvironmentVariable("ORLEANS_ADVERTISED_HOST");
-                    
+
                     if (!string.IsNullOrEmpty(advertisedHost))
                     {
                         // 如果指定了广播地址，使用它
@@ -39,7 +37,7 @@ public static class OrleansHostExtension
                             {
                                 options.GatewayListeningEndpoint = new IPEndPoint(IPAddress.Any, gatewayPort);
                                 options.SiloListeningEndpoint = new IPEndPoint(IPAddress.Any, siloPort);
-                                
+
                                 // 尝试解析广播地址
                                 if (IPAddress.TryParse(advertisedHost, out var advertisedIP))
                                 {
@@ -51,7 +49,8 @@ public static class OrleansHostExtension
                                     try
                                     {
                                         var hostEntry = Dns.GetHostEntry(advertisedHost);
-                                        options.AdvertisedIPAddress = hostEntry.AddressList.First(ip => ip.AddressFamily == AddressFamily.InterNetwork);
+                                        options.AdvertisedIPAddress = hostEntry.AddressList.First(ip =>
+                                            ip.AddressFamily == AddressFamily.InterNetwork);
                                     }
                                     catch
                                     {
@@ -79,7 +78,7 @@ public static class OrleansHostExtension
                     // 本地开发环境
                     siloBuilder.UseLocalhostClustering();
                 }
-                
+
                 siloBuilder
                     .AddMemoryGrainStorage("Default")
                     .AddMemoryStreams(AevatarCoreConstants.StreamProvider)
@@ -111,7 +110,7 @@ public static class OrleansHostExtension
             })
             .UseConsoleLifetime();
     }
-    
+
     private static IPAddress GetLocalIPAddress()
     {
         try
@@ -129,11 +128,11 @@ public static class OrleansHostExtension
                     }
                 }
             }
-            
+
             // 如果没找到合适的IP，返回第一个非环回IPv4地址
-            var firstIPv4 = host.AddressList.FirstOrDefault(ip => 
+            var firstIPv4 = host.AddressList.FirstOrDefault(ip =>
                 ip.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip));
-            
+
             return firstIPv4 ?? IPAddress.Loopback;
         }
         catch

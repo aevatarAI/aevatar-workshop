@@ -1,15 +1,10 @@
 ﻿using System.Diagnostics;
-using Aevatar.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Aevatar.Core.Abstractions;
-using Aevatar.Core.Abstractions.Plugin;
 using Aevatar.Workshop.Client;
 using Microsoft.AspNetCore.Builder;
 using Aevatar.GAgents.AI.Options;
 using Aevatar.GAgents.Executor;
-using Aevatar.Plugins;
-using Aevatar.Plugins.DbContexts;
-using Aevatar.Plugins.Repositories;
 using Microsoft.Extensions.Configuration;
 using Aevatar.Workshop.Client.Services;
 
@@ -65,6 +60,7 @@ var serviceProvider = await Startup.RunAsync(args);
 builder.Services.AddSingleton(serviceProvider.GetRequiredService<IClusterClient>());
 builder.Services.AddSingleton(serviceProvider.GetRequiredService<IGAgentFactory>());
 builder.Services.AddSingleton(serviceProvider.GetRequiredService<IGAgentExecutor>());
+builder.Services.AddSingleton(serviceProvider.GetRequiredService<IGAgentService>());
 
 var app = builder.Build();
 

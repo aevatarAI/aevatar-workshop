@@ -1,4 +1,4 @@
-namespace Aevatar.Workshop.Host.Options;
+namespace Aevatar.Workshop.GAgent.Options;
 
 /// <summary>
 /// MCP Server configuration options

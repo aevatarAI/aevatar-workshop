@@ -3,8 +3,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using Aevatar.Core.Abstractions;
+using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.Executor;
 using Aevatar.Workshop.GAgent;
+using Aevatar.GAgents.AI.Options;
+using Aevatar.Workshop.GAgent.Options;
 
 namespace Aevatar.Workshop.Client.Services;
 
@@ -29,53 +32,19 @@ public class ConfigSyncService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        _logger.LogInformation("=== ConfigSyncService Starting ===");
+        
         try
         {
-            _logger.LogInformation("Starting configuration sync to host using ConfigManagerGAgent");
-
-            // Wait a bit for Orleans to be ready
-            await Task.Delay(3000, cancellationToken);
-
-            // Get ConfigManagerGAgent
-            var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>();
-            var executorGAgent = await _gAgentFactory.GetGAgentAsync<IEventHandlerExecutorGAgent>();
-
-            // Sync SystemLLMConfigs
-            var llmConfigs = GetConfigurationJson("SystemLLMConfigs");
-            if (!string.IsNullOrEmpty(llmConfigs) && llmConfigs != "{}")
-            {
-                _logger.LogInformation("Syncing SystemLLMConfigs to host");
-
-                var updateEvent = new ConfigUpdateEvent
-                {
-                    ConfigType = "SystemLLMConfigs",
-                    ConfigJson = llmConfigs
-                };
-
-                await executorGAgent.ExecuteGAgentEventHandler(configManager, updateEvent);
-            }
-
-            // Sync MCPServers
-            var mcpServers = GetConfigurationJson("MCPServers");
-            if (!string.IsNullOrEmpty(mcpServers) && mcpServers != "{}")
-            {
-                _logger.LogInformation("Syncing MCPServers to host");
-
-                var updateEvent = new ConfigUpdateEvent
-                {
-                    ConfigType = "MCPServers",
-                    ConfigJson = mcpServers
-                };
-
-                await executorGAgent.ExecuteGAgentEventHandler(configManager, updateEvent);
-            }
-
-            _logger.LogInformation("Configuration sync completed");
+            await SyncSystemLLMConfigsAsync();
+            await SyncMCPServersAsync();
+            
+            _logger.LogInformation("=== ConfigSyncService Completed Successfully ===");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to sync configuration to host");
-            // Don't throw - allow the application to continue even if config sync fails
+            _logger.LogError(ex, "Error during configuration sync");
+            throw;
         }
     }
 
@@ -84,119 +53,108 @@ public class ConfigSyncService : IHostedService
         return Task.CompletedTask;
     }
 
-    private string GetConfigurationJson(string sectionName)
+    private async Task SyncSystemLLMConfigsAsync()
     {
-        var section = _configuration.GetSection(sectionName);
-        if (!section.Exists())
+        try
         {
-            _logger.LogWarning("Configuration section '{Section}' not found", sectionName);
-            return "{}";
-        }
-
-        // Convert IConfigurationSection to dictionary
-        var dict = new Dictionary<string, object>();
-        foreach (var child in section.GetChildren())
-        {
-            if (child.GetChildren().Any())
+            _logger.LogInformation("Starting SystemLLMConfigs sync");
+            
+            // Read SystemLLMConfigs from configuration
+            var systemLLMConfigs = new SystemLLMConfigOptions
             {
-                // This is a complex object
-                var childDict = GetSectionAsDictionary(child);
-                dict[child.Key] = ConvertArrayRepresentation(childDict);
-            }
-            else
-            {
-                // This is a simple value
-                dict[child.Key] = child.Value ?? string.Empty;
-            }
-        }
+                SystemLLMConfigs = new Dictionary<string, LLMConfig>()
+            };
+            _configuration.GetSection("SystemLLMConfigs").Bind(systemLLMConfigs.SystemLLMConfigs);
 
-        return JsonSerializer.Serialize(dict);
-    }
-
-    private object ConvertArrayRepresentation(Dictionary<string, object> dict)
-    {
-        // Check if this dictionary represents an array
-        if (dict.ContainsKey("_isArray") && dict.ContainsKey("_items") && 
-            dict["_isArray"] is bool isArray && isArray)
-        {
-            var items = dict["_items"] as List<object>;
-            if (items != null)
+            if (systemLLMConfigs.SystemLLMConfigs != null && systemLLMConfigs.SystemLLMConfigs.Any())
             {
-                // Convert any nested dictionaries that might also be arrays
-                var convertedItems = new List<object>();
-                foreach (var item in items)
+                _logger.LogInformation("Found {Count} SystemLLMConfigs to sync: {Keys}", 
+                    systemLLMConfigs.SystemLLMConfigs.Count,
+                    string.Join(", ", systemLLMConfigs.SystemLLMConfigs.Keys));
+                
+                // Get the ConfigManagerGAgent instance for SystemLLMConfigOptions
+                var configGuid = typeof(SystemLLMConfigOptions).FullName!.ToGuid();
+                var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>(configGuid);
+
+                // Create update event - serialize the entire dictionary
+                var updateEvent = new ConfigUpdateEvent
                 {
-                    if (item is Dictionary<string, object> itemDict)
-                    {
-                        convertedItems.Add(ConvertArrayRepresentation(itemDict));
-                    }
-                    else
-                    {
-                        convertedItems.Add(item);
-                    }
-                }
-                return convertedItems;
-            }
-        }
+                    ConfigType = typeof(SystemLLMConfigOptions).FullName!,
+                    ConfigJson = JsonSerializer.Serialize(systemLLMConfigs.SystemLLMConfigs)
+                };
 
-        // Not an array, process nested dictionaries
-        var result = new Dictionary<string, object>();
-        foreach (var kvp in dict)
-        {
-            if (kvp.Value is Dictionary<string, object> nestedDict)
-            {
-                result[kvp.Key] = ConvertArrayRepresentation(nestedDict);
-            }
-            else
-            {
-                result[kvp.Key] = kvp.Value;
-            }
-        }
-        return result;
-    }
-
-    private Dictionary<string, object> GetSectionAsDictionary(IConfigurationSection section)
-    {
-        var dict = new Dictionary<string, object>();
-        var children = section.GetChildren().ToList();
-        
-        // Check if this section represents an array
-        if (children.Any() && children.All(child => child.Key.All(char.IsDigit)))
-        {
-            // This is an array - return it as a list
-            var array = new List<object>();
-            foreach (var child in children.OrderBy(c => int.Parse(c.Key)))
-            {
-                if (child.GetChildren().Any())
+                var response = await configManager.UpdateConfigAsync(updateEvent);
+                
+                if (response.Success)
                 {
-                    array.Add(GetSectionAsDictionary(child));
+                    _logger.LogInformation("Successfully synced SystemLLMConfigs to ConfigManagerGAgent");
                 }
                 else
                 {
-                    array.Add(child.Value ?? string.Empty);
+                    _logger.LogError("Failed to sync SystemLLMConfigs: {ResponseErrorMessage}", response.ErrorMessage);
                 }
-            }
-            // Return a dictionary with the array marked
-            dict["_isArray"] = true;
-            dict["_items"] = array;
-            return dict;
-        }
-
-        // Process as regular object
-        foreach (var child in children)
-        {
-            if (child.GetChildren().Any())
-            {
-                // This is a nested object or array
-                dict[child.Key] = GetSectionAsDictionary(child);
             }
             else
             {
-                // This is a simple value
-                dict[child.Key] = child.Value ?? string.Empty;
+                _logger.LogWarning("No SystemLLMConfigs found in configuration");
             }
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing SystemLLMConfigs");
+            throw;
+        }
+    }
 
-        return dict;
+    private async Task SyncMCPServersAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Starting MCPServers sync");
+            
+            // Read MCPServers from configuration
+            var mcpServerOptions = new MCPServerOptions
+            {
+                MCPServers = new Dictionary<string, MCPServerConfig>()
+            };
+            _configuration.GetSection("MCPServers").Bind(mcpServerOptions.MCPServers);
+
+            if (mcpServerOptions.MCPServers != null && mcpServerOptions.MCPServers.Any())
+            {
+                _logger.LogInformation("Found {Count} MCPServers to sync", mcpServerOptions.MCPServers.Count);
+                
+                // Get the ConfigManagerGAgent instance for MCPServerOptions
+                var configGuid = typeof(MCPServerOptions).FullName!.ToGuid();
+                var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>(configGuid);
+
+                // Create update event - serialize the entire dictionary
+                var updateEvent = new ConfigUpdateEvent
+                {
+                    ConfigType = typeof(MCPServerOptions).FullName!,
+                    ConfigJson = JsonSerializer.Serialize(mcpServerOptions.MCPServers)
+                };
+
+                // Update configuration
+                var response = await configManager.UpdateConfigAsync(updateEvent);
+
+                if (response.Success)
+                {
+                    _logger.LogInformation("Successfully synced MCPServers to ConfigManagerGAgent");
+                }
+                else
+                {
+                    _logger.LogError("Failed to sync MCPServers: {ErrorMessage}", response.ErrorMessage);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("No MCPServers found in configuration");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing MCPServers");
+            throw;
+        }
     }
 }

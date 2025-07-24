@@ -17,8 +17,5 @@ public class AevatarWorkshopTestModule : AbpModule
         // Register test services
         context.Services.AddSingleton<IGAgentExecutor, GAgentExecutor>();
         context.Services.AddSingleton<IGAgentService, GAgentService>();
-
-        // Register mock configuration handler
-        context.Services.AddSingleton<IConfigurationHandler, MockConfigurationHandler>();
     }
 }

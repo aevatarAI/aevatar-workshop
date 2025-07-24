@@ -1,7 +1,7 @@
 using Aevatar.Core;
 using Aevatar.Core.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Aevatar.Workshop.GAgent;
 
@@ -14,6 +14,8 @@ public class ConfigManagerGAgentState : StateBase
     [Id(0)] public DateTime LastUpdated { get; set; }
     [Id(1)] public Dictionary<string, DateTime> ConfigUpdateTimes { get; set; } = new();
     [Id(2)] public int TotalUpdates { get; set; }
+    [Id(3)] public string ConfigJson { get; set; } = string.Empty;
+    [Id(4)] public string ConfigType { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -29,45 +31,54 @@ public class ConfigUpdatedLogEvent : ConfigManagerStateLogEvent
     [Id(1)] public bool Success { get; set; }
     [Id(2)] public string? ErrorMessage { get; set; }
     [Id(3)] public DateTime Timestamp { get; set; }
+    [Id(4)] public string ConfigJson { get; set; } = string.Empty;
+}
+
+[GenerateSerializer]
+public class ConfigSetLogEvent : ConfigManagerStateLogEvent
+{
+    [Id(0)] public string ConfigType { get; set; } = string.Empty;
+    [Id(1)] public string ConfigJson { get; set; } = string.Empty;
+    [Id(2)] public DateTime Timestamp { get; set; }
 }
 
 public interface IConfigManagerGAgent : IStateGAgent<ConfigManagerGAgentState>
 {
-    Task<List<string>> GetSupportedConfigTypesAsync();
+    Task<ConfigResponseEvent> UpdateConfigAsync(ConfigUpdateEvent updateEvent);
+    Task<ConfigResponseEvent> RequestConfigAsync(ConfigRequestEvent requestEvent);
 }
 
 /// <summary>
 /// GAgent responsible for managing configuration updates
-/// This GAgent uses IConfigurationHandler which is implemented in the Host project
+/// Each instance stores one type of Options configuration
+/// Primary key is generated from Options type's FullName
 /// </summary>
 [GAgent("config", "aevatar")]
 public class ConfigManagerGAgent : GAgentBase<ConfigManagerGAgentState, ConfigManagerStateLogEvent>,
     IConfigManagerGAgent
 {
-    private IConfigurationHandler? _configHandler;
-
-    protected IConfigurationHandler ConfigHandler
-    {
-        get
-        {
-            if (_configHandler == null)
-            {
-                // Try to get the handler from DI
-                _configHandler = ServiceProvider.GetService<IConfigurationHandler>();
-                if (_configHandler == null)
-                {
-                    throw new InvalidOperationException(
-                        "IConfigurationHandler is not registered. Make sure it's registered in the Host module.");
-                }
-            }
-
-            return _configHandler;
-        }
-    }
-
     public override Task<string> GetDescriptionAsync()
     {
-        return Task.FromResult("Configuration manager GAgent for updating runtime configurations");
+        var configType = string.IsNullOrEmpty(State.ConfigType) ? "Not configured" : State.ConfigType;
+        return Task.FromResult($"Configuration manager GAgent for type: {configType}. " +
+                               $"Last updated: {State.LastUpdated:yyyy-MM-dd HH:mm:ss}, " +
+                               $"Total updates: {State.TotalUpdates}");
+    }
+
+    /// <summary>
+    /// Update configuration
+    /// </summary>
+    public async Task<ConfigResponseEvent> UpdateConfigAsync(ConfigUpdateEvent updateEvent)
+    {
+        return await HandleEventAsync(updateEvent);
+    }
+
+    /// <summary>
+    /// Request configuration
+    /// </summary>
+    public async Task<ConfigResponseEvent> RequestConfigAsync(ConfigRequestEvent requestEvent)
+    {
+        return await HandleEventAsync(requestEvent);
     }
 
     /// <summary>
@@ -76,71 +87,83 @@ public class ConfigManagerGAgent : GAgentBase<ConfigManagerGAgentState, ConfigMa
     [EventHandler]
     public async Task<ConfigResponseEvent> HandleEventAsync(ConfigUpdateEvent updateEvent)
     {
-        Logger.LogInformation("Received configuration update request for type: {ConfigType}", updateEvent.ConfigType);
-        
-        // Debug log
-        Logger.LogInformation("ConfigHandler instance: {HandlerType}, HashCode: {HashCode}", 
-            ConfigHandler.GetType().Name, ConfigHandler.GetHashCode());
-
         try
         {
-            var (success, errorMessage) = await ConfigHandler.UpdateConfigurationAsync(
-                updateEvent.ConfigType,
-                updateEvent.ConfigJson,
-                updateEvent.ConfigKey);
+            // Validate input
+            if (string.IsNullOrEmpty(updateEvent.ConfigType))
+            {
+                throw new ArgumentException("ConfigType cannot be empty");
+            }
 
-            Logger.LogInformation("UpdateConfigurationAsync returned: Success={Success}, Error={Error}", 
-                success, errorMessage);
+            if (string.IsNullOrEmpty(updateEvent.ConfigJson))
+            {
+                throw new ArgumentException("ConfigJson cannot be empty");
+            }
 
-            // Log the update
-            RaiseEvent(new ConfigUpdatedLogEvent
+            // Validate JSON format
+            try
+            {
+                JsonConvert.DeserializeObject(updateEvent.ConfigJson);
+            }
+            catch (JsonException ex)
+            {
+                throw new ArgumentException($"Invalid JSON format: {ex.Message}", ex);
+            }
+
+            // Raise state update event
+            RaiseEvent(new ConfigSetLogEvent
             {
                 ConfigType = updateEvent.ConfigType,
-                Success = success,
-                ErrorMessage = errorMessage,
+                ConfigJson = updateEvent.ConfigJson,
                 Timestamp = DateTime.UtcNow
             });
 
             await ConfirmEvents();
 
-            // Send response
-            var response = new ConfigResponseEvent
+            // Log success
+            RaiseEvent(new ConfigUpdatedLogEvent
+            {
+                ConfigType = updateEvent.ConfigType,
+                Success = true,
+                Timestamp = DateTime.UtcNow,
+                ConfigJson = updateEvent.ConfigJson
+            });
+
+            await ConfirmEvents();
+
+            Logger.LogInformation("Successfully updated configuration for type: {ConfigType}\n{ConfigJson}",
+                updateEvent.ConfigType, updateEvent.ConfigJson);
+
+            return new ConfigResponseEvent
             {
                 ConfigType = updateEvent.ConfigType,
                 ConfigJson = updateEvent.ConfigJson,
-                Success = success,
-                ErrorMessage = errorMessage
+                Success = true
             };
-
-            Logger.LogInformation("Configuration update completed. Type: {Type}, Success: {Success}",
-                updateEvent.ConfigType, success);
-
-            return response;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error updating configuration for type: {ConfigType}", updateEvent.ConfigType);
+            Logger.LogError(ex, "Failed to update configuration for type: {ConfigType}", updateEvent.ConfigType);
 
+            // Log failure
             RaiseEvent(new ConfigUpdatedLogEvent
             {
                 ConfigType = updateEvent.ConfigType,
                 Success = false,
                 ErrorMessage = ex.Message,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.UtcNow,
+                ConfigJson = string.Empty
             });
 
             await ConfirmEvents();
 
-            // Send error response
-            var response = new ConfigResponseEvent
+            return new ConfigResponseEvent
             {
                 ConfigType = updateEvent.ConfigType,
                 ConfigJson = string.Empty,
                 Success = false,
                 ErrorMessage = ex.Message
             };
-
-            return response;
         }
     }
 
@@ -148,58 +171,87 @@ public class ConfigManagerGAgent : GAgentBase<ConfigManagerGAgentState, ConfigMa
     /// Handle configuration get events
     /// </summary>
     [EventHandler]
-    public async Task<ConfigResponseEvent> HandleEventAsync(ConfigRequestEvent configRequest)
+    public async Task<ConfigResponseEvent> HandleEventAsync(ConfigRequestEvent requestEvent)
     {
-        Logger.LogInformation("Received configuration get request for type: {ConfigType}", configRequest.ConfigType);
-
         try
         {
-            var (success, configJson, errorMessage) = await ConfigHandler.GetConfigurationAsync(
-                configRequest.ConfigType,
-                configRequest.ConfigKey);
-
-            var response = new ConfigResponseEvent
+            // Check if we have configuration stored
+            if (string.IsNullOrEmpty(State.ConfigJson))
             {
-                ConfigType = configRequest.ConfigType,
-                ConfigJson = configJson,
-                Success = success,
-                ErrorMessage = errorMessage
+                return new ConfigResponseEvent
+                {
+                    ConfigType = requestEvent.ConfigType,
+                    ConfigJson = string.Empty,
+                    Success = false,
+                    ErrorMessage = "No configuration found"
+                };
+            }
+
+            // Check if config type matches
+            if (!string.IsNullOrEmpty(State.ConfigType) &&
+                State.ConfigType != requestEvent.ConfigType)
+            {
+                return new ConfigResponseEvent
+                {
+                    ConfigType = requestEvent.ConfigType,
+                    ConfigJson = string.Empty,
+                    Success = false,
+                    ErrorMessage =
+                        $"Configuration type mismatch. Expected: {State.ConfigType}, Requested: {requestEvent.ConfigType}"
+                };
+            }
+
+            // If a specific key is requested, extract it from the JSON
+            if (!string.IsNullOrEmpty(requestEvent.ConfigKey))
+            {
+                try
+                {
+                    var configObject = JsonConvert.DeserializeObject<Dictionary<string, object>>(State.ConfigJson);
+                    if (configObject != null && configObject.TryGetValue(requestEvent.ConfigKey, out var value))
+                    {
+                        var valueJson = JsonConvert.SerializeObject(value);
+                        Logger.LogInformation($"Successfully extracted configuration key: {requestEvent.ConfigKey}");
+                        return new ConfigResponseEvent
+                        {
+                            ConfigType = requestEvent.ConfigType,
+                            ConfigJson = valueJson,
+                            Success = true
+                        };
+                    }
+
+                    return new ConfigResponseEvent
+                    {
+                        ConfigType = requestEvent.ConfigType,
+                        ConfigJson = string.Empty,
+                        Success = false,
+                        ErrorMessage = $"Configuration key '{requestEvent.ConfigKey}' not found"
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to extract configuration key: {ConfigKey}", requestEvent.ConfigKey);
+                    // If extraction fails, return the whole config
+                }
+            }
+
+            return new ConfigResponseEvent
+            {
+                ConfigType = State.ConfigType,
+                ConfigJson = State.ConfigJson,
+                Success = true
             };
-
-            Logger.LogInformation("Configuration get completed. Type: {Type}, Success: {Success}",
-                configRequest.ConfigType, success);
-
-            return response;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error getting configuration for type: {ConfigType}", configRequest.ConfigType);
+            Logger.LogError(ex, "Failed to retrieve configuration for type: {ConfigType}", requestEvent.ConfigType);
 
-            var response = new ConfigResponseEvent
+            return new ConfigResponseEvent
             {
-                ConfigType = configRequest.ConfigType,
+                ConfigType = requestEvent.ConfigType,
                 ConfigJson = string.Empty,
                 Success = false,
                 ErrorMessage = ex.Message
             };
-
-            return response;
-        }
-    }
-
-    /// <summary>
-    /// Get supported configuration types
-    /// </summary>
-    public async Task<List<string>> GetSupportedConfigTypesAsync()
-    {
-        try
-        {
-            return await ConfigHandler.GetSupportedConfigTypesAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error getting supported configuration types");
-            return [];
         }
     }
 
@@ -208,10 +260,16 @@ public class ConfigManagerGAgent : GAgentBase<ConfigManagerGAgentState, ConfigMa
     {
         switch (@event)
         {
-            case ConfigUpdatedLogEvent updatedEvent:
-                state.LastUpdated = updatedEvent.Timestamp;
-                state.ConfigUpdateTimes[updatedEvent.ConfigType] = updatedEvent.Timestamp;
-                if (updatedEvent.Success)
+            case ConfigSetLogEvent setEvent:
+                state.ConfigType = setEvent.ConfigType;
+                state.ConfigJson = setEvent.ConfigJson;
+                state.LastUpdated = setEvent.Timestamp;
+                break;
+
+            case ConfigUpdatedLogEvent updateEvent:
+                state.LastUpdated = updateEvent.Timestamp;
+                state.ConfigUpdateTimes[updateEvent.ConfigType] = updateEvent.Timestamp;
+                if (updateEvent.Success)
                 {
                     state.TotalUpdates++;
                 }
