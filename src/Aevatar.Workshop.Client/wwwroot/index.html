@@ -473,6 +473,12 @@
   // --- Demo definitions ---
   const basicDemos = [
     {
+      key: 'EventHandlerDemo',
+      name: { en: 'Event Handler Demo', zh: '事件处理器演示' },
+      desc: { en: 'demodesc/EventHandlerDemo.md', zh: 'demodesc/EventHandlerDemo.zh.md' },
+      isCustom: true // Custom rendering for event handler demo
+    },
+    {
       key: 'GAgentServiceDemo',
       name: { en: 'GAgent Service Demo', zh: 'GAgent Service 演示' },
       desc: { en: 'demodesc/GAgentServiceDemo.md', zh: 'demodesc/GAgentServiceDemo.zh.md' },
@@ -675,6 +681,11 @@
     if (!demo) return;
 
     // Handle custom demos
+    if (demo.isCustom && demo.key === 'EventHandlerDemo') {
+      renderEventHandlerDemo(demo);
+      return;
+    }
+
     if (demo.isCustom && demo.key === 'GAgentServiceDemo') {
       renderGAgentServiceDemo(demo);
       return;
@@ -902,6 +913,87 @@
     fetchLog();
     // Real-time refresh
     logInterval = setInterval(fetchLog, 2000);
+  }
+
+  // Event Handler Demo rendering
+  async function renderEventHandlerDemo(demo) {
+    // Create an iframe to load the standalone demo page
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = '/demos/event-handler-demo.html';
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+
+    // Demo iframe
+    const iframeContainer = document.createElement('div');
+    iframeContainer.style.marginTop = '20px';
+    iframeContainer.style.padding = '20px';
+    iframeContainer.style.background = '#f7fafc';
+    iframeContainer.style.borderRadius = '8px';
+    iframeContainer.style.border = '1px solid #e2e8f0';
+    iframeContainer.style.height = '800px';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = '/demos/event-handler-demo.html';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.style.borderRadius = '4px';
+    iframe.style.background = 'white';
+
+    iframeContainer.appendChild(iframe);
+    demoCard.appendChild(iframeContainer);
+
+    mainContent.appendChild(demoCard);
   }
 
   // GAgent Service Demo rendering
