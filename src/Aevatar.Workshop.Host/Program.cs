@@ -1,11 +1,19 @@
 ﻿using Aevatar.Workshop.Host;
+using Aevatar.Workshop.Host.Services;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
+
+// Create a shared runtime configuration provider instance
+var runtimeConfigProvider = new RuntimeConfigurationProvider();
 
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
+    .Add(new RuntimeConfigurationSource { Provider = runtimeConfigProvider })
     .AddEnvironmentVariables()
     .Build();
 
@@ -17,7 +25,7 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Log.Information("Starting Aevatar Workshop Host (Orleans Silo)");
-    var host = CreateHostBuilder(args).Build();
+    var host = CreateHostBuilder(args, runtimeConfigProvider).Build();
     await host.RunAsync();
     return 0;
 }
@@ -31,16 +39,19 @@ finally
     Log.CloseAndFlush();
 }
 
-static IHostBuilder CreateHostBuilder(string[] args) =>
+static IHostBuilder CreateHostBuilder(string[] args, RuntimeConfigurationProvider runtimeConfigProvider) =>
     Host.CreateDefaultBuilder(args)
         .ConfigureAppConfiguration((hostingContext, config) =>
         {
-            config.SetBasePath(Directory.GetCurrentDirectory())
+            config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                  .Add(new RuntimeConfigurationSource { Provider = runtimeConfigProvider })
                   .AddEnvironmentVariables();
         })
-        .ConfigureServices((_, services) => 
-        { 
-            services.AddApplication<WorkshopHostModule>(); 
+        .ConfigureServices((context, services) =>
+        {
+            // Register the runtime config provider instance
+            services.AddSingleton(runtimeConfigProvider);
+            services.AddApplication<WorkshopHostModule>();
         })
         .UseOrleansConfiguration()
         .UseAutofac()

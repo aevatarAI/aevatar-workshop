@@ -1,12 +1,20 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Aevatar.Core;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.Executor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Orleans;
+using Orleans.Runtime;
 
 namespace Aevatar.Workshop.GAgent;
 
@@ -86,10 +94,16 @@ public interface IToolCallingAIGAgent : IStateGAgent<ToolCallingAIGAgentState>
 [GAgent("toolcalling.ai", "ai")]
 public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCallingStateLogEvent>, IToolCallingAIGAgent
 {
+    private readonly SystemLLMConfigOptions _llmConfigOptions;
     private Kernel? _kernel;
     private IGAgentFactory? _gAgentFactory;
     private IMathGAgent? _mathGAgent;
     private ITimeConverterGAgent? _timeGAgent;
+
+    public ToolCallingAIGAgent(IOptions<SystemLLMConfigOptions> llmConfigOptions)
+    {
+        _llmConfigOptions = llmConfigOptions.Value;
+    }
 
     public override Task<string> GetDescriptionAsync()
     {
@@ -102,10 +116,49 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
         {
             Logger.LogInformation("Initializing ToolCallingAIGAgent with LLM system: {System}", llmSystem);
 
-            // Get system LLM configuration
-            var systemConfigs = ServiceProvider.GetRequiredService<IOptions<SystemLLMConfigOptions>>();
-            if (systemConfigs.Value.SystemLLMConfigs == null ||
-                !systemConfigs.Value.SystemLLMConfigs.TryGetValue(llmSystem, out var config))
+            // Get configuration from ConfigManagerGAgent
+            Dictionary<string, LLMConfig>? systemConfigs = null;
+            
+            try
+            {
+                // Get ConfigManagerGAgent
+                var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>();
+                var executorGAgent = await _gAgentFactory.GetGAgentAsync<IEventHandlerExecutorGAgent>();
+                
+                // Send configuration request event
+                var requestEvent = new ConfigRequestEvent 
+                { 
+                    ConfigType = "SystemLLMConfigs",
+                    ConfigKey = null // Get all configs
+                };
+                
+                var responseJson = await executorGAgent.ExecuteGAgentEventHandler(
+                    configManager, requestEvent);
+                var response = JsonSerializer.Deserialize<ConfigResponseEvent>(responseJson);
+                
+                if (response?.Success == true && !string.IsNullOrEmpty(response.ConfigJson))
+                {
+                    systemConfigs = JsonSerializer.Deserialize<Dictionary<string, LLMConfig>>(response.ConfigJson);
+                    Logger.LogInformation("Retrieved {Count} configurations from ConfigManagerGAgent", systemConfigs?.Count ?? 0);
+                }
+                else
+                {
+                    Logger.LogWarning("Failed to get configurations from ConfigManagerGAgent: {Error}", response?.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning(ex, "Failed to get configurations from ConfigManagerGAgent");
+            }
+            
+            if (systemConfigs == null)
+            {
+                // Fallback to IOptions if ConfigManagerGAgent is not available or failed
+                systemConfigs = _llmConfigOptions.SystemLLMConfigs;
+                Logger.LogInformation("Retrieved {Count} configurations from IOptions", systemConfigs?.Count ?? 0);
+            }
+            
+            if (systemConfigs == null || !systemConfigs.TryGetValue(llmSystem, out var config))
             {
                 throw new InvalidOperationException($"LLM configuration not found for: {llmSystem}");
             }

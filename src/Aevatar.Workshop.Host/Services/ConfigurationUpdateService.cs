@@ -7,65 +7,37 @@ using System.Text.Json;
 namespace Aevatar.Workshop.Host.Services;
 
 /// <summary>
-/// Implementation of configuration update service using IOptionsMonitor
+/// Implementation of configuration update service using runtime configuration provider
 /// </summary>
 public class ConfigurationUpdateService : IConfigurationUpdateService
 {
     private readonly IOptionsMonitor<SystemLLMConfigOptions> _systemLLMOptions;
     private readonly IOptionsMonitor<MCPServerOptions> _mcpServerOptions;
+    private readonly RuntimeConfigurationProvider _runtimeConfigProvider;
     private readonly ILogger<ConfigurationUpdateService> _logger;
     
-    // In-memory storage for runtime updates (in production, you might want to persist these)
-    private readonly Dictionary<string, LLMConfig> _runtimeLLMConfigs = new();
-    private readonly Dictionary<string, MCPServerConfig> _runtimeMCPConfigs = new();
-    private readonly object _lockObject = new();
-
     public ConfigurationUpdateService(
         IOptionsMonitor<SystemLLMConfigOptions> systemLLMOptions,
         IOptionsMonitor<MCPServerOptions> mcpServerOptions,
+        RuntimeConfigurationProvider runtimeConfigProvider,
         ILogger<ConfigurationUpdateService> logger)
     {
         _systemLLMOptions = systemLLMOptions;
         _mcpServerOptions = mcpServerOptions;
+        _runtimeConfigProvider = runtimeConfigProvider;
         _logger = logger;
-        
-        // Initialize runtime configs from current options
-        lock (_lockObject)
-        {
-            if (_systemLLMOptions.CurrentValue.SystemLLMConfigs != null)
-            {
-                foreach (var kvp in _systemLLMOptions.CurrentValue.SystemLLMConfigs)
-                {
-                    _runtimeLLMConfigs[kvp.Key] = kvp.Value;
-                }
-            }
-            
-            if (_mcpServerOptions.CurrentValue.MCPServers != null)
-            {
-                foreach (var kvp in _mcpServerOptions.CurrentValue.MCPServers)
-                {
-                    _runtimeMCPConfigs[kvp.Key] = kvp.Value;
-                }
-            }
-        }
     }
 
     public Task<bool> UpdateSystemLLMConfigAsync(string configKey, LLMConfig config)
     {
         try
         {
-            lock (_lockObject)
-            {
-                _runtimeLLMConfigs[configKey] = config;
-            }
+            // Update the runtime configuration provider
+            _runtimeConfigProvider.UpdateSystemLLMConfig(configKey, config);
             
             _logger.LogInformation("Updated SystemLLMConfig for key: {Key}", configKey);
             
-            // Note: In a real implementation, you might want to:
-            // 1. Save to appsettings.json or database
-            // 2. Notify dependent services about the change
-            // 3. Use IOptionsMonitor.OnChange to react to changes
-            
+            // The configuration change will automatically trigger IOptionsMonitor to reload
             return Task.FromResult(true);
         }
         catch (Exception ex)
@@ -79,16 +51,12 @@ public class ConfigurationUpdateService : IConfigurationUpdateService
     {
         try
         {
-            lock (_lockObject)
-            {
-                _runtimeLLMConfigs.Clear();
-                foreach (var kvp in configs)
-                {
-                    _runtimeLLMConfigs[kvp.Key] = kvp.Value;
-                }
-            }
+            // Update all configs in the runtime configuration provider
+            _runtimeConfigProvider.UpdateSystemLLMConfigs(configs);
             
             _logger.LogInformation("Updated all SystemLLMConfigs, total count: {Count}", configs.Count);
+            
+            // The configuration change will automatically trigger IOptionsMonitor to reload
             return Task.FromResult(true);
         }
         catch (Exception ex)
@@ -100,22 +68,21 @@ public class ConfigurationUpdateService : IConfigurationUpdateService
 
     public Task<Dictionary<string, LLMConfig>> GetSystemLLMConfigsAsync()
     {
-        lock (_lockObject)
-        {
-            return Task.FromResult(new Dictionary<string, LLMConfig>(_runtimeLLMConfigs));
-        }
+        // Get current value from IOptionsMonitor which includes runtime updates
+        var currentConfigs = _systemLLMOptions.CurrentValue.SystemLLMConfigs ?? new Dictionary<string, LLMConfig>();
+        return Task.FromResult(new Dictionary<string, LLMConfig>(currentConfigs));
     }
 
     public Task<bool> UpdateMCPServerConfigAsync(string serverName, MCPServerConfig config)
     {
         try
         {
-            lock (_lockObject)
-            {
-                _runtimeMCPConfigs[serverName] = config;
-            }
+            // Update the runtime configuration provider
+            _runtimeConfigProvider.UpdateMCPServerConfig(serverName, config);
             
             _logger.LogInformation("Updated MCPServerConfig for server: {ServerName}", serverName);
+            
+            // The configuration change will automatically trigger IOptionsMonitor to reload
             return Task.FromResult(true);
         }
         catch (Exception ex)
@@ -129,13 +96,10 @@ public class ConfigurationUpdateService : IConfigurationUpdateService
     {
         try
         {
-            lock (_lockObject)
+            // Update all MCP server configs
+            foreach (var kvp in configs)
             {
-                _runtimeMCPConfigs.Clear();
-                foreach (var kvp in configs)
-                {
-                    _runtimeMCPConfigs[kvp.Key] = kvp.Value;
-                }
+                _runtimeConfigProvider.UpdateMCPServerConfig(kvp.Key, kvp.Value);
             }
             
             _logger.LogInformation("Updated all MCPServerConfigs, total count: {Count}", configs.Count);
@@ -150,9 +114,8 @@ public class ConfigurationUpdateService : IConfigurationUpdateService
 
     public Task<Dictionary<string, MCPServerConfig>> GetMCPServerConfigsAsync()
     {
-        lock (_lockObject)
-        {
-            return Task.FromResult(new Dictionary<string, MCPServerConfig>(_runtimeMCPConfigs));
-        }
+        // Get current value from IOptionsMonitor which includes runtime updates
+        var currentConfigs = _mcpServerOptions.CurrentValue.MCPServers ?? new Dictionary<string, MCPServerConfig>();
+        return Task.FromResult(new Dictionary<string, MCPServerConfig>(currentConfigs));
     }
 } 

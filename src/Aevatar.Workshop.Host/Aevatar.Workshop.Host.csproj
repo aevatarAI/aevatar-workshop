@@ -27,7 +27,7 @@
         <PackageReference Include="Aevatar" />
     </ItemGroup>
     <ItemGroup>
-        <None Update="appsettings.secrets.json">
+        <None Update="appsettings.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>

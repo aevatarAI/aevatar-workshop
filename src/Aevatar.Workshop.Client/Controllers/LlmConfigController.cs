@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Newtonsoft.Json.Linq;
+using Aevatar.Core.Abstractions;
+using Aevatar.GAgents.Executor;
+using Aevatar.Workshop.GAgent;
+using Microsoft.Extensions.Logging;
 
 namespace Aevatar.Workshop.Client.Controllers;
 
@@ -10,15 +14,29 @@ public class LlmConfigController : ControllerBase
 {
     private static readonly string configPath =
         Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-    
+
     private static readonly string secretsPath =
         Path.Combine(Directory.GetCurrentDirectory(), "appsettings.secrets.json");
+
+    private readonly IGAgentFactory _gAgentFactory;
+    private readonly IGAgentExecutor _gAgentExecutor;
+    private readonly ILogger<LlmConfigController> _logger;
+
+    public LlmConfigController(
+        IGAgentFactory gAgentFactory,
+        IGAgentExecutor gAgentExecutor,
+        ILogger<LlmConfigController> logger)
+    {
+        _gAgentFactory = gAgentFactory;
+        _gAgentExecutor = gAgentExecutor;
+        _logger = logger;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetLlmConfigs()
     {
         var mergedConfigs = new JObject();
-        
+
         // First, load from appsettings.json
         if (System.IO.File.Exists(configPath))
         {
@@ -29,7 +47,7 @@ public class LlmConfigController : ControllerBase
                 mergedConfigs = JObject.Parse(configs.ToString());
             }
         }
-        
+
         // Then, load from appsettings.secrets.json and merge (overwrite duplicates)
         if (System.IO.File.Exists(secretsPath))
         {
@@ -51,56 +69,115 @@ public class LlmConfigController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> SaveLlmConfigs([FromBody] JsonElement newConfigs)
     {
-        // Default to saving in appsettings.secrets.json
-        JObject jsonObj;
-        
-        // If secrets file exists, update it; otherwise create it
-        if (System.IO.File.Exists(secretsPath))
+        try
         {
-            var json = await System.IO.File.ReadAllTextAsync(secretsPath);
-            jsonObj = JObject.Parse(json);
-        }
-        else
-        {
-            // Create a new structure matching appsettings.json format
-            jsonObj = JObject.Parse(@"{
-                ""Serilog"": {
-                    ""Properties"": {
-                        ""Application"": ""Aevatar.Workshop.Host"",
-                        ""Environment"": ""Development""
-                    },
-                    ""MinimumLevel"": {
-                        ""Default"": ""Information"",
-                        ""Override"": {
-                            ""Default"": ""Information"",
-                            ""System"": ""Warning"",
-                            ""Microsoft"": ""Warning"",
-                            ""Orleans"": ""Error""
-                        }
-                    },
-                    ""WriteTo"": [
-                        {
-                            ""Name"": ""Console""
+            // Step 1: Save to local file (appsettings.secrets.json)
+            JObject jsonObj;
+
+            // If secrets file exists, update it; otherwise create it
+            if (System.IO.File.Exists(secretsPath))
+            {
+                var json = await System.IO.File.ReadAllTextAsync(secretsPath);
+                jsonObj = JObject.Parse(json);
+            }
+            else
+            {
+                // Create a new structure matching appsettings.json format
+                jsonObj = JObject.Parse(@"{
+                    ""Serilog"": {
+                        ""Properties"": {
+                            ""Application"": ""Aevatar.Workshop.Host"",
+                            ""Environment"": ""Development""
                         },
-                        {
-                            ""Name"": ""RollingFile"",
-                            ""Args"": {
-                                ""pathFormat"": ""Logs/log-{Date}.log"",
-                                ""outputTemplate"": ""[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}{Offset:zzz}][{Level:u3}] [{SourceContext}] {Message}{NewLine}{Exception}"",
-                                ""rollOnFileSizeLimit"": true,
-                                ""rollingInterval"": ""Day"",
-                                ""retainedFileCountLimit"": 15
+                        ""MinimumLevel"": {
+                            ""Default"": ""Information"",
+                            ""Override"": {
+                                ""Default"": ""Information"",
+                                ""System"": ""Warning"",
+                                ""Microsoft"": ""Warning"",
+                                ""Orleans"": ""Error""
                             }
-                        }
-                    ]
+                        },
+                        ""WriteTo"": [
+                            {
+                                ""Name"": ""Console""
+                            },
+                            {
+                                ""Name"": ""RollingFile"",
+                                ""Args"": {
+                                    ""pathFormat"": ""Logs/log-{Date}.log"",
+                                    ""outputTemplate"": ""[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}{Offset:zzz}][{Level:u3}] [{SourceContext}] {Message}{NewLine}{Exception}"",
+                                    ""rollOnFileSizeLimit"": true,
+                                    ""rollingInterval"": ""Day"",
+                                    ""retainedFileCountLimit"": 15
+                                }
+                            }
+                        ]
+                    }
+                }");
+            }
+
+            jsonObj["SystemLLMConfigs"] = JObject.Parse(newConfigs.ToString());
+            await System.IO.File.WriteAllTextAsync(secretsPath, jsonObj.ToString(Newtonsoft.Json.Formatting.Indented));
+
+            _logger.LogInformation("Configuration saved to appsettings.secrets.json");
+
+            // Step 2: Sync to host via ConfigManagerGAgent
+            try
+            {
+                var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>();
+                var configJson = newConfigs.ToString();
+
+                var updateEvent = new ConfigUpdateEvent
+                {
+                    ConfigType = "SystemLLMConfigs",
+                    ConfigJson = configJson
+                };
+
+                _logger.LogInformation("Sending configuration update to host...");
+
+                var responseJson = await _gAgentExecutor.ExecuteGAgentEventHandler(
+                    configManager,
+                    updateEvent);
+
+                var response = JsonSerializer.Deserialize<ConfigResponseEvent>(responseJson);
+                if (response.Success)
+                {
+                    _logger.LogInformation("Configuration successfully synced to host");
+                    return Ok(new
+                    {
+                        message = "Configuration saved locally and synced to host",
+                        localSave = true,
+                        hostSync = true
+                    });
                 }
-            }");
+
+                _logger.LogWarning("Failed to sync configuration to host: {Error}", response.ErrorMessage);
+                return Ok(new
+                {
+                    message = $"Configuration saved locally but failed to sync to host: {response.ErrorMessage}",
+                    localSave = true,
+                    hostSync = false,
+                    error = response.ErrorMessage
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error syncing configuration to host");
+                return Ok(new
+                {
+                    message = $"Configuration saved locally but failed to sync to host: {ex.Message}",
+                    localSave = true,
+                    hostSync = false,
+                    error = ex.Message
+                });
+            }
         }
-        
-        jsonObj["SystemLLMConfigs"] = JObject.Parse(newConfigs.ToString());
-        await System.IO.File.WriteAllTextAsync(secretsPath, jsonObj.ToString(Newtonsoft.Json.Formatting.Indented));
-        
-        return Ok("Configuration saved to appsettings.secrets.json");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving configuration");
+            return StatusCode(500, new { error = ex.Message });
+        }
     }
 
     [HttpGet("check")]
@@ -110,7 +187,7 @@ public class LlmConfigController : ControllerBase
         {
             // Check both files
             var hasConfig = false;
-            
+
             if (System.IO.File.Exists(configPath))
             {
                 var json = await System.IO.File.ReadAllTextAsync(configPath);
@@ -120,7 +197,7 @@ public class LlmConfigController : ControllerBase
                     hasConfig = true;
                 }
             }
-            
+
             if (!hasConfig && System.IO.File.Exists(secretsPath))
             {
                 var json = await System.IO.File.ReadAllTextAsync(secretsPath);
@@ -138,7 +215,7 @@ public class LlmConfigController : ControllerBase
             return Ok(new { ok = false, error = ex.Message });
         }
     }
-    
+
     private bool CheckConfigsInDocument(JsonDocument doc)
     {
         var root = doc.RootElement;
@@ -153,6 +230,7 @@ public class LlmConfigController : ControllerBase
                 }
             }
         }
+
         return false;
     }
 
@@ -162,7 +240,7 @@ public class LlmConfigController : ControllerBase
         try
         {
             var keys = new HashSet<string>();
-            
+
             // Read from appsettings.json
             if (System.IO.File.Exists(configPath))
             {
@@ -178,7 +256,7 @@ public class LlmConfigController : ControllerBase
                     }
                 }
             }
-            
+
             // Also read from appsettings.secrets.json
             if (System.IO.File.Exists(secretsPath))
             {
@@ -200,6 +278,33 @@ public class LlmConfigController : ControllerBase
         catch
         {
             return Ok(Array.Empty<string>());
+        }
+    }
+
+    [HttpGet("sync-status")]
+    public async Task<IActionResult> GetSyncStatus()
+    {
+        try
+        {
+            // Check if we can connect to host
+            var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>();
+
+            return Ok(new
+            {
+                connected = true,
+                hostAvailable = configManager != null,
+                message = "Connected to Orleans cluster"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Unable to connect to Orleans cluster");
+            return Ok(new
+            {
+                connected = false,
+                hostAvailable = false,
+                message = $"Unable to connect to Orleans cluster: {ex.Message}"
+            });
         }
     }
 }

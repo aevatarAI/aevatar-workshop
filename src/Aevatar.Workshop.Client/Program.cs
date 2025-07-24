@@ -24,27 +24,13 @@ builder.Configuration
     .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-// builder.Services.AddSingleton<IGAgentExecutor, GAgentExecutor>();
-// builder.Services.AddSingleton<IGAgentService, GAgentService>();
-// builder.Services.AddSingleton<IGAgentManager, GAgentManager>();
-// builder.Services.AddSingleton<IPluginGAgentManager, PluginGAgentManager>();
-// builder.Services.AddTransient<ITenantPluginCodeRepository, TenantPluginCodeRepository>();
-// builder.Services.AddTransient<IPluginCodeStorageRepository, PluginCodeStorageRepository>();
-// builder.Services.AddTransient<IPluginLoadStatusRepository, PluginLoadStatusRepository>();
-// builder.Services.AddTransient<TenantPluginCodeMongoDbContext>();
-// builder.Services.AddTransient<PluginCodeStorageMongoDbContext>();
-// builder.Services.AddTransient<PluginLoadStatusMongoDbContext>();
-
 builder.Services.AddControllers();
-
-// Remove HttpClient registration as ConfigSyncService now uses GAgent
-// builder.Services.AddHttpClient();
 
 // Configure SystemLLMConfigOptions
 builder.Services.Configure<SystemLLMConfigOptions>(options =>
 {
     var llmConfigs = new Dictionary<string, LLMConfig>();
-    
+
     // Load from configuration (which now includes both files)
     var section = builder.Configuration.GetSection("SystemLLMConfigs");
     if (section.Exists())
@@ -58,9 +44,9 @@ builder.Services.Configure<SystemLLMConfigOptions>(options =>
             }
         }
     }
-    
+
     options.SystemLLMConfigs = llmConfigs;
-    
+
     // Log loaded configurations for debugging
     Console.WriteLine($"Loaded {llmConfigs.Count} SystemLLMConfigs:");
     foreach (var kvp in llmConfigs)
@@ -78,6 +64,7 @@ var serviceProvider = await Startup.RunAsync(args);
 // Register Orleans services for dependency injection
 builder.Services.AddSingleton(serviceProvider.GetRequiredService<IClusterClient>());
 builder.Services.AddSingleton(serviceProvider.GetRequiredService<IGAgentFactory>());
+builder.Services.AddSingleton(serviceProvider.GetRequiredService<IGAgentExecutor>());
 
 var app = builder.Build();
 
@@ -100,8 +87,6 @@ app.Lifetime.ApplicationStarted.Register(() =>
     var url = urls.FirstOrDefault() ?? "http://localhost:5000";
 
     Console.WriteLine($"Application started. Access the demos at: {url}");
-    Console.WriteLine(
-        $"Host is expected at: {Environment.GetEnvironmentVariable("HOST_URL") ?? "http://localhost:5277"}");
 
     // Try to open browser (may not work in Docker)
     try

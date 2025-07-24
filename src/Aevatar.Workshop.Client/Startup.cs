@@ -57,6 +57,7 @@ public static class Startup
                     .UseAevatar(true);
                 client.Services.AddTransient<IGAgentService, GAgentService>();
                 client.Services.AddTransient<IGAgentExecutor, GAgentExecutor>();
+                client.Services.AddHostedService<Services.ConfigSyncService>();
             })
             .ConfigureLogging(logging => logging.AddConsole())
             .UseConsoleLifetime();

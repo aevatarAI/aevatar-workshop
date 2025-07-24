@@ -314,7 +314,6 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="/js/restart-service.js?v=2"></script>
 </head>
 <body>
 <div id="lang-switcher" style="position: fixed; top: 10px; right: 20px; z-index: 10000; background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px;">
@@ -324,7 +323,7 @@
 <div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:400px;text-align:center;">
     <div style="font-size:1.15rem;font-weight:bold;color:#b91c1c;margin-bottom:18px;" data-i18n-key="api-key-not-configured">API key not configured</div>
-    <div style="font-size:1rem;margin-bottom:18px;" data-i18n-key="edit-appsettings-notice">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>.<br><br>After saving the configuration, you can click the Restart Services button below.</div>
+    <div style="font-size:1rem;margin-bottom:18px;" data-i18n-key="edit-appsettings-notice">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>. Configuration changes will be applied automatically.</div>
     <details style="text-align:left;margin-bottom:18px;">
       <summary style="cursor:pointer;font-weight:bold;color:#2563eb;" data-i18n-key="what-is-systemllmconfigs">What is SystemLLMConfigs? How to configure?</summary>
       <div style="font-size:0.98rem;margin-top:10px;" data-i18n-key="systemllmconfigs-desc">
@@ -344,12 +343,10 @@
         </div>
       </div>
     </details>
-    <button id="modalRestartBtn" style="background:#ef4444;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;" data-i18n-key="restart-services">Restart Services</button>
-    <button id="modalCloseBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;" data-i18n-key="close">Close</button>
+    <button id="modalCloseBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin:0 auto;display:block;" data-i18n-key="close">Close</button>
   </div>
 </div>
 <div id="sidebar">
-  <button id="restartBtn" style="width:90%;margin:0 auto 24px auto;display:block;font-size:1.08rem;padding:12px 0;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;" data-i18n-key="restart-services">Restart Services</button>
   <button id="configLlmBtn" style="width:90%;margin:0 auto 18px auto;display:block;font-size:1.08rem;padding:12px 0;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;" data-i18n-key="config-llm">Config LLM</button>
   <h2 data-i18n-key="aevatar-demos">Aevatar Demos</h2>
   <ul class="sidebar-list" id="sidebar-list"></ul>
@@ -371,14 +368,13 @@
   // --- I18n ---
   const translations = {
     en: {
-      'restart-services': 'Restart Services',
       'config-llm': 'Config LLM',
       'aevatar-demos': 'Aevatar Demos',
       'edit-llm-configs': 'Edit SystemLLMConfigs',
       'save': 'Save',
       'cancel': 'Cancel',
       'api-key-not-configured': 'API key not configured',
-      'edit-appsettings-notice': 'Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>.<br><br>After saving the configuration, you can click the Restart Services button below.',
+      'edit-appsettings-notice': 'Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>. Configuration changes will be applied automatically.',
       'close': 'Close',
       'what-is-systemllmconfigs': 'What is SystemLLMConfigs? How to configure?',
       'systemllmconfigs-desc': `
@@ -399,7 +395,7 @@
       'loading': 'Loading...',
       'failed-to-load-config': 'Failed to load config.',
       'saving': 'Saving...',
-      'saved-restarting': 'Saved! Restarting services...',
+      'saved-successfully': 'Configuration saved successfully!',
       'save-failed': 'Save failed.',
       'run-demo': 'Run Demo',
       'host-log': 'Host Log',
@@ -409,14 +405,13 @@
 
     },
     zh: {
-      'restart-services': '重启服务',
       'config-llm': '配置 LLM',
       'aevatar-demos': 'Aevatar 演示',
       'edit-llm-configs': '编辑 SystemLLMConfigs',
       'save': '保存',
       'cancel': '取消',
       'api-key-not-configured': 'API 密钥未配置',
-      'edit-appsettings-notice': '请编辑 <b>src/Aevatar.Workshop.Host/appsettings.json</b> 并在 <b>SystemLLMConfigs 部分</b>设置值。<br><br>保存配置后，您可以点击下方的"重启服务"按钮。',
+      'edit-appsettings-notice': '请编辑 <b>src/Aevatar.Workshop.Host/appsettings.json</b> 并在 <b>SystemLLMConfigs 部分</b>设置值。配置更改将自动应用。',
       'close': '关闭',
       'what-is-systemllmconfigs': '什么是 SystemLLMConfigs？如何配置？',
       'systemllmconfigs-desc': `
@@ -437,7 +432,7 @@
       'loading': '加载中...',
       'failed-to-load-config': '加载配置失败。',
       'saving': '保存中...',
-      'saved-restarting': '已保存！正在重启服务...',
+      'saved-successfully': '配置保存成功！',
       'save-failed': '保存失败。',
       'run-demo': '运行演示',
       'host-log': '主机日志',
@@ -639,13 +634,12 @@
               body: JSON.stringify(llmConfigData)
             });
             if (resp.ok) {
-              llmConfigMsg.setAttribute('data-i18n-key', 'saved-restarting');
-              llmConfigMsg.textContent = 'Saved! Restarting services...';
+              llmConfigMsg.setAttribute('data-i18n-key', 'saved-successfully');
+              llmConfigMsg.textContent = 'Configuration saved successfully!';
               setLanguage(currentLanguage);
               setTimeout(() => {
                 llmConfigModal.style.display = 'none';
-                document.getElementById('restartBtn').click();
-              }, 1000);
+              }, 1500);
             } else {
               llmConfigMsg.setAttribute('data-i18n-key', 'save-failed');
               llmConfigMsg.textContent = 'Save failed.';
@@ -1327,7 +1321,6 @@
 
   // Removed multichatBox as MultiGAgentDemo is deleted
   const configModal = document.getElementById('configModal');
-  const modalRestartBtn = document.getElementById('modalRestartBtn');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   let configChecked = false;
 
@@ -1344,7 +1337,6 @@
   }
 
   modalCloseBtn.onclick = () => { configModal.style.display = 'none'; };
-  modalRestartBtn.onclick = () => { configModal.style.display = 'none'; restartBtn.onclick(); };
 
   document.getElementById('lang-en').onclick = () => setLanguage('en');
   document.getElementById('lang-zh').onclick = () => setLanguage('zh');

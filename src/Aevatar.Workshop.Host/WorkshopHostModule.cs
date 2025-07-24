@@ -113,10 +113,8 @@ public class WorkshopHostModule : AbpModule
             }
         });
         
-        // Register configuration update service
+        // Register configuration services
         context.Services.AddSingleton<IConfigurationUpdateService, ConfigurationUpdateService>();
-        
-        // Register configuration handler for GAgent
         context.Services.AddSingleton<IConfigurationHandler, WorkshopConfigurationHandler>();
         
         context.Services.AddSemanticKernel();

@@ -60,9 +60,9 @@ public class WorkshopConfigurationHandler : IConfigurationHandler
             {
                 case "systemllmconfigs":
                     var llmConfigs = await _updateService.GetSystemLLMConfigsAsync();
-                    if (!string.IsNullOrEmpty(configKey) && llmConfigs.ContainsKey(configKey))
+                    if (!string.IsNullOrEmpty(configKey) && llmConfigs.TryGetValue(configKey, out var value))
                     {
-                        var singleConfig = new Dictionary<string, LLMConfig> { { configKey, llmConfigs[configKey] } };
+                        var singleConfig = new Dictionary<string, LLMConfig> { { configKey, value } };
                         return (true, JsonSerializer.Serialize(singleConfig), null);
                     }
 
