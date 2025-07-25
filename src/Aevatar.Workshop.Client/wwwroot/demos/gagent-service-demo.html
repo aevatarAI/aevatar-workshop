@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GAgentService & GAgentExecutor Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-desc {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .desc-content {
+            line-height: 1.8;
+        }
+        
+        .desc-content h2 {
+            color: #1f2937;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .desc-content h3 {
+            color: #374151;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .desc-content code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .desc-content pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        
+        .desc-content ul, .desc-content ol {
+            margin-left: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .demo-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .demo-section h3 {
+            color: #1f2937;
+            margin-bottom: 16px;
+            font-size: 1.2rem;
+        }
+        
+        .demo-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .demo-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .demo-input input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .demo-btn {
+            padding: 8px 16px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .demo-btn:hover {
+            background: #4f46e5;
+        }
+        
+        .demo-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .demo-result {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 16px;
+            min-height: 100px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .sections-container {
+            margin-top: 32px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+        
+        .execution-section {
+            grid-column: 1 / -1;
+        }
+        
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .param-input {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .param-input label {
+            font-size: 13px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .param-input input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .loading {
+            color: #6366f1;
+            font-style: italic;
+        }
+        
+        .error {
+            color: #ef4444;
+        }
+        
+        .success {
+            color: #10b981;
+        }
+        
+        details {
+            margin-bottom: 8px;
+            border: 1px solid #e5e7eb;
+            border-radius: 4px;
+            padding: 8px;
+        }
+        
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .sections-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>GAgentService & GAgentExecutor Demo</h1>
+            <p>Discover, query, and execute GAgents dynamically</p>
+        </div>
+        
+        <div class="demo-card">
+            <div class="demo-desc desc-content" id="description">
+                Loading documentation...
+            </div>
+            
+            <div class="sections-container" id="sectionsContainer">
+                <!-- Dynamic sections will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get language from URL parameter or default to English
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentLanguage = urlParams.get('lang') || 'en';
+        
+        // Load description markdown
+        async function loadDescription() {
+            const descPath = currentLanguage === 'zh' 
+                ? '../demodesc/GAgentServiceDemo.zh.md' 
+                : '../demodesc/GAgentServiceDemo.md';
+            
+            try {
+                const response = await fetch(descPath);
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+                document.getElementById('description').innerHTML = DOMPurify.sanitize(html);
+                
+                // Highlight code blocks
+                document.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+            } catch (error) {
+                console.error('Failed to load description:', error);
+                document.getElementById('description').innerHTML = 'Failed to load documentation.';
+            }
+        }
+        
+        // Create a demo section
+        function createGAgentSection(title, apiCall, formatter, options = {}) {
+            const section = document.createElement('div');
+            section.className = 'demo-section';
+            
+            const sectionTitle = document.createElement('h3');
+            sectionTitle.textContent = title;
+            section.appendChild(sectionTitle);
+            
+            if (options.inputLabel) {
+                const inputDiv = document.createElement('div');
+                inputDiv.className = 'demo-input';
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = options.inputPlaceholder || '';
+                inputDiv.appendChild(input);
+                
+                const button = document.createElement('button');
+                button.className = 'demo-btn';
+                button.textContent = currentLanguage === 'zh' ? '执行' : 'Execute';
+                button.onclick = async () => {
+                    button.disabled = true;
+                    resultDiv.innerHTML = '<div class="loading">Loading...</div>';
+                    try {
+                        const data = await apiCall(input.value);
+                        resultDiv.innerHTML = formatter(data);
+                    } catch (error) {
+                        resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                    } finally {
+                        button.disabled = false;
+                    }
+                };
+                inputDiv.appendChild(button);
+                
+                section.appendChild(inputDiv);
+            } else {
+                const button = document.createElement('button');
+                button.className = 'demo-btn';
+                button.textContent = currentLanguage === 'zh' ? '执行' : 'Execute';
+                button.style.marginBottom = '16px';
+                button.onclick = async () => {
+                    button.disabled = true;
+                    resultDiv.innerHTML = '<div class="loading">Loading...</div>';
+                    try {
+                        const data = await apiCall();
+                        resultDiv.innerHTML = formatter(data);
+                    } catch (error) {
+                        resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                    } finally {
+                        button.disabled = false;
+                    }
+                };
+                section.appendChild(button);
+            }
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'demo-result';
+            section.appendChild(resultDiv);
+            
+            return section;
+        }
+        
+        // Initialize the demo sections
+        function initializeSections() {
+            const container = document.getElementById('sectionsContainer');
+            
+            // 1. List All GAgents Section
+            const listSection = createGAgentSection(
+                currentLanguage === 'zh' ? '列出所有 GAgent' : 'List All GAgents',
+                async () => {
+                    const resp = await fetch('/api/GAgentService/list');
+                    return await resp.json();
+                },
+                (data) => {
+                    if (!data.success) return `Error: ${data.error}`;
+                    let html = `<div style="font-weight:bold;margin-bottom:8px;">Total GAgents: ${data.total}</div>`;
+                    data.gAgents.forEach(g => {
+                        html += `<details style="margin-bottom:8px;border:1px solid #e5e7eb;border-radius:4px;padding:8px;">`;
+                        html += `<summary style="cursor:pointer;font-weight:bold;">${g.grainType} (${g.eventCount} events)</summary>`;
+                        html += `<ul style="margin-top:8px;margin-left:20px;">`;
+                        g.events.forEach(e => {
+                            html += `<li>${e.name}</li>`;
+                        });
+                        html += `</ul></details>`;
+                    });
+                    return html;
+                }
+            );
+            container.appendChild(listSection);
+            
+            // 2. Get GAgent Details Section
+            const detailSection = createGAgentSection(
+                currentLanguage === 'zh' ? '获取 GAgent 详情' : 'Get GAgent Details',
+                async (grainType) => {
+                    if (!grainType) throw new Error('Please enter a GrainType');
+                    const resp = await fetch(`/api/GAgentService/info?grainType=${encodeURIComponent(grainType)}`);
+                    return await resp.json();
+                },
+                (data) => {
+                    if (!data.success) return `Error: ${data.error}`;
+                    const info = data.info;
+                    let html = `<div style="margin-bottom:8px;"><strong>GrainType:</strong> ${info.grainType}</div>`;
+                    html += `<div style="margin-bottom:8px;"><strong>Description:</strong> ${info.description || 'N/A'}</div>`;
+                    html += `<div style="margin-bottom:8px;"><strong>Configuration Type:</strong> ${info.configurationType || 'N/A'}</div>`;
+                    html += `<div><strong>Supported Events:</strong></div>`;
+                    html += `<ul style="margin-left:20px;">`;
+                    info.supportedEvents.forEach(e => {
+                        html += `<li>${e.name}</li>`;
+                    });
+                    html += `</ul>`;
+                    return html;
+                },
+                { inputLabel: 'GrainType:', inputPlaceholder: 'e.g., gagent.alice' }
+            );
+            container.appendChild(detailSection);
+            
+            // 3. Find GAgents by Event Section
+            const findSection = createGAgentSection(
+                currentLanguage === 'zh' ? '按事件查找 GAgent' : 'Find GAgents by Event',
+                async (eventTypeName) => {
+                    if (!eventTypeName) throw new Error('Please enter an event type name');
+                    const resp = await fetch(`/api/GAgentService/find-by-event?eventTypeName=${encodeURIComponent(eventTypeName)}`);
+                    return await resp.json();
+                },
+                (data) => {
+                    if (!data.success) return `Error: ${data.error}`;
+                    let html = `<div style="font-weight:bold;margin-bottom:8px;">Found ${data.total} GAgent(s)</div>`;
+                    if (data.total === 0) {
+                        html += '<div style="color:#6b7280;">No GAgents found supporting this event type.</div>';
+                    } else {
+                        data.gAgents.forEach(g => {
+                            html += `<div style="margin-bottom:8px;padding:8px;background:#f3f4f6;border-radius:4px;">`;
+                            html += `<div><strong>GrainType:</strong> ${g.grainType}</div>`;
+                            html += `<div><strong>Events:</strong> ${g.eventCount}</div>`;
+                            html += '</div>';
+                        });
+                    }
+                    return html;
+                },
+                { inputLabel: 'Event Type:', inputPlaceholder: 'e.g., RecordEvent' }
+            );
+            container.appendChild(findSection);
+            
+            // 4. Execute GAgent Section - Full width
+            const executeSection = document.createElement('div');
+            executeSection.className = 'demo-section execution-section';
+            
+            const execTitle = document.createElement('h3');
+            execTitle.textContent = currentLanguage === 'zh' ? '执行 GAgent' : 'Execute GAgent';
+            executeSection.appendChild(execTitle);
+            
+            // GrainType and Event selection
+            const selectionDiv = document.createElement('div');
+            selectionDiv.style.display = 'flex';
+            selectionDiv.style.gap = '12px';
+            selectionDiv.style.marginBottom = '16px';
+            
+            const grainInput = document.createElement('input');
+            grainInput.type = 'text';
+            grainInput.placeholder = 'GrainType (e.g., tools.math)';
+            grainInput.style.flex = '1';
+            grainInput.style.padding = '8px 12px';
+            grainInput.style.border = '1px solid #d1d5db';
+            grainInput.style.borderRadius = '6px';
+            selectionDiv.appendChild(grainInput);
+            
+            const eventSelect = document.createElement('select');
+            eventSelect.style.flex = '1';
+            eventSelect.innerHTML = '<option value="">Select event type...</option>';
+            selectionDiv.appendChild(eventSelect);
+            
+            const loadEventsBtn = document.createElement('button');
+            loadEventsBtn.className = 'demo-btn';
+            loadEventsBtn.textContent = currentLanguage === 'zh' ? '加载事件' : 'Load Events';
+            loadEventsBtn.onclick = async () => {
+                if (!grainInput.value) {
+                    alert('Please enter a GrainType');
+                    return;
+                }
+                try {
+                    const resp = await fetch(`/api/GAgentService/info?grainType=${encodeURIComponent(grainInput.value)}`);
+                    const data = await resp.json();
+                    if (data.success) {
+                        eventSelect.innerHTML = '<option value="">Select event type...</option>';
+                        data.info.supportedEvents.forEach(e => {
+                            const option = document.createElement('option');
+                            option.value = e.name;
+                            option.textContent = e.name;
+                            eventSelect.appendChild(option);
+                        });
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                } catch (error) {
+                    alert(`Failed to load events: ${error.message}`);
+                }
+            };
+            selectionDiv.appendChild(loadEventsBtn);
+            
+            executeSection.appendChild(selectionDiv);
+            
+            // Parameters section
+            const paramsDiv = document.createElement('div');
+            paramsDiv.id = 'paramsDiv';
+            executeSection.appendChild(paramsDiv);
+            
+            // Execute button
+            const executeBtn = document.createElement('button');
+            executeBtn.className = 'demo-btn';
+            executeBtn.textContent = currentLanguage === 'zh' ? '执行' : 'Execute';
+            executeBtn.style.marginTop = '16px';
+            executeBtn.onclick = async () => {
+                if (!grainInput.value || !eventSelect.value) {
+                    alert('Please select both GrainType and Event type');
+                    return;
+                }
+                
+                // Collect parameters
+                const params = {};
+                paramsDiv.querySelectorAll('input').forEach(input => {
+                    if (input.value) {
+                        params[input.name] = input.value;
+                    }
+                });
+                
+                executeBtn.disabled = true;
+                execResultDiv.innerHTML = '<div class="loading">Executing...</div>';
+                
+                try {
+                    const resp = await fetch('/api/GAgentExecutor/execute', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            grainType: grainInput.value,
+                            eventTypeName: eventSelect.value,
+                            eventData: params
+                        })
+                    });
+                    const data = await resp.json();
+                    
+                    if (data.success) {
+                        execResultDiv.innerHTML = `<div class="success">Success!</div><pre>${JSON.stringify(data.result, null, 2)}</pre>`;
+                    } else {
+                        execResultDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                    }
+                } catch (error) {
+                    execResultDiv.innerHTML = `<div class="error">Failed: ${error.message}</div>`;
+                } finally {
+                    executeBtn.disabled = false;
+                }
+            };
+            executeSection.appendChild(executeBtn);
+            
+            const execResultDiv = document.createElement('div');
+            execResultDiv.className = 'demo-result';
+            execResultDiv.style.marginTop = '16px';
+            executeSection.appendChild(execResultDiv);
+            
+            // Event selection change handler
+            eventSelect.onchange = () => {
+                paramsDiv.innerHTML = '';
+                if (eventSelect.value) {
+                    // Add some common parameter inputs
+                    const paramsGrid = document.createElement('div');
+                    paramsGrid.className = 'params-grid';
+                    
+                    // Add default parameter inputs based on event type
+                    if (eventSelect.value.includes('Calculate')) {
+                        const paramDiv = document.createElement('div');
+                        paramDiv.className = 'param-input';
+                        paramDiv.innerHTML = `
+                            <label>Expression</label>
+                            <input type="text" name="expression" placeholder="e.g., 2 + 2">
+                        `;
+                        paramsGrid.appendChild(paramDiv);
+                    } else if (eventSelect.value.includes('Time')) {
+                        const paramDiv = document.createElement('div');
+                        paramDiv.className = 'param-input';
+                        paramDiv.innerHTML = `
+                            <label>Timezone</label>
+                            <input type="text" name="timezone" placeholder="e.g., UTC">
+                        `;
+                        paramsGrid.appendChild(paramDiv);
+                    } else {
+                        // Generic parameter input
+                        const paramDiv = document.createElement('div');
+                        paramDiv.className = 'param-input';
+                        paramDiv.innerHTML = `
+                            <label>Parameter (JSON)</label>
+                            <input type="text" name="data" placeholder='{"key": "value"}'>
+                        `;
+                        paramsGrid.appendChild(paramDiv);
+                    }
+                    
+                    paramsDiv.appendChild(paramsGrid);
+                }
+            };
+            
+            container.appendChild(executeSection);
+        }
+        
+        // Initialize the page
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDescription();
+            initializeSections();
+        });
+    </script>
+</body>
+</html> 

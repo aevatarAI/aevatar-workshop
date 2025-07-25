@@ -1,11 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Aevatar.Core;
 using Aevatar.Core.Abstractions;
+using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.AIGAgent.Agent;
+using Aevatar.GAgents.AIGAgent.Dtos;
+using Aevatar.GAgents.AIGAgent.State;
 using Aevatar.GAgents.Executor;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -13,8 +11,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Orleans;
-using Orleans.Runtime;
+using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Aevatar.Workshop.GAgent;
 
@@ -34,7 +32,7 @@ public class ToolCallInfo
 /// Simple AI agent state for tool calling demo
 /// </summary>
 [GenerateSerializer]
-public class ToolCallingAIGAgentState : StateBase
+public class ToolCallingAIGAgentState : AIGAgentStateBase
 {
     [Id(0)] public bool Initialized { get; set; }
     [Id(1)] public string LLMSystem { get; set; } = "OpenAI";
@@ -92,13 +90,14 @@ public interface IToolCallingAIGAgent : IStateGAgent<ToolCallingAIGAgentState>
 /// Simple AI agent that demonstrates tool calling with MathGAgent and TimeConverterGAgent
 /// </summary>
 [GAgent("toolcalling.ai", "ai")]
-public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCallingStateLogEvent>, IToolCallingAIGAgent
+public class ToolCallingAIGAgent : AIGAgentBase<ToolCallingAIGAgentState, ToolCallingStateLogEvent>, IToolCallingAIGAgent
 {
     private readonly SystemLLMConfigOptions _llmConfigOptions;
     private Kernel? _kernel;
     private IGAgentFactory? _gAgentFactory;
     private IMathGAgent? _mathGAgent;
     private ITimeConverterGAgent? _timeGAgent;
+    private IGAgentFactory GAgentFactory => _gAgentFactory ??= ServiceProvider.GetRequiredService<IGAgentFactory>();
 
     public ToolCallingAIGAgent(IOptions<SystemLLMConfigOptions> llmConfigOptions)
     {
@@ -116,104 +115,51 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
         {
             Logger.LogInformation("Initializing ToolCallingAIGAgent with LLM system: {System}", llmSystem);
 
-            // Get configuration from ConfigManagerGAgent
-            Dictionary<string, LLMConfig>? systemConfigs = null;
-            
-            try
+            // Use the base class method to set system LLM
+            await SetSystemLLMAsync(llmSystem);
+
+            // Set a default prompt template if not already set
+            if (string.IsNullOrEmpty(State.PromptTemplate))
             {
-                // Get ConfigManagerGAgent
-                var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>();
-                var executorGAgent = await _gAgentFactory.GetGAgentAsync<IEventHandlerExecutorGAgent>();
-                
-                // Send configuration request event
-                var requestEvent = new ConfigRequestEvent 
-                { 
-                    ConfigType = "SystemLLMConfigs",
-                    ConfigKey = null // Get all configs
+                var initDto = new InitializeDto
+                {
+                    LLMConfig = new LLMConfigDto { SystemLLM = llmSystem },
+                    Instructions = 
+                        "You are a helpful AI assistant with access to mathematical calculation and time conversion tools.\n\n" +
+                        "Available tools:\n" +
+                        "1. calculate_math: Use this to calculate any mathematical expression (e.g., square roots, arithmetic operations)\n" +
+                        "2. convert_time: Use this to convert time between different timezones\n" +
+                        "3. get_time_in_zone: Use this to get the current time in a specific timezone\n\n" +
+                        "IMPORTANT RULES:\n" +
+                        "- You MUST use calculate_math for ANY mathematical question, including percentages, arithmetic, etc.\n" +
+                        "- Convert natural language to math expressions. Examples:\n" +
+                        "  • '250的15%是多少？' or 'What is 15% of 250?' → use calculate_math('250 * 0.15')\n" +
+                        "  • '计算10的平方根' or 'square root of 10' → use calculate_math('sqrt(10)')\n" +
+                        "  • '100加50' or '100 plus 50' → use calculate_math('100 + 50')\n" +
+                        "- For time queries like '东京现在几点' or 'What time in Tokyo', use get_time_in_zone('JST')\n" +
+                        "- ALWAYS use tools for calculations, NEVER calculate in your head\n" +
+                        "- Respond in the same language as the user's query",
                 };
-                
-                var responseJson = await executorGAgent.ExecuteGAgentEventHandler(
-                    configManager, requestEvent);
-                var response = JsonSerializer.Deserialize<ConfigResponseEvent>(responseJson);
-                
-                if (response?.Success == true && !string.IsNullOrEmpty(response.ConfigJson))
+
+                // Use base class InitializeAsync which handles everything
+                var success = await base.InitializeAsync(initDto);
+                if (!success)
                 {
-                    systemConfigs = JsonSerializer.Deserialize<Dictionary<string, LLMConfig>>(response.ConfigJson);
-                    Logger.LogInformation("Retrieved {Count} configurations from ConfigManagerGAgent", systemConfigs?.Count ?? 0);
-                }
-                else
-                {
-                    Logger.LogWarning("Failed to get configurations from ConfigManagerGAgent: {Error}", response?.ErrorMessage);
+                    throw new InvalidOperationException("Failed to initialize AI agent");
                 }
             }
-            catch (Exception ex)
+            else
             {
-                Logger.LogWarning(ex, "Failed to get configurations from ConfigManagerGAgent");
-            }
-            
-            if (systemConfigs == null)
-            {
-                // Fallback to IOptions if ConfigManagerGAgent is not available or failed
-                systemConfigs = _llmConfigOptions.SystemLLMConfigs;
-                Logger.LogInformation("Retrieved {Count} configurations from IOptions", systemConfigs?.Count ?? 0);
-            }
-            
-            if (systemConfigs == null || !systemConfigs.TryGetValue(llmSystem, out var config))
-            {
-                throw new InvalidOperationException($"LLM configuration not found for: {llmSystem}");
+                // If prompt template exists, just trigger brain initialization
+                await OnAIGAgentActivateAsync(CancellationToken.None);
             }
 
-            // Build kernel based on provider
-            var kernelBuilder = Kernel.CreateBuilder();
-
-            switch (config.ProviderEnum)
+            // Get kernel from brain
+            _kernel = GetKernelFromBrain();
+            if (_kernel == null)
             {
-                case LLMProviderEnum.DeepSeek:
-                    // DeepSeek uses OpenAI-compatible API with custom endpoint
-                    var deepSeekClient = new OpenAI.OpenAIClient(
-                        new System.ClientModel.ApiKeyCredential(config.ApiKey ??
-                                                                throw new InvalidOperationException(
-                                                                    "API key is required")),
-                        new OpenAI.OpenAIClientOptions
-                            { Endpoint = new Uri(config.Endpoint ?? "https://api.deepseek.com") }
-                    );
-
-                    kernelBuilder.AddOpenAIChatCompletion(
-                        modelId: string.IsNullOrEmpty(config.ModelName) ? "deepseek-chat" : config.ModelName,
-                        openAIClient: deepSeekClient);
-                    break;
-
-                case LLMProviderEnum.Azure:
-                    // Azure OpenAI
-                    kernelBuilder.AddAzureOpenAIChatCompletion(
-                        deploymentName: config.ModelName ??
-                                        throw new InvalidOperationException(
-                                            "Model name (deployment name) is required for Azure"),
-                        endpoint: config.Endpoint ??
-                                  throw new InvalidOperationException("Endpoint is required for Azure"),
-                        apiKey: config.ApiKey ?? throw new InvalidOperationException("API key is required"));
-                    break;
-
-                case LLMProviderEnum.Google:
-                    // Google Gemini - would need Google AI SDK
-                    throw new NotSupportedException(
-                        "Google Gemini provider is not yet supported in this implementation");
-
-                case LLMProviderEnum.OpenAI:
-                default:
-                    // OpenAI
-                    kernelBuilder.AddOpenAIChatCompletion(
-                        modelId: string.IsNullOrEmpty(config.ModelName) ? "gpt-3.5-turbo" : config.ModelName,
-                        apiKey: config.ApiKey ?? throw new InvalidOperationException("API key is required"));
-                    break;
+                throw new InvalidOperationException("Failed to get kernel from brain");
             }
-
-            _kernel = kernelBuilder.Build();
-
-            Logger.LogInformation("Kernel built successfully with provider: {Provider}, model: {Model}",
-                config.ProviderEnum,
-                config.ModelName ??
-                (config.ProviderEnum == LLMProviderEnum.DeepSeek ? "deepseek-chat" : "gpt-3.5-turbo"));
 
             // Register tools
             await RegisterToolsAsync();
@@ -473,22 +419,10 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
             // Create chat history
             var chatHistory = new ChatHistory();
 
-            // Add system message with clearer instructions
-            chatHistory.AddSystemMessage(
-                "You are a helpful AI assistant with access to mathematical calculation and time conversion tools.\n\n" +
-                "Available tools:\n" +
-                "1. calculate_math: Use this to calculate any mathematical expression (e.g., square roots, arithmetic operations)\n" +
-                "2. convert_time: Use this to convert time between different timezones\n" +
-                "3. get_time_in_zone: Use this to get the current time in a specific timezone\n\n" +
-                "IMPORTANT RULES:\n" +
-                "- You MUST use calculate_math for ANY mathematical question, including percentages, arithmetic, etc.\n" +
-                "- Convert natural language to math expressions. Examples:\n" +
-                "  • '250的15%是多少？' or 'What is 15% of 250?' → use calculate_math('250 * 0.15')\n" +
-                "  • '计算10的平方根' or 'square root of 10' → use calculate_math('sqrt(10)')\n" +
-                "  • '100加50' or '100 plus 50' → use calculate_math('100 + 50')\n" +
-                "- For time queries like '东京现在几点' or 'What time in Tokyo', use get_time_in_zone('JST')\n" +
-                "- ALWAYS use tools for calculations, NEVER calculate in your head\n" +
-                "- Respond in the same language as the user's query");
+            // Add system message from prompt template
+            var systemMessage = State.PromptTemplate ??
+                                "You are a helpful AI assistant with access to mathematical calculation and time conversion tools.";
+            chatHistory.AddSystemMessage(systemMessage);
 
             // Add conversation history
             foreach (var msg in State.ChatHistory.TakeLast(10)) // Keep last 10 messages for context
@@ -588,7 +522,94 @@ public class ToolCallingAIGAgent : GAgentBase<ToolCallingAIGAgentState, ToolCall
         return Task.FromResult(State.ToolCallHistory.ToList());
     }
 
-    protected override void GAgentTransitionState(ToolCallingAIGAgentState state,
+    /// <summary>
+    /// Override to get LLM config from ConfigManagerGAgent
+    /// </summary>
+    protected override async Task<LLMConfig?> GetLLMConfigAsync(LLMConfigDto llmConfigDto)
+    {
+        Logger.LogInformation("GetLLMConfigAsync called with SystemLLM: {SystemLLM}, HasSelfConfig: {HasSelfConfig}",
+            llmConfigDto.SystemLLM, llmConfigDto.SelfLLMConfig != null);
+
+        if (llmConfigDto.SystemLLM.IsNullOrWhiteSpace() &&
+            llmConfigDto.SelfLLMConfig == null)
+        {
+            Logger.LogWarning("Both SystemLLM and SelfLLMConfig are null/empty");
+            return null;
+        }
+
+        if (!llmConfigDto.SystemLLM.IsNullOrWhiteSpace())
+        {
+            Logger.LogInformation("Attempting to resolve SystemLLM config for key: {Key}", llmConfigDto.SystemLLM);
+            // Get config from ConfigManagerGAgent instead of IOptions
+            var config = await ResolveSystemConfigAsync(llmConfigDto.SystemLLM);
+            if (config == null)
+            {
+                Logger.LogWarning("Failed to resolve SystemLLM config for key: {Key}", llmConfigDto.SystemLLM);
+            }
+
+            return config;
+        }
+
+        Logger.LogInformation("Using SelfLLMConfig");
+        return llmConfigDto.SelfLLMConfig?.ConvertToLLMConfig();
+    }
+
+    /// <summary>
+    /// Override to resolve system config from ConfigManagerGAgent
+    /// </summary>
+    protected override async Task<LLMConfig?> ResolveSystemConfigAsync(string key)
+    {
+        try
+        {
+            Logger.LogInformation("Resolving SystemLLM config for key: {Key}", key);
+
+            // Get the GUID for SystemLLMConfigOptions type using ToGuid extension
+            var configGuid = typeof(SystemLLMConfigOptions).FullName!.ToGuid();
+
+            // Get ConfigManagerGAgent instance
+            var configManager = await GAgentFactory.GetGAgentAsync<IConfigManagerGAgent>(configGuid);
+
+            // Request configuration - we need the entire dictionary
+            var requestEvent = new ConfigRequestEvent
+            {
+                ConfigType = typeof(SystemLLMConfigOptions).FullName!,
+                // Don't specify ConfigKey - we need the entire dictionary
+                ConfigKey = null
+            };
+
+            var response = await configManager.RequestConfigAsync(requestEvent);
+
+            if (response.Success && !string.IsNullOrEmpty(response.ConfigJson))
+            {
+                // Deserialize as dictionary of LLMConfig
+                var configDict = JsonConvert.DeserializeObject<Dictionary<string, LLMConfig>>(response.ConfigJson);
+
+                if (configDict != null && configDict.TryGetValue(key, out var config))
+                {
+                    Logger.LogInformation("Successfully resolved config for key: {Key}", key);
+                    return config;
+                }
+
+                Logger.LogWarning("Config dictionary does not contain key: {Key}. Available keys: {Keys}",
+                    key, configDict?.Keys != null ? string.Join(", ", configDict.Keys) : "none");
+            }
+            else
+            {
+                Logger.LogWarning("ConfigManagerGAgent returned unsuccessful response or empty config for type: {Type}",
+                    typeof(SystemLLMConfigOptions).FullName);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to resolve config from ConfigManagerGAgent for key: {Key}", key);
+        }
+
+        // Return null as fallback
+        Logger.LogWarning("Returning null for config key: {Key}", key);
+        return null;
+    }
+
+    protected override void AIGAgentTransitionState(ToolCallingAIGAgentState state,
         StateLogEventBase<ToolCallingStateLogEvent> @event)
     {
         switch (@event)

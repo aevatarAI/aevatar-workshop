@@ -1,0 +1,955 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tool Calling Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-desc {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .desc-content {
+            line-height: 1.8;
+        }
+        
+        .desc-content h2 {
+            color: #1f2937;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .desc-content h3 {
+            color: #374151;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .desc-content code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .desc-content pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        
+        .desc-content ul, .desc-content ol {
+            margin-left: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .chat-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-top: 24px;
+        }
+        
+        .chat-main {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .chat-sidebar {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .chat-messages {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .message {
+            margin-bottom: 16px;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .message.user {
+            background: #dbeafe;
+            margin-left: 40px;
+            text-align: right;
+        }
+        
+        .message.assistant {
+            background: #f3f4f6;
+            margin-right: 40px;
+        }
+        
+        .message.tool {
+            background: #fef3c7;
+            margin: 8px 20px;
+            font-size: 0.9em;
+            font-family: monospace;
+        }
+        
+        .message-content {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        
+        .chat-input {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .chat-input input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover {
+            background: #4f46e5;
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .tools-section h3 {
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+        
+        .tool-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .tool-name {
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .tool-desc {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .status-section {
+            margin-top: 20px;
+            padding: 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        
+        .status-active {
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .status-inactive {
+            color: #6b7280;
+        }
+        
+        .demo-controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .system-selector {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .system-selector h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+        
+        .llm-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .llm-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .llm-card:hover {
+            border-color: #6366f1;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+        }
+        
+        .llm-card.selected {
+            border-color: #6366f1;
+            background: #eef2ff;
+        }
+        
+        .llm-name {
+            font-weight: bold;
+            color: #1f2937;
+        }
+        
+        .llm-model {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .tool-test-section {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f3f4f6;
+            border-radius: 8px;
+        }
+        
+        .tool-test-input {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .chat-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-sidebar {
+                order: -1;
+            }
+            
+            .state-display > div:first-child {
+                grid-template-columns: 1fr;
+            }
+            
+            .demo-examples > div > div {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .demo-examples li:hover {
+            background: #e5e7eb !important;
+            transform: translateX(4px);
+            transition: all 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Tool Calling Demo</h1>
+            <p>AI agent that uses MathGAgent and TimeConverterGAgent as tools</p>
+        </div>
+        
+        <div class="demo-card">
+            <div class="demo-desc desc-content" id="description">
+                Loading documentation...
+            </div>
+            
+            <!-- LLM System Selection -->
+            <div class="system-selector" id="systemSelector">
+                <h3>Select LLM System</h3>
+                <div class="llm-grid" id="llmGrid">
+                    <div style="color: #6b7280; text-align: center; grid-column: 1 / -1;">
+                        Loading available LLM systems...
+                    </div>
+                </div>
+                <button id="initBtn" class="btn" disabled>Initialize AI GAgent</button>
+                <button id="resetBtn" class="btn btn-secondary" style="display:none;">Reset Agent</button>
+            </div>
+            
+            <!-- Agent State Display -->
+            <div class="state-display" id="stateDisplay" style="display:none; margin-top: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Agent State Section -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h3 style="margin-top: 0; color: #1f2937;">Agent State</h3>
+                        <div id="agentStateContent" style="background: #f9fafb; padding: 12px; border-radius: 4px; font-family: monospace; font-size: 0.9em;">
+                            <div>Status: <span id="stateStatus" style="color: #10b981; font-weight: bold;">Active</span></div>
+                            <div>Agent ID: <span id="stateAgentId" style="color: #6b7280;"></span></div>
+                            <div>LLM System: <span id="stateLLMSystem" style="color: #6b7280;"></span></div>
+                            <div>Tools Available: <span id="stateToolsCount" style="color: #3b82f6;">2</span></div>
+                            <div>Messages Processed: <span id="stateMessageCount" style="color: #3b82f6;">0</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tool Usage Statistics -->
+                    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <h3 style="margin-top: 0; color: #1f2937;">Tool Usage</h3>
+                        <div id="toolUsageContent" style="background: #f9fafb; padding: 12px; border-radius: 4px;">
+                            <div style="margin-bottom: 8px;">
+                                <strong>MathGAgent:</strong> 
+                                <span id="mathUsageCount" style="color: #8b5cf6;">0</span> calls
+                            </div>
+                            <div>
+                                <strong>TimeConverterGAgent:</strong> 
+                                <span id="timeUsageCount" style="color: #f59e0b;">0</span> calls
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tool Call History -->
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-top: 20px;">
+                    <h3 style="margin-top: 0; color: #1f2937;">Tool Call History</h3>
+                    <div id="toolHistoryContent" style="max-height: 200px; overflow-y: auto; background: #f9fafb; padding: 12px; border-radius: 4px;">
+                        <div style="color: #6b7280; text-align: center;">No tool calls yet...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Interface (Initially Hidden) -->
+            <div class="chat-container" id="chatInterface" style="display:none;">
+                <div class="chat-main">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="Ask me to calculate something or convert time..." />
+                        <button id="sendBtn" class="btn">Send</button>
+                    </div>
+                </div>
+                
+                <div class="chat-sidebar">
+                    <div class="tools-section">
+                        <h3>Available Tools</h3>
+                        <div id="toolsList">
+                            <div class="tool-item">
+                                <div class="tool-name">MathGAgent</div>
+                                <div class="tool-desc">Mathematical calculations</div>
+                            </div>
+                            <div class="tool-item">
+                                <div class="tool-name">TimeConverterGAgent</div>
+                                <div class="tool-desc">Time zone conversions</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-section">
+                        <h3>Agent Status</h3>
+                        <div id="agentStatus" class="status-inactive">Not initialized</div>
+                        <div id="agentId" style="font-size:0.8em;color:#6b7280;margin-top:4px;"></div>
+                    </div>
+                    
+                    <div class="tool-test-section">
+                        <h3>Test Tools Directly</h3>
+                        <select id="toolSelect" style="width:100%;padding:8px;margin-top:8px;border:1px solid #d1d5db;border-radius:6px;">
+                            <option value="">Select a tool...</option>
+                            <option value="mathgagent">MathGAgent</option>
+                            <option value="timeconvertergagent">TimeConverterGAgent</option>
+                        </select>
+                        <div class="tool-test-input" style="display:none;">
+                            <input type="text" id="toolInput" placeholder="Enter expression or timezone" style="flex:1;padding:8px;border:1px solid #d1d5db;border-radius:6px;" />
+                            <button id="toolTestBtn" class="btn">Test</button>
+                        </div>
+                        <div id="toolResult" style="margin-top:12px;padding:12px;background:white;border-radius:6px;display:none;font-family:monospace;font-size:0.9em;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Demo Examples Section -->
+            <div class="demo-examples" style="margin-top: 30px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="margin-top: 0; color: #1f2937;">Try These Examples</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <h4 style="color: #8b5cf6; margin-bottom: 10px;">🧮 Math Examples</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 8px; padding: 8px; background: #f3f4f6; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('chatInput').value = 'Calculate the cube root of 35'; document.getElementById('chatInput').focus();">
+                                "Calculate the cube root of 35"
+                            </li>
+                            <li style="margin-bottom: 8px; padding: 8px; background: #f3f4f6; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('chatInput').value = 'What is sin(45 degrees)?'; document.getElementById('chatInput').focus();">
+                                "What is sin(45 degrees)?"
+                            </li>
+                            <li style="margin-bottom: 8px; padding: 8px; background: #f3f4f6; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('chatInput').value = 'Calculate log base 2 of 64'; document.getElementById('chatInput').focus();">
+                                "Calculate log base 2 of 64"
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: #f59e0b; margin-bottom: 10px;">🕐 Time Examples</h4>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="margin-bottom: 8px; padding: 8px; background: #f3f4f6; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('chatInput').value = 'What time is it in Tokyo?'; document.getElementById('chatInput').focus();">
+                                "What time is it in Tokyo?"
+                            </li>
+                            <li style="margin-bottom: 8px; padding: 8px; background: #f3f4f6; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('chatInput').value = 'Convert 3pm PST to EST'; document.getElementById('chatInput').focus();">
+                                "Convert 3pm PST to EST"
+                            </li>
+                            <li style="margin-bottom: 8px; padding: 8px; background: #f3f4f6; border-radius: 4px; cursor: pointer;" onclick="document.getElementById('chatInput').value = 'What is the time difference between London and New York?'; document.getElementById('chatInput').focus();">
+                                "What is the time difference between London and New York?"
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get language from URL parameter or default to English
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentLanguage = urlParams.get('lang') || 'en';
+        
+        let agentId = null;
+        let messageCount = 0;
+        let mathUsageCount = 0;
+        let timeUsageCount = 0;
+        let toolHistory = [];
+        let selectedLLMSystem = null;
+        
+        // Load description markdown
+        async function loadDescription() {
+            const descPath = currentLanguage === 'zh' 
+                ? '../demodesc/AIToolCallingDemo.zh.md' 
+                : '../demodesc/AIToolCallingDemo.md';
+            
+            try {
+                const response = await fetch(descPath);
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+                document.getElementById('description').innerHTML = DOMPurify.sanitize(html);
+                
+                // Highlight code blocks
+                document.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+            } catch (error) {
+                console.error('Failed to load description:', error);
+                document.getElementById('description').innerHTML = 'Failed to load documentation.';
+            }
+        }
+        
+        // Load available LLM systems
+        async function loadLLMSystems() {
+            try {
+                const response = await fetch('/api/AIToolCallingDemo/llm-systems');
+                const data = await response.json();
+                
+                const llmGrid = document.getElementById('llmGrid');
+                
+                if (data.success && data.systems && data.systems.length > 0) {
+                    llmGrid.innerHTML = '';
+                    
+                    data.systems.forEach(system => {
+                        const llmCard = document.createElement('div');
+                        llmCard.className = 'llm-card';
+                        llmCard.onclick = () => selectLLMSystem(system.name, llmCard);
+                        
+                        llmCard.innerHTML = `
+                            <div class="llm-name">${system.name}</div>
+                            <div class="llm-model">${system.model}</div>
+                        `;
+                        
+                        llmGrid.appendChild(llmCard);
+                    });
+                    
+                    // Auto-select first system
+                    if (data.systems.length > 0) {
+                        const firstCard = llmGrid.querySelector('.llm-card');
+                        selectLLMSystem(data.systems[0].name, firstCard);
+                    }
+                } else {
+                    llmGrid.innerHTML = '<div style="color: #ef4444; text-align: center; grid-column: 1 / -1;">No LLM systems configured</div>';
+                }
+            } catch (error) {
+                console.error('Failed to load LLM systems:', error);
+                document.getElementById('llmGrid').innerHTML = 
+                    '<div style="color: #ef4444; text-align: center; grid-column: 1 / -1;">Failed to load LLM systems</div>';
+            }
+        }
+        
+        // Select LLM system
+        function selectLLMSystem(systemName, cardElement) {
+            selectedLLMSystem = systemName;
+            
+            // Update UI
+            document.querySelectorAll('.llm-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            cardElement.classList.add('selected');
+            
+            document.getElementById('initBtn').disabled = false;
+        }
+        
+        // Initialize AI agent
+        async function initializeAgent() {
+            if (!selectedLLMSystem) {
+                alert('Please select an LLM system first');
+                return;
+            }
+            
+            document.getElementById('initBtn').disabled = true;
+            document.getElementById('agentStatus').textContent = 'Initializing...';
+            
+            try {
+                const response = await fetch('/api/AIToolCallingDemo/initialize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        llmSystem: selectedLLMSystem
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    agentId = data.agentId;
+                    document.getElementById('agentStatus').textContent = 'Active';
+                    document.getElementById('agentStatus').className = 'status-active';
+                    document.getElementById('agentId').textContent = `ID: ${agentId}`;
+                    document.getElementById('stateAgentId').textContent = agentId;
+                    document.getElementById('stateLLMSystem').textContent = selectedLLMSystem;
+                    document.getElementById('systemSelector').style.display = 'none';
+                    document.getElementById('stateDisplay').style.display = 'block';
+                    document.getElementById('chatInterface').style.display = 'grid';
+                    document.getElementById('initBtn').style.display = 'none';
+                    document.getElementById('resetBtn').style.display = 'inline-block';
+                    
+                    // Load available tools
+                    loadTools();
+                    
+                    // Add welcome message
+                    addMessage('assistant', 'Hello! I can help you with mathematical calculations and time zone conversions. Try asking me to calculate "35^(1/3)" or "what time is it in Tokyo?"');
+                } else {
+                    alert(`Failed to initialize: ${data.error}`);
+                    document.getElementById('agentStatus').textContent = 'Failed';
+                    document.getElementById('initBtn').disabled = false;
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                document.getElementById('agentStatus').textContent = 'Error';
+                document.getElementById('initBtn').disabled = false;
+            }
+        }
+        
+        // Load available tools
+        async function loadTools() {
+            try {
+                const response = await fetch('/api/AIToolCallingDemo/demo-tools');
+                const data = await response.json();
+                
+                if (data.success && data.tools) {
+                    const toolsList = document.getElementById('toolsList');
+                    toolsList.innerHTML = '';
+                    
+                    data.tools.forEach(tool => {
+                        const toolItem = document.createElement('div');
+                        toolItem.className = 'tool-item';
+                        toolItem.innerHTML = `
+                            <div class="tool-name">${tool.name}</div>
+                            <div class="tool-desc">${tool.description}</div>
+                        `;
+                        toolsList.appendChild(toolItem);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load tools:', error);
+            }
+        }
+        
+        // Add message to chat
+        function addMessage(role, content) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = content;
+            
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            
+            // Auto scroll to bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        // Update tool history display
+        function updateToolHistory() {
+            const historyContent = document.getElementById('toolHistoryContent');
+            
+            // Debug logging
+            console.log('Tool History:', toolHistory);
+            
+            if (toolHistory.length === 0) {
+                historyContent.innerHTML = '<div style="color: #6b7280; text-align: center;">No tool calls yet...</div>';
+                return;
+            }
+            
+            historyContent.innerHTML = '';
+            
+            // Show last 10 tool calls
+            const recentCalls = toolHistory.slice(-10).reverse();
+            recentCalls.forEach(call => {
+                const callDiv = document.createElement('div');
+                callDiv.style.marginBottom = '12px';
+                callDiv.style.padding = '8px';
+                callDiv.style.background = '#fff';
+                callDiv.style.borderRadius = '4px';
+                callDiv.style.border = '1px solid #e5e7eb';
+                
+                const toolIcon = call.tool.toLowerCase().includes('math') ? '🧮' : '🕐';
+                
+                // Process result for display
+                let displayResult = call.result;
+                if (typeof displayResult === 'string' && displayResult !== 'No result') {
+                    try {
+                        const parsed = JSON.parse(displayResult);
+                        if (parsed && parsed.Result !== undefined) {
+                            displayResult = parsed.Result;
+                        }
+                    } catch (e) {
+                        // Not JSON, use as is
+                    }
+                }
+                
+                callDiv.innerHTML = `
+                    <div style="font-size: 0.85em; color: #6b7280;">${call.timestamp.toLocaleTimeString()}</div>
+                    <div style="font-weight: bold; color: #1f2937;">${toolIcon} ${call.tool}</div>
+                    <div style="font-size: 0.9em; color: #4b5563;">Input: ${call.input}</div>
+                    <div style="font-size: 0.9em; color: #10b981;">Result: ${displayResult}</div>
+                `;
+                
+                historyContent.appendChild(callDiv);
+            });
+        }
+        
+        // Send chat message
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message || !agentId) return;
+            
+            // Add user message
+            addMessage('user', message);
+            input.value = '';
+            
+            // Disable send button
+            document.getElementById('sendBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/api/AIToolCallingDemo/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        agentId: agentId,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Debug logging
+                console.log('Chat Response:', data);
+                
+                if (data.success) {
+                    // Update message count
+                    messageCount++;
+                    document.getElementById('stateMessageCount').textContent = messageCount;
+                    
+                    // Show recent tool calls if any
+                    if (data.recentToolCalls && data.recentToolCalls.length > 0) {
+                        data.recentToolCalls.forEach(call => {
+                            // Extract and format the result
+                            let toolResult = call.output || 'No result';
+                            
+                            // Debug logging
+                            console.log('Tool Call Output:', call.tool, call.output);
+                            
+                            // Try to extract Result field if present
+                            if (typeof toolResult === 'string') {
+                                try {
+                                    const parsed = JSON.parse(toolResult);
+                                    if (parsed && parsed.Result !== undefined) {
+                                        toolResult = parsed.Result;
+                                    }
+                                } catch (e) {
+                                    // Not JSON or parsing failed, use as is
+                                }
+                            }
+                            
+                            addMessage('tool', `🔧 ${call.tool}: ${call.input} → ${toolResult}`);
+                            
+                            // Update tool usage statistics
+                            if (call.tool.toLowerCase().includes('math')) {
+                                mathUsageCount++;
+                                document.getElementById('mathUsageCount').textContent = mathUsageCount;
+                            } else if (call.tool.toLowerCase().includes('time')) {
+                                timeUsageCount++;
+                                document.getElementById('timeUsageCount').textContent = timeUsageCount;
+                            }
+                            
+                            // Add to tool history
+                            const historyItem = {
+                                timestamp: new Date(call.timestamp),
+                                tool: call.tool,
+                                input: call.input,
+                                result: call.output || 'No result'
+                            };
+                            toolHistory.push(historyItem);
+                        });
+                        updateToolHistory();
+                    }
+                    
+                    // Add assistant response
+                    addMessage('assistant', data.response);
+                } else {
+                    addMessage('assistant', `Error: ${data.error}`);
+                }
+            } catch (error) {
+                addMessage('assistant', `Failed to send message: ${error.message}`);
+            } finally {
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+        
+        // Reset agent
+        function resetAgent() {
+            if (confirm('Are you sure you want to reset the agent?')) {
+                agentId = null;
+                messageCount = 0;
+                mathUsageCount = 0;
+                timeUsageCount = 0;
+                toolHistory = [];
+                
+                document.getElementById('agentStatus').textContent = 'Not initialized';
+                document.getElementById('agentStatus').className = 'status-inactive';
+                document.getElementById('agentId').textContent = '';
+                document.getElementById('systemSelector').style.display = 'block';
+                document.getElementById('stateDisplay').style.display = 'none';
+                document.getElementById('chatInterface').style.display = 'none';
+                document.getElementById('initBtn').style.display = 'inline-block';
+                document.getElementById('resetBtn').style.display = 'none';
+                document.getElementById('chatMessages').innerHTML = '';
+                document.getElementById('initBtn').disabled = false;
+                
+                // Reset statistics displays
+                document.getElementById('stateMessageCount').textContent = '0';
+                document.getElementById('mathUsageCount').textContent = '0';
+                document.getElementById('timeUsageCount').textContent = '0';
+                document.getElementById('toolHistoryContent').innerHTML = '<div style="color: #6b7280; text-align: center;">No tool calls yet...</div>';
+            }
+        }
+        
+        // Tool testing
+        async function testTool() {
+            const tool = document.getElementById('toolSelect').value;
+            const input = document.getElementById('toolInput').value;
+            
+            if (!tool || !input) return;
+            
+            document.getElementById('toolTestBtn').disabled = true;
+            document.getElementById('toolResult').style.display = 'block';
+            document.getElementById('toolResult').textContent = 'Testing...';
+            
+            try {
+                const response = await fetch('/api/AIToolCallingDemo/test-tool', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        toolName: tool,
+                        input: input,
+                        agentId: agentId || null
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // Debug logging
+                console.log('Test Tool Response:', data);
+                
+                if (data.success) {
+                    // Extract and format the result
+                    let displayResult = data.result;
+                    
+                    // Try to extract Result field if present
+                    if (typeof displayResult === 'string') {
+                        try {
+                            const parsed = JSON.parse(displayResult);
+                            if (parsed && parsed.Result !== undefined) {
+                                displayResult = parsed.Result;
+                            }
+                        } catch (e) {
+                            // Not JSON, use as is
+                        }
+                    }
+                    
+                    document.getElementById('toolResult').textContent = `Result: ${displayResult}`;
+                    
+                    // Add to tool history for direct tests
+                    const toolName = tool === 'mathgagent' ? 'MathGAgent' : 'TimeConverterGAgent';
+                    const historyItem = {
+                        timestamp: new Date(),
+                        tool: toolName + ' (Direct Test)',
+                        input: input,
+                        result: displayResult
+                    };
+                    toolHistory.push(historyItem);
+                    updateToolHistory();
+                    
+                    // Update usage statistics
+                    if (tool === 'mathgagent') {
+                        mathUsageCount++;
+                        document.getElementById('mathUsageCount').textContent = mathUsageCount;
+                    } else {
+                        timeUsageCount++;
+                        document.getElementById('timeUsageCount').textContent = timeUsageCount;
+                    }
+                } else {
+                    document.getElementById('toolResult').textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                document.getElementById('toolResult').textContent = `Failed: ${error.message}`;
+            } finally {
+                document.getElementById('toolTestBtn').disabled = false;
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('initBtn').addEventListener('click', initializeAgent);
+        document.getElementById('resetBtn').addEventListener('click', resetAgent);
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        document.getElementById('toolSelect').addEventListener('change', (e) => {
+            const testInput = document.querySelector('.tool-test-input');
+            if (e.target.value) {
+                testInput.style.display = 'flex';
+                document.getElementById('toolInput').placeholder = 
+                    e.target.value === 'mathgagent' 
+                        ? 'Enter math expression (e.g., 35^(1/3))' 
+                        : 'Enter timezone (e.g., Asia/Tokyo)';
+            } else {
+                testInput.style.display = 'none';
+                document.getElementById('toolResult').style.display = 'none';
+            }
+        });
+        
+        document.getElementById('toolTestBtn').addEventListener('click', testTool);
+        document.getElementById('toolInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') testTool();
+        });
+        
+        // Initialize the page
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDescription();
+            loadLLMSystems(); // Load LLM systems on page load
+        });
+    </script>
+</body>
+</html> 

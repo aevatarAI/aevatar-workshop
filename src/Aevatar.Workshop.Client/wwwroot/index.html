@@ -1001,13 +1001,43 @@
     // Create demo card
     const demoCard = document.createElement('div');
     demoCard.className = 'demo-card';
-    demoCard.style.maxWidth = '1200px';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
 
     // Title
     const title = document.createElement('div');
     title.className = 'demo-title';
     title.textContent = demo.name[currentLanguage] || demo.name['en'];
     demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = `/demos/gagent-service-demo.html?lang=${currentLanguage}`;
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
 
     // Description
     const desc = document.createElement('div');
@@ -1023,96 +1053,7 @@
       }
     });
     demoCard.appendChild(desc);
-
-    // Interactive sections container
-    const sectionsContainer = document.createElement('div');
-    sectionsContainer.style.marginTop = '32px';
-    sectionsContainer.style.display = 'grid';
-    sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(400px, 1fr))';
-    sectionsContainer.style.gap = '24px';
-
-    // 1. List All GAgents Section
-    const listSection = createGAgentSection(
-            currentLanguage === 'zh' ? '列出所有 GAgent' : 'List All GAgents',
-            async () => {
-              const resp = await fetch('/api/GAgentService/list');
-              return await resp.json();
-            },
-            (data) => {
-              if (!data.success) return `Error: ${data.error}`;
-              let html = `<div style="font-weight:bold;margin-bottom:8px;">Total GAgents: ${data.total}</div>`;
-              data.gAgents.forEach(g => {
-                html += `<details style="margin-bottom:8px;border:1px solid #e5e7eb;border-radius:4px;padding:8px;">`;
-                html += `<summary style="cursor:pointer;font-weight:bold;">${g.grainType} (${g.eventCount} events)</summary>`;
-                html += `<ul style="margin-top:8px;margin-left:20px;">`;
-                g.events.forEach(e => {
-                  html += `<li>${e.name}</li>`;
-                });
-                html += `</ul></details>`;
-              });
-              return html;
-            }
-    );
-    sectionsContainer.appendChild(listSection);
-
-    // 2. Get GAgent Details Section
-    const detailSection = createGAgentSection(
-            currentLanguage === 'zh' ? '获取 GAgent 详情' : 'Get GAgent Details',
-            async (grainType) => {
-              if (!grainType) throw new Error('Please enter a GrainType');
-              const resp = await fetch(`/api/GAgentService/info?grainType=${encodeURIComponent(grainType)}`);
-              return await resp.json();
-            },
-            (data) => {
-              if (!data.success) return `Error: ${data.error}`;
-              const info = data.info;
-              let html = `<div style="margin-bottom:8px;"><strong>GrainType:</strong> ${info.grainType}</div>`;
-              html += `<div style="margin-bottom:8px;"><strong>Description:</strong> ${info.description || 'N/A'}</div>`;
-              html += `<div style="margin-bottom:8px;"><strong>Configuration Type:</strong> ${info.configurationType || 'N/A'}</div>`;
-              html += `<div><strong>Supported Events:</strong></div>`;
-              html += `<ul style="margin-left:20px;">`;
-              info.supportedEvents.forEach(e => {
-                html += `<li>${e.name}</li>`;
-              });
-              html += `</ul>`;
-              return html;
-            },
-            { inputLabel: 'GrainType:', inputPlaceholder: 'e.g., gagent.alice' }
-    );
-    sectionsContainer.appendChild(detailSection);
-
-    // 3. Find GAgents by Event Section
-    const findSection = createGAgentSection(
-            currentLanguage === 'zh' ? '按事件查找 GAgent' : 'Find GAgents by Event',
-            async (eventTypeName) => {
-              if (!eventTypeName) throw new Error('Please enter an event type name');
-              const resp = await fetch(`/api/GAgentService/find-by-event?eventTypeName=${encodeURIComponent(eventTypeName)}`);
-              return await resp.json();
-            },
-            (data) => {
-              if (!data.success) return `Error: ${data.error}`;
-              let html = `<div style="font-weight:bold;margin-bottom:8px;">Found ${data.total} GAgent(s)</div>`;
-              if (data.total === 0) {
-                html += '<div style="color:#6b7280;">No GAgents found supporting this event type.</div>';
-              } else {
-                data.gAgents.forEach(g => {
-                  html += `<div style="margin-bottom:8px;padding:8px;background:#f3f4f6;border-radius:4px;">`;
-                  html += `<div><strong>GrainType:</strong> ${g.grainType}</div>`;
-                  html += `<div><strong>Event:</strong> ${g.eventType.name}</div>`;
-                  html += `</div>`;
-                });
-              }
-              return html;
-            },
-            { inputLabel: 'Event Type Name:', inputPlaceholder: 'e.g., GreetingEvent' }
-    );
-    sectionsContainer.appendChild(findSection);
-
-    // 4. Execute GAgent Section
-    const executeSection = createGAgentExecuteSection();
-    sectionsContainer.appendChild(executeSection);
-
-    demoCard.appendChild(sectionsContainer);
+    
     mainContent.appendChild(demoCard);
   }
 
@@ -1435,6 +1376,8 @@
 
   window.onload = function() {
     checkConfigAndMaybeShowModal();
+    renderSidebar();
+    renderMainContent();
   };
 
   function setupManualLogPanel(boxId, btnId, api) {
@@ -1716,13 +1659,43 @@
     // Create demo card
     const demoCard = document.createElement('div');
     demoCard.className = 'demo-card';
-    demoCard.style.maxWidth = '1200px';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
 
     // Title
     const title = document.createElement('div');
     title.className = 'demo-title';
     title.textContent = demo.name[currentLanguage] || demo.name['en'];
     demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = `/demos/ai-tool-calling-demo.html?lang=${currentLanguage}`;
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
 
     // Description
     const desc = document.createElement('div');
@@ -1738,26 +1711,133 @@
       }
     });
     demoCard.appendChild(desc);
+    
+        mainContent.appendChild(demoCard);
+  }
 
-    // State management
-    let agentId = null;
-    let chatHistory = [];
+  // This function was missing - restoring renderMCPDemo
+  async function renderMCPDemo(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
 
-    // Interactive sections container
-    const sectionsContainer = document.createElement('div');
-    sectionsContainer.style.marginTop = '32px';
-    sectionsContainer.style.display = 'grid';
-    sectionsContainer.style.gridTemplateColumns = '1fr 1fr';
-    sectionsContainer.style.gap = '24px';
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
 
-    // 1. Initialize Agent Section
-    const initSection = document.createElement('div');
-    initSection.style.background = '#fff';
-    initSection.style.padding = '20px';
-    initSection.style.borderRadius = '8px';
-    initSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
 
-    const initTitle = document.createElement('h3');
+    const link = document.createElement('a');
+    link.href = `/demos/mcp-demo.html?lang=${currentLanguage}`;
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+    
+    mainContent.appendChild(demoCard);
+  }
+
+  // Dynamic AI & MCP Demo rendering
+  async function renderDynamicAIMCPDemo(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = `/demos/dynamic-ai-mcp.html?lang=${currentLanguage}`;
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+    
+    mainContent.appendChild(demoCard);
+  }
+
+  // PsiGAgent Demo rendering (correct implementation is below)
     initTitle.style.marginTop = '0';
     initTitle.style.color = '#1e293b';
     initTitle.textContent = currentLanguage === 'zh' ? '初始化 AI 代理' : 'Initialize AI Agent';
@@ -2254,634 +2334,11 @@
         timeDemoBtn.disabled = false;
       }
     };
-  }
 
-  // MCP Demo rendering
-  async function renderMCPDemo(demo) {
-    // Create demo card
-    const demoCard = document.createElement('div');
-    demoCard.className = 'demo-card';
-    demoCard.style.maxWidth = '800px';
-    demoCard.style.margin = '0 auto';
-
-    // Title
-    const title = document.createElement('div');
-    title.className = 'demo-title';
-    title.textContent = demo.name[currentLanguage] || demo.name['en'];
-    demoCard.appendChild(title);
-
-    // Description
-    const desc = document.createElement('div');
-    desc.className = 'demo-desc desc-content';
-    desc.innerHTML = 'Loading...';
-    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
-    fetch(descPath).then(r => r.text()).then(md => {
-      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
-      if (window.hljs) {
-        desc.querySelectorAll('pre code').forEach(block => {
-          hljs.highlightElement(block);
-        });
-      }
-    });
-    demoCard.appendChild(desc);
-
-    // State management
-    let agentId = null;
-    let availableTools = {};
-    let serverStates = [];
-
-    // Interactive sections container
-    const sectionsContainer = document.createElement('div');
-    sectionsContainer.style.marginTop = '32px';
-
-    // 1. MCP Server Configuration Section
-    const configSection = document.createElement('div');
-    configSection.style.background = '#fff';
-    configSection.style.padding = '20px';
-    configSection.style.borderRadius = '8px';
-    configSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-    configSection.style.marginBottom = '24px';
-
-    const configTitle = document.createElement('h3');
-    configTitle.style.marginTop = '0';
-    configTitle.style.color = '#1e293b';
-    configTitle.textContent = currentLanguage === 'zh' ? '配置 MCP 服务器' : 'Configure MCP Servers';
-    configSection.appendChild(configTitle);
-
-    // Server list
-    const serverList = document.createElement('div');
-    serverList.style.marginBottom = '16px';
-
-    // Default servers
-    const defaultServers = [
-      {
-        name: 'filesystem',
-        command: 'npx',
-        args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp', '/Users', '/System/Volumes/Data/Users'],
-        description: currentLanguage === 'zh' ? '文件系统服务器 - 访问系统和用户目录' : 'Filesystem Server - Access system and user directories'
-      },
-      {
-        name: 'memory',
-        command: 'npx',
-        args: ['-y', '@modelcontextprotocol/server-memory'],
-        description: currentLanguage === 'zh' ? '内存存储服务器 - 临时键值存储' : 'Memory Server - Temporary key-value storage'
-      },
-      {
-        name: 'sequential-thinking',
-        command: 'npx',
-        args: ['-y', '@modelcontextprotocol/server-sequential-thinking'],
-        description: currentLanguage === 'zh' ? '顺序思考服务器 - 分步解决问题' : 'Sequential Thinking Server - Step-by-step problem solving'
-      },
-      {
-        name: 'everything',
-        command: 'npx',
-        args: ['-y', '@modelcontextprotocol/server-everything'],
-        description: currentLanguage === 'zh' ? '测试服务器 - 展示所有MCP功能' : 'Everything Server - Demonstrates all MCP features'
-      }
-    ];
-
-    const selectedServers = new Set();
-
-    defaultServers.forEach(server => {
-      const serverDiv = document.createElement('div');
-      serverDiv.style.marginBottom = '8px';
-      serverDiv.style.padding = '12px';
-      serverDiv.style.background = '#f9fafb';
-      serverDiv.style.borderRadius = '4px';
-      serverDiv.style.display = 'flex';
-      serverDiv.style.alignItems = 'center';
-      serverDiv.style.gap = '12px';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.value = server.name;
-      checkbox.onchange = (e) => {
-        if (e.target.checked) {
-          selectedServers.add(server);
-        } else {
-          selectedServers.delete(server);
-        }
-      };
-      serverDiv.appendChild(checkbox);
-
-      const serverInfo = document.createElement('div');
-      serverInfo.style.flex = '1';
-      serverInfo.innerHTML = `
-      <div style="font-weight:bold;">${server.name}</div>
-      <div style="font-size:0.9em;color:#6b7280;">${server.description}</div>
-      <div style="font-size:0.85em;color:#9ca3af;font-family:monospace;word-wrap:break-word;overflow-wrap:break-word;">${server.command} ${server.args.join(' ')}</div>
-    `;
-      serverDiv.appendChild(serverInfo);
-
-      serverList.appendChild(serverDiv);
-    });
-
-    configSection.appendChild(serverList);
-
-    // Initialize button
-    const initButton = document.createElement('button');
-    initButton.style.padding = '10px 24px';
-    initButton.style.background = '#3b82f6';
-    initButton.style.color = '#fff';
-    initButton.style.border = 'none';
-    initButton.style.borderRadius = '4px';
-    initButton.style.cursor = 'pointer';
-    initButton.style.fontWeight = 'bold';
-    initButton.textContent = currentLanguage === 'zh' ? '初始化 MCP 代理' : 'Initialize MCP Agent';
-    configSection.appendChild(initButton);
-
-    const initStatus = document.createElement('div');
-    initStatus.style.marginTop = '12px';
-    initStatus.style.padding = '8px';
-    initStatus.style.background = '#f9fafb';
-    initStatus.style.borderRadius = '4px';
-    initStatus.style.color = '#6b7280';
-    initStatus.textContent = currentLanguage === 'zh' ? '选择服务器并点击初始化...' : 'Select servers and click initialize...';
-    configSection.appendChild(initStatus);
-
-    sectionsContainer.appendChild(configSection);
-
-    // 2. Server States Section
-    const statesSection = document.createElement('div');
-    statesSection.style.background = '#fff';
-    statesSection.style.padding = '20px';
-    statesSection.style.borderRadius = '8px';
-    statesSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-    statesSection.style.marginBottom = '24px';
-    statesSection.style.display = 'none';
-
-    const statesTitle = document.createElement('h3');
-    statesTitle.style.marginTop = '0';
-    statesTitle.style.color = '#1e293b';
-    statesTitle.textContent = currentLanguage === 'zh' ? '服务器状态' : 'Server States';
-    statesSection.appendChild(statesTitle);
-
-    const statesContent = document.createElement('div');
-    statesContent.style.display = 'grid';
-    statesContent.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
-    statesContent.style.gap = '16px';
-    statesSection.appendChild(statesContent);
-
-    sectionsContainer.appendChild(statesSection);
-
-    // 3. Available Tools Section
-    const toolsSection = document.createElement('div');
-    toolsSection.style.background = '#fff';
-    toolsSection.style.padding = '20px';
-    toolsSection.style.borderRadius = '8px';
-    toolsSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-    toolsSection.style.marginBottom = '24px';
-    toolsSection.style.display = 'none';
-
-    const toolsTitle = document.createElement('h3');
-    toolsTitle.style.marginTop = '0';
-    toolsTitle.style.color = '#1e293b';
-    toolsTitle.textContent = currentLanguage === 'zh' ? '可用工具' : 'Available Tools';
-    toolsSection.appendChild(toolsTitle);
-
-    const toolsContent = document.createElement('div');
-    toolsSection.appendChild(toolsContent);
-
-    sectionsContainer.appendChild(toolsSection);
-
-    // 4. Tool Call Interface
-    const callSection = document.createElement('div');
-    callSection.style.background = '#fff';
-    callSection.style.padding = '20px';
-    callSection.style.borderRadius = '8px';
-    callSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-    callSection.style.marginBottom = '24px';
-    callSection.style.display = 'none';
-
-    const callTitle = document.createElement('h3');
-    callTitle.style.marginTop = '0';
-    callTitle.style.color = '#1e293b';
-    callTitle.textContent = currentLanguage === 'zh' ? '调用工具' : 'Call Tool';
-    callSection.appendChild(callTitle);
-
-    // Tool selector
-    const toolGroup = document.createElement('div');
-    toolGroup.style.marginBottom = '12px';
-
-    const toolLabel = document.createElement('label');
-    toolLabel.style.display = 'block';
-    toolLabel.style.marginBottom = '4px';
-    toolLabel.style.fontWeight = 'bold';
-    toolLabel.textContent = currentLanguage === 'zh' ? '选择工具:' : 'Select Tool:';
-    toolGroup.appendChild(toolLabel);
-
-    const toolSelect = document.createElement('select');
-    toolSelect.style.width = '100%';
-    toolSelect.style.padding = '8px';
-    toolSelect.style.border = '1px solid #d1d5db';
-    toolSelect.style.borderRadius = '4px';
-    toolGroup.appendChild(toolSelect);
-
-    callSection.appendChild(toolGroup);
-
-    // Arguments input
-    const argsGroup = document.createElement('div');
-    argsGroup.style.marginBottom = '12px';
-
-    const argsLabel = document.createElement('label');
-    argsLabel.style.display = 'block';
-    argsLabel.style.marginBottom = '4px';
-    argsLabel.style.fontWeight = 'bold';
-    argsLabel.textContent = currentLanguage === 'zh' ? '参数 (JSON):' : 'Arguments (JSON):';
-    argsGroup.appendChild(argsLabel);
-
-    const argsTextarea = document.createElement('textarea');
-    argsTextarea.style.width = '100%';
-    argsTextarea.style.minHeight = '100px';
-    argsTextarea.style.padding = '8px';
-    argsTextarea.style.border = '1px solid #d1d5db';
-    argsTextarea.style.borderRadius = '4px';
-    argsTextarea.style.fontFamily = 'monospace';
-    argsTextarea.placeholder = '{\n  "path": "/tmp/test.txt"\n}';
-    argsGroup.appendChild(argsTextarea);
-
-    callSection.appendChild(argsGroup);
-
-    // Call button
-    const callButton = document.createElement('button');
-    callButton.style.padding = '10px 20px';
-    callButton.style.background = '#10b981';
-    callButton.style.color = '#fff';
-    callButton.style.border = 'none';
-    callButton.style.borderRadius = '4px';
-    callButton.style.cursor = 'pointer';
-    callButton.style.fontWeight = 'bold';
-    callButton.textContent = currentLanguage === 'zh' ? '调用工具' : 'Call Tool';
-    callSection.appendChild(callButton);
-
-    // Result display
-    const resultDiv = document.createElement('div');
-    resultDiv.style.marginTop = '16px';
-    resultDiv.style.padding = '12px';
-    resultDiv.style.background = '#f9fafb';
-    resultDiv.style.borderRadius = '4px';
-    resultDiv.style.minHeight = '60px';
-    resultDiv.style.wordWrap = 'break-word';
-    resultDiv.style.overflowWrap = 'break-word';
-    resultDiv.style.overflow = 'auto';
-    callSection.appendChild(resultDiv);
-
-    sectionsContainer.appendChild(callSection);
-
-    // 5. Tool Call History
-    const historySection = document.createElement('div');
-    historySection.style.background = '#fff';
-    historySection.style.padding = '20px';
-    historySection.style.borderRadius = '8px';
-    historySection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
-    historySection.style.display = 'none';
-
-    const historyTitle = document.createElement('h3');
-    historyTitle.style.marginTop = '0';
-    historyTitle.style.color = '#1e293b';
-    historyTitle.textContent = currentLanguage === 'zh' ? '调用历史' : 'Call History';
-    historySection.appendChild(historyTitle);
-
-    const historyContent = document.createElement('div');
-    historyContent.style.maxHeight = '300px';
-    historyContent.style.overflowY = 'auto';
-    historySection.appendChild(historyContent);
-
-    sectionsContainer.appendChild(historySection);
-
-    demoCard.appendChild(sectionsContainer);
-    mainContent.appendChild(demoCard);
-
-    // Event handlers
-    initButton.onclick = async () => {
-      if (selectedServers.size === 0) {
-        initStatus.textContent = currentLanguage === 'zh' ? '请至少选择一个服务器' : 'Please select at least one server';
-        initStatus.style.color = '#ef4444';
-        return;
-      }
-
-      try {
-        initButton.disabled = true;
-        initStatus.textContent = currentLanguage === 'zh' ? '初始化中...' : 'Initializing...';
-        initStatus.style.color = '#3b82f6';
-
-        const servers = Array.from(selectedServers).map(s => ({
-          serverName: s.name,
-          command: s.command,
-          args: s.args
-        }));
-
-        const resp = await fetch('/api/MCPDemo/initialize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ servers })
-        });
-
-        const data = await resp.json();
-
-        if (data.success) {
-          agentId = data.agentId;
-          initStatus.textContent = `✓ ${currentLanguage === 'zh' ? '初始化成功！' : 'Initialized successfully!'}`;
-          initStatus.style.color = '#10b981';
-
-          // Update available tools
-          availableTools = data.availableTools;
-          serverStates = data.serverStates;
-
-          // Show other sections
-          statesSection.style.display = 'block';
-          toolsSection.style.display = 'block';
-          callSection.style.display = 'block';
-          historySection.style.display = 'block';
-
-          // Update server states
-          updateServerStates();
-
-          // Update tools display
-          updateToolsDisplay();
-
-          // Update history
-          updateHistory();
-        } else {
-          initStatus.textContent = `✗ ${data.error}`;
-          initStatus.style.color = '#ef4444';
-        }
-      } catch (error) {
-        initStatus.textContent = `✗ ${error.message}`;
-        initStatus.style.color = '#ef4444';
-      } finally {
-        initButton.disabled = false;
-      }
-    };
-
-    // Update server states display
-    function updateServerStates() {
-      statesContent.innerHTML = '';
-      serverStates.forEach(state => {
-        const stateCard = document.createElement('div');
-        stateCard.style.padding = '12px';
-        stateCard.style.background = '#f3f4f6';
-        stateCard.style.borderRadius = '4px';
-
-        const statusColor = state.isConnected ? '#10b981' : '#ef4444';
-        const statusText = state.isConnected ?
-                (currentLanguage === 'zh' ? '已连接' : 'Connected') :
-                (currentLanguage === 'zh' ? '未连接' : 'Disconnected');
-
-        stateCard.innerHTML = `
-        <div style="font-weight:bold;margin-bottom:4px;">${state.serverName}</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <span style="width:8px;height:8px;background:${statusColor};border-radius:50%;display:inline-block;"></span>
-          <span style="color:${statusColor};">${statusText}</span>
-        </div>
-        <div style="font-size:0.85em;color:#6b7280;">
-          ${currentLanguage === 'zh' ? '工具数' : 'Tools'}: ${state.registeredTools?.length || 0}
-        </div>
-      `;
-        statesContent.appendChild(stateCard);
-      });
-    }
-
-    // Update tools display
-    function updateToolsDisplay() {
-      toolsContent.innerHTML = '';
-      toolSelect.innerHTML = '<option value="">-- Select a tool --</option>';
-
-      // Group tools by server
-      const toolsByServer = {};
-      Object.entries(availableTools).forEach(([key, tool]) => {
-        if (!toolsByServer[tool.serverName]) {
-          toolsByServer[tool.serverName] = [];
-        }
-        toolsByServer[tool.serverName].push({ key, ...tool });
-      });
-
-      // Display tools grouped by server
-      Object.entries(toolsByServer).forEach(([serverName, tools]) => {
-        const serverGroup = document.createElement('details');
-        serverGroup.style.marginBottom = '16px';
-        serverGroup.style.border = '1px solid #e5e7eb';
-        serverGroup.style.borderRadius = '4px';
-        serverGroup.style.padding = '12px';
-        serverGroup.open = true;
-
-        const summary = document.createElement('summary');
-        summary.style.cursor = 'pointer';
-        summary.style.fontWeight = 'bold';
-        summary.style.marginBottom = '8px';
-        summary.textContent = `${serverName} (${tools.length} tools)`;
-        serverGroup.appendChild(summary);
-
-        const toolList = document.createElement('div');
-        toolList.style.display = 'grid';
-        toolList.style.gap = '8px';
-
-        tools.forEach(tool => {
-          const toolCard = document.createElement('div');
-          toolCard.style.padding = '8px';
-          toolCard.style.background = '#f9fafb';
-          toolCard.style.borderRadius = '4px';
-          toolCard.style.fontSize = '0.9em';
-
-          toolCard.innerHTML = `
-          <div style="font-weight:bold;color:#1f2937;">${tool.name}</div>
-          <div style="color:#6b7280;margin-top:4px;">${tool.description}</div>
-          ${tool.parameters && Object.keys(tool.parameters).length > 0 ? `
-          <div style="color:#9ca3af;margin-top:4px;font-size:0.85em;">
-            Parameters: ${Object.entries(tool.parameters).map(([name, param]) =>
-                  `${name}${param.required ? '*' : ''}`
-          ).join(', ')}
-          </div>` : ''}
-        `;
-          toolList.appendChild(toolCard);
-
-          // Add to select
-          const option = document.createElement('option');
-          option.value = tool.key;
-          option.textContent = `${serverName}.${tool.name}`;
-          toolSelect.appendChild(option);
-        });
-
-        serverGroup.appendChild(toolList);
-        toolsContent.appendChild(serverGroup);
-      });
-    }
-
-    // Update parameter hints when tool is selected
-    toolSelect.onchange = () => {
-      const selectedTool = availableTools[toolSelect.value];
-      if (selectedTool && selectedTool.parameters && Object.keys(selectedTool.parameters).length > 0) {
-        const exampleArgs = {};
-        Object.entries(selectedTool.parameters).forEach(([name, param]) => {
-          if (param.type === 'string') {
-            exampleArgs[name] = param.description || 'example';
-          } else if (param.type === 'number') {
-            exampleArgs[name] = 0;
-          } else if (param.type === 'boolean') {
-            exampleArgs[name] = false;
-          } else {
-            exampleArgs[name] = null;
-          }
-        });
-        argsTextarea.placeholder = JSON.stringify(exampleArgs, null, 2);
-      } else {
-        argsTextarea.placeholder = '{}';
-      }
-    };
-
-    // Call tool
-    callButton.onclick = async () => {
-      const selectedToolKey = toolSelect.value;
-      if (!selectedToolKey) {
-        resultDiv.innerHTML = `<span style="color:#ef4444;">${currentLanguage === 'zh' ? '请选择一个工具' : 'Please select a tool'}</span>`;
-        return;
-      }
-
-      const selectedTool = availableTools[selectedToolKey];
-      if (!selectedTool) return;
-
-      let args = {};
-      try {
-        const argsText = argsTextarea.value.trim();
-        if (argsText) {
-          args = JSON.parse(argsText);
-        }
-      } catch (error) {
-        resultDiv.innerHTML = `<span style="color:#ef4444;">${currentLanguage === 'zh' ? 'JSON 格式错误' : 'Invalid JSON format'}: ${error.message}</span>`;
-        return;
-      }
-
-      try {
-        callButton.disabled = true;
-        resultDiv.innerHTML = `<span style="color:#6b7280;">${currentLanguage === 'zh' ? '调用中...' : 'Calling...'}</span>`;
-
-        const resp = await fetch('/api/MCPDemo/tool-call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            agentId: agentId,
-            serverName: selectedTool.serverName,
-            toolName: selectedTool.name,
-            arguments: args
-          })
-        });
-
-        const data = await resp.json();
-
-        if (data.success) {
-          // CRITICAL: Get the actual result content from the correct path
-          let resultContent = null;
-          if (data.resultDisplay && data.resultDisplay.resultContent !== undefined) {
-            resultContent = data.resultDisplay.resultContent;
-          } else if (data.result !== undefined) {
-            resultContent = data.result;
-          } else {
-            // Fallback to showing the entire response if no result found
-            resultContent = data;
-          }
-
-          // Display full result
-          let resultHtml = `
-          <div style="color:#10b981;font-weight:bold;margin-bottom:8px;">✓ ${currentLanguage === 'zh' ? '成功' : 'Success'}</div>
-          <pre style="background:#fff;padding:8px;border-radius:4px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;">${JSON.stringify(resultContent, null, 2)}</pre>
-        `;
-
-          // Try to extract and display Result field separately
-          let resultFieldValue = null;
-          try {
-            const jsonStr = typeof resultContent === 'string' ? resultContent : JSON.stringify(resultContent);
-            const parsed = JSON.parse(jsonStr);
-            if (parsed.Result !== undefined && parsed.Result !== null) {
-              resultFieldValue = parsed.Result;
-            }
-          } catch (e) {
-            // Not JSON or no Result field
-          }
-
-          // If Result field exists, display it in a separate section
-          if (resultFieldValue !== null) {
-            resultHtml += `
-            <div style="margin-top:16px;padding:12px;background:#f0fff4;border:2px solid #34d399;border-radius:8px;">
-              <div style="font-weight:bold;color:#059669;margin-bottom:8px;">${currentLanguage === 'zh' ? 'Result：' : 'Result:'}</div>
-              <pre style="background:#fff;padding:8px;border-radius:4px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;border:1px solid #bbf7d0;">${escapeHtml(String(resultFieldValue))}</pre>
-            </div>
-          `;
-          }
-
-          resultDiv.innerHTML = resultHtml;
-
-          // Update history
-          updateHistory();
-        } else {
-          resultDiv.innerHTML = `
-          <div style="color:#ef4444;font-weight:bold;margin-bottom:8px;">✗ ${currentLanguage === 'zh' ? '错误' : 'Error'}</div>
-          <div>${data.errorMessage || data.error}</div>
-        `;
-        }
-      } catch (error) {
-        resultDiv.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
-      } finally {
-        callButton.disabled = false;
-      }
-    };
-
-    // Update history
-    async function updateHistory() {
-      if (!agentId) return;
-
-      try {
-        const resp = await fetch(`/api/MCPDemo/history/${agentId}`);
-        const data = await resp.json();
-
-        if (data.success) {
-          historyContent.innerHTML = '';
-
-          if (data.history.length === 0) {
-            historyContent.innerHTML = `<div style="color:#6b7280;padding:12px;">${currentLanguage === 'zh' ? '暂无调用历史' : 'No call history yet'}</div>`;
-          } else {
-            data.history.forEach(call => {
-              const historyItem = document.createElement('div');
-              historyItem.style.marginBottom = '12px';
-              historyItem.style.padding = '12px';
-              historyItem.style.background = call.success ? '#f0fdf4' : '#fef2f2';
-              historyItem.style.borderRadius = '4px';
-              historyItem.style.border = `1px solid ${call.success ? '#bbf7d0' : '#fecaca'}`;
-
-              historyItem.innerHTML = `
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                <span style="font-weight:bold;color:${call.success ? '#10b981' : '#ef4444'};">
-                  ${call.serverName}.${call.toolName}
-                </span>
-                <span style="font-size:0.85em;color:#6b7280;">
-                  ${new Date(call.timestamp).toLocaleTimeString()}
-                </span>
-              </div>
-              <div style="font-size:0.9em;color:#4b5563;margin-bottom:4px;">
-                <strong>${currentLanguage === 'zh' ? '参数' : 'Arguments'}:</strong> 
-                <code style="background:#f3f4f6;padding:2px 4px;border-radius:2px;word-wrap:break-word;overflow-wrap:break-word;display:inline-block;max-width:100%;">${JSON.stringify(call.arguments)}</code>
-              </div>
-              ${call.success ? `
-              <div style="font-size:0.9em;color:#059669;">
-                <strong>${currentLanguage === 'zh' ? '结果' : 'Result'}:</strong> 
-                <pre style="margin-top:4px;background:#fff;padding:4px;border-radius:2px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;max-height:100px;overflow-y:auto;">${JSON.stringify(call.result, null, 2)}</pre>
-              </div>` : `
-              <div style="font-size:0.9em;color:#dc2626;">
-                <strong>${currentLanguage === 'zh' ? '错误' : 'Error'}:</strong> ${call.errorMessage}
-              </div>`}
-            `;
-              historyContent.appendChild(historyItem);
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch history:', error);
-      }
-    }
-  }
 
   // Dynamic AI MCP Demo rendering
   async function renderDynamicAIMCPDemo(demo) {
-    // Create an iframe to load the standalone demo page
+    // Create demo card
     const demoCard = document.createElement('div');
     demoCard.className = 'demo-card';
     demoCard.style.maxWidth = '1400px';
@@ -2905,7 +2362,7 @@
     linkContainer.style.textAlign = 'center';
 
     const link = document.createElement('a');
-    link.href = '/demos/dynamic-ai-mcp.html';
+    link.href = `/demos/dynamic-ai-mcp.html?lang=${currentLanguage}`;
     link.target = '_blank';
     link.style.display = 'inline-block';
     link.style.padding = '12px 24px';
@@ -2936,26 +2393,7 @@
       }
     });
     demoCard.appendChild(desc);
-
-    // Demo iframe
-    const iframeContainer = document.createElement('div');
-    iframeContainer.style.marginTop = '20px';
-    iframeContainer.style.height = '900px';
-    iframeContainer.style.border = '1px solid #374151';
-    iframeContainer.style.borderRadius = '8px';
-    iframeContainer.style.overflow = 'hidden';
-    iframeContainer.style.background = '#0e0e0e';
-
-    const iframe = document.createElement('iframe');
-    iframe.src = '/demos/dynamic-ai-mcp.html';
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.style.background = '#0e0e0e';
-
-    iframeContainer.appendChild(iframe);
-    demoCard.appendChild(iframeContainer);
-
+    
     mainContent.appendChild(demoCard);
   }
 

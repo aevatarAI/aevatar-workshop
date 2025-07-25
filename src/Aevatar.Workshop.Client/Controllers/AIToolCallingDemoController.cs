@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Aevatar.Core.Abstractions;
 using Microsoft.Extensions.Logging;
 using Aevatar.Workshop.GAgent;
+using Microsoft.Extensions.Configuration;
 
 namespace Aevatar.Workshop.Client.Controllers;
 
@@ -11,13 +12,56 @@ public class AIToolCallingDemoController : ControllerBase
 {
     private readonly IGAgentFactory _gAgentFactory;
     private readonly ILogger<AIToolCallingDemoController> _logger;
+    private readonly IConfiguration _configuration;
 
     public AIToolCallingDemoController(
         IGAgentFactory gAgentFactory,
-        ILogger<AIToolCallingDemoController> logger)
+        ILogger<AIToolCallingDemoController> logger,
+        IConfiguration configuration)
     {
         _gAgentFactory = gAgentFactory;
         _logger = logger;
+        _configuration = configuration;
+    }
+
+    /// <summary>
+    /// Get available LLM systems from configuration
+    /// </summary>
+    [HttpGet("llm-systems")]
+    public IActionResult GetLLMSystems()
+    {
+        try
+        {
+            var llmSystemsSection = _configuration.GetSection("SystemLLMConfigs");
+            var systems = new List<object>();
+
+            foreach (var systemSection in llmSystemsSection.GetChildren())
+            {
+                systems.Add(new
+                {
+                    name = systemSection.Key,
+                    provider = systemSection["ProviderEnum"] ?? "Unknown",
+                    model = systemSection["DeploymentOrModelId"] ?? systemSection["ModelName"] ?? "Unknown",
+                    description = $"{systemSection.Key} - {systemSection["DeploymentOrModelId"] ?? systemSection["ModelName"] ?? "Unknown"}"
+                });
+            }
+
+            return Ok(new
+            {
+                success = true,
+                systems = systems
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get LLM systems");
+            return Ok(new
+            {
+                success = false,
+                error = ex.Message,
+                systems = new List<object>()
+            });
+        }
     }
 
     /// <summary>
@@ -111,7 +155,8 @@ public class AIToolCallingDemoController : ControllerBase
                 {
                     tool = h.ToolName,
                     timestamp = h.Timestamp,
-                    input = h.Input
+                    input = h.Input,
+                    output = h.Output
                 })
                 .ToList();
             
@@ -154,6 +199,7 @@ public class AIToolCallingDemoController : ControllerBase
                 function = h.ToolName,
                 parameters = h.Input,
                 input = h.Input, // Add both for compatibility
+                output = h.Output,
                 timestamp = h.Timestamp
             })
         });

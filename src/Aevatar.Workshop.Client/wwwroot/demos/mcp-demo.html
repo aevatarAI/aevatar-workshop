@@ -3,22 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCP Tool Demo</title>
+    <title>MCP (Model Context Protocol) Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+        * {
+            box-sizing: border-box;
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 0;
         }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
-        h1 {
-            color: #333;
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
             margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .demo-desc {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .desc-content {
+            line-height: 1.8;
+        }
+        
+        .desc-content h2 {
+            color: #1f2937;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .desc-content h3 {
+            color: #374151;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .desc-content code {
+            background: #e5e7eb;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        
+        .desc-content pre {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        
+        .desc-content ul, .desc-content ol {
+            margin-left: 24px;
+            margin-bottom: 12px;
+        }
+        
+        .demo-controls {
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+            margin-right: 10px;
+        }
+        
+        .btn:hover {
+            background: #4f46e5;
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
         .section {
             background: white;
             padding: 20px;
@@ -26,496 +146,782 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .button {
-            background-color: #0066cc;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+        
+        .section h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+        
+        .server-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .server-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
             cursor: pointer;
-            font-size: 14px;
-            margin-right: 10px;
+            transition: all 0.2s;
         }
-        .button:hover {
-            background-color: #0052a3;
+        
+        .server-card:hover {
+            border-color: #6366f1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
         }
-        .button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
+        
+        .server-card.selected {
+            border-color: #6366f1;
+            background: #eef2ff;
         }
-        .tool-item {
-            padding: 10px;
-            margin: 5px 0;
-            background: #f8f9fa;
-            border-radius: 4px;
-            cursor: pointer;
+        
+        .server-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
         }
-        .tool-item:hover {
-            background: #e9ecef;
-        }
-        .tool-name {
+        
+        .server-name {
             font-weight: bold;
-            color: #0066cc;
+            color: #1f2937;
+            margin-bottom: 4px;
         }
-        .tool-description {
-            color: #666;
-            font-size: 14px;
-            margin-top: 5px;
+        
+        .server-desc {
+            font-size: 0.9em;
+            color: #6b7280;
         }
-        .server-badge {
+        
+        .server-status {
             display: inline-block;
-            background: #28a745;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            margin-left: 10px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
         }
-        .server-badge.disconnected {
-            background: #dc3545;
+        
+        .status-connected {
+            background: #10b981;
         }
-        .result-box {
-            background: #f0f8ff;
-            border: 2px solid #4a90e2;
-            border-radius: 8px;
-            padding: 20px;
+        
+        .status-disconnected {
+            background: #ef4444;
+        }
+        
+        .tools-section {
             margin-top: 20px;
         }
-        .result-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        .result-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c5aa0;
-        }
-        .result-type {
-            background: #2c5aa0;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-        }
-        .result-content {
-            background: white;
-            border: 1px solid #d0e3f7;
-            border-radius: 4px;
-            padding: 15px;
-            overflow-x: auto;
-        }
-        .result-content pre {
-            margin: 0;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        .result-content.json {
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 13px;
-        }
-        .error-box {
-            background: #fff5f5;
-            border: 2px solid #f56565;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .error-title {
-            color: #c53030;
-            font-weight: bold;
+        
+        .tool-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
             margin-bottom: 10px;
         }
-        .error-message {
-            color: #742a2a;
-        }
-        .tool-info {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            padding: 10px;
-            margin-bottom: 15px;
-            font-size: 14px;
-        }
-        .info-item {
-            margin: 5px 0;
-        }
-        .info-label {
+        
+        .tool-name {
             font-weight: bold;
-            color: #4a5568;
+            color: #1f2937;
+            margin-bottom: 4px;
         }
+        
+        .tool-desc {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .tool-params {
+            font-size: 0.85em;
+            color: #4b5563;
+        }
+        
         .input-group {
             margin-bottom: 15px;
         }
+        
         .input-group label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
-            color: #333;
+            color: #1f2937;
         }
+        
         .input-group input, .input-group textarea {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
             font-size: 14px;
         }
+        
         .input-group textarea {
-            min-height: 60px;
+            min-height: 80px;
             font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
         }
+        
+        .result-section {
+            margin-top: 20px;
+            padding: 16px;
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+        }
+        
+        .result-title {
+            font-weight: bold;
+            color: #0284c7;
+            margin-bottom: 10px;
+        }
+        
+        .result-content {
+            background: white;
+            border: 1px solid #e0f2fe;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+        }
+        
+        .error-box {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 12px;
+            color: #dc2626;
+            margin-top: 10px;
+        }
+        
+        .history-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .history-time {
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+        
+        .history-tool {
+            font-weight: bold;
+            color: #1f2937;
+            margin-top: 4px;
+        }
+        
+        .history-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+        
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
         .loading {
             display: inline-block;
             width: 20px;
             height: 20px;
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #0066cc;
+            border-top: 3px solid #6366f1;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-left: 10px;
             vertical-align: middle;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .server-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>MCP Tool Demo</h1>
-
-        <div class="section">
-            <h2>Initialize MCP Server</h2>
-            <button class="button" onclick="initializeMCP()">Initialize Filesystem Server</button>
-            <div id="initStatus"></div>
+        <div class="header">
+            <h1>MCP (Model Context Protocol) Demo</h1>
+            <p>Connect to MCP servers and use their tools directly</p>
         </div>
-
-        <div class="section" id="toolsSection" style="display:none;">
-            <h2>Available Tools</h2>
-            <div id="toolsList"></div>
+        
+        <div class="demo-card">
+            <div class="demo-desc desc-content" id="description">
+                Loading documentation...
+            </div>
+            
+            <div class="demo-controls">
+                <button id="refreshServersBtn" class="btn">Refresh Available Servers</button>
+                <button id="resetBtn" class="btn btn-danger" style="display:none;">Reset All</button>
+            </div>
+            
+            <!-- Available MCP Servers -->
+            <div class="section">
+                <h3>Available MCP Servers</h3>
+                <div id="serverGrid" class="server-grid">
+                    <div style="color: #6b7280; text-align: center; grid-column: 1 / -1;">
+                        Loading MCP servers...
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <button id="initSelectedBtn" class="btn" disabled>Initialize Selected Server</button>
+                </div>
+            </div>
+            
+            <!-- Connected Server Info -->
+            <div id="serverInfoSection" class="section" style="display:none;">
+                <h3>Connected Server</h3>
+                <div id="serverInfo"></div>
+            </div>
+            
+            <!-- Available Tools -->
+            <div id="toolsSection" class="section" style="display:none;">
+                <h3>Available Tools</h3>
+                <div id="toolsList" class="tools-section"></div>
+            </div>
+            
+            <!-- Tool Execution -->
+            <div id="executionSection" class="section" style="display:none;">
+                <h3>Execute Tool</h3>
+                <div id="toolForm"></div>
+                <button id="executeBtn" class="btn" style="margin-top: 16px;">Execute Tool</button>
+                <div id="resultSection" class="result-section" style="display:none;">
+                    <div class="result-title">Result</div>
+                    <div id="resultContent" class="result-content"></div>
+                </div>
+            </div>
+            
+            <!-- Tool Call History -->
+            <div id="historySection" class="section" style="display:none;">
+                <h3>Tool Call History</h3>
+                <div id="historyContent">
+                    <div style="color: #6b7280; text-align: center;">No tool calls yet...</div>
+                </div>
+            </div>
         </div>
-
-        <div class="section" id="callSection" style="display:none;">
-            <h2>Call Tool</h2>
-            <div id="selectedTool"></div>
-            <div id="argumentsForm"></div>
-            <button class="button" onclick="callTool()">Execute Tool</button>
-            <button class="button" onclick="clearSelection()">Clear</button>
-        </div>
-
-        <div id="resultSection"></div>
     </div>
 
     <script>
-        let currentAgentId = null;
+        // Get language from URL parameter or default to English
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentLanguage = urlParams.get('lang') || 'en';
+        
+        let mcpServers = [];
+        let selectedServer = null;
+        let agentId = null;
+        let availableTools = {};
         let selectedTool = null;
-
-        async function initializeMCP() {
-            const statusDiv = document.getElementById('initStatus');
-            statusDiv.innerHTML = '<span class="loading"></span> Initializing MCP server...';
-
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Load description markdown
+        async function loadDescription() {
+            const descPath = currentLanguage === 'zh' 
+                ? '../demodesc/MCPDemo.zh.md' 
+                : '../demodesc/MCPDemo.md';
+            
+            try {
+                const response = await fetch(descPath);
+                const markdown = await response.text();
+                const html = marked.parse(markdown);
+                document.getElementById('description').innerHTML = DOMPurify.sanitize(html);
+                
+                // Highlight code blocks
+                document.querySelectorAll('pre code').forEach(block => {
+                    hljs.highlightElement(block);
+                });
+            } catch (error) {
+                console.error('Failed to load description:', error);
+                document.getElementById('description').innerHTML = 'Failed to load documentation.';
+            }
+        }
+        
+        // Load available MCP servers from configuration
+        async function loadMCPServers() {
+            try {
+                const response = await fetch('/api/DynamicAIMCP/mcp-servers');
+                const data = await response.json();
+                
+                if (data.success && data.servers) {
+                    mcpServers = data.servers;
+                    renderServerGrid();
+                }
+            } catch (error) {
+                console.error('Failed to load MCP servers:', error);
+                document.getElementById('serverGrid').innerHTML = 
+                    '<div style="color: #ef4444; text-align: center; grid-column: 1 / -1;">Failed to load MCP servers</div>';
+            }
+        }
+        
+        // Render server grid
+        function renderServerGrid() {
+            const serverGrid = document.getElementById('serverGrid');
+            
+            if (mcpServers.length === 0) {
+                serverGrid.innerHTML = 
+                    '<div style="color: #6b7280; text-align: center; grid-column: 1 / -1;">No MCP servers configured</div>';
+                return;
+            }
+            
+            serverGrid.innerHTML = '';
+            
+            mcpServers.forEach(server => {
+                const serverCard = document.createElement('div');
+                serverCard.className = 'server-card';
+                serverCard.onclick = () => selectServer(server);
+                
+                serverCard.innerHTML = `
+                    <div class="server-icon">${server.icon || '🛠️'}</div>
+                    <div class="server-name">${server.name}</div>
+                    <div class="server-desc">${server.description || 'MCP Server'}</div>
+                    <div style="margin-top: 8px; font-size: 0.85em; color: #6b7280;">
+                        Command: <code style="background: #f3f4f6; padding: 2px 4px; border-radius: 3px;">${server.command}</code>
+                    </div>
+                `;
+                
+                serverGrid.appendChild(serverCard);
+            });
+        }
+        
+        // Select a server
+        function selectServer(server) {
+            selectedServer = server;
+            
+            // Update UI
+            document.querySelectorAll('.server-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            document.getElementById('initSelectedBtn').disabled = false;
+        }
+        
+        // Initialize selected server
+        async function initializeServer() {
+            if (!selectedServer) return;
+            
+            document.getElementById('initSelectedBtn').disabled = true;
+            document.getElementById('initSelectedBtn').innerHTML = 'Initializing... <span class="loading"></span>';
+            
             try {
                 const response = await fetch('/api/MCPDemo/initialize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         servers: [{
-                            serverName: 'filesystem',
-                            command: 'npx',
-                            args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp', '/Users', '/System/Volumes/Data/Users']
+                            serverName: selectedServer.name,
+                            command: selectedServer.command,
+                            args: selectedServer.args || [],
+                            environment: selectedServer.env || {}
                         }],
                         timeoutSeconds: 30
                     })
                 });
-
+                
                 const data = await response.json();
+                
                 if (data.success) {
-                    currentAgentId = data.agentId;
-                    statusDiv.innerHTML = `<div style="color: green;">✓ MCP server initialized successfully!</div>
-                        <div>Agent ID: ${data.agentId}</div>
-                        <div>Tools discovered: ${Object.keys(data.availableTools).length}</div>`;
+                    agentId = data.agentId;
+                    availableTools = {};
                     
-                    displayTools(data.availableTools);
+                    // Store tools by name
+                    data.availableTools.forEach(tool => {
+                        availableTools[tool.name] = tool;
+                    });
+                    
+                    // Update UI
+                    document.getElementById('resetBtn').style.display = 'inline-block';
+                    document.getElementById('serverInfoSection').style.display = 'block';
                     document.getElementById('toolsSection').style.display = 'block';
+                    document.getElementById('executionSection').style.display = 'block';
+                    document.getElementById('historySection').style.display = 'block';
+                    
+                    // Display server info
+                    const serverInfo = data.serverStates[0];
+                    document.getElementById('serverInfo').innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="font-size: 2rem;">${selectedServer.icon || '🛠️'}</div>
+                            <div>
+                                <div style="font-weight: bold; color: #1f2937;">${selectedServer.name}</div>
+                                <div style="color: #6b7280; font-size: 0.9em;">
+                                    <span class="server-status ${serverInfo.isConnected ? 'status-connected' : 'status-disconnected'}"></span>
+                                    ${serverInfo.isConnected ? 'Connected' : 'Disconnected'}
+                                </div>
+                                <div style="color: #6b7280; font-size: 0.85em; margin-top: 4px;">
+                                    ${serverInfo.registeredTools.length} tools available
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Display tools
+                    renderTools();
+                    
+                    // Load history
+                    loadHistory();
                 } else {
-                    statusDiv.innerHTML = `<div style="color: red;">✗ Failed to initialize: ${data.error}</div>`;
+                    alert(`Failed to initialize server: ${data.error}`);
                 }
             } catch (error) {
-                statusDiv.innerHTML = `<div style="color: red;">✗ Error: ${error.message}</div>`;
+                console.error('Failed to initialize server:', error);
+                alert('Failed to initialize server. Please check the console for details.');
+            } finally {
+                document.getElementById('initSelectedBtn').innerHTML = 'Initialize Selected Server';
+                document.getElementById('initSelectedBtn').disabled = false;
             }
         }
-
-        function displayTools(tools) {
+        
+        // Render available tools
+        function renderTools() {
             const toolsList = document.getElementById('toolsList');
             toolsList.innerHTML = '';
-
-            for (const [name, tool] of Object.entries(tools)) {
-                const toolDiv = document.createElement('div');
-                toolDiv.className = 'tool-item';
-                toolDiv.innerHTML = `
-                    <div class="tool-name">${name}
-                        <span class="server-badge">${tool.serverName}</span>
-                    </div>
-                    <div class="tool-description">${tool.description}</div>
-                `;
-                toolDiv.onclick = () => selectTool(name, tool);
-                toolsList.appendChild(toolDiv);
-            }
-        }
-
-        function selectTool(name, tool) {
-            selectedTool = { name, ...tool };
-            document.getElementById('callSection').style.display = 'block';
             
-            const selectedDiv = document.getElementById('selectedTool');
-            selectedDiv.innerHTML = `<h3>Selected Tool: ${name}</h3>`;
-
-            const formDiv = document.getElementById('argumentsForm');
-            formDiv.innerHTML = '';
-
-            if (tool.parameters && Object.keys(tool.parameters).length > 0) {
-                for (const [paramName, param] of Object.entries(tool.parameters)) {
+            Object.values(availableTools).forEach(tool => {
+                const toolItem = document.createElement('div');
+                toolItem.className = 'tool-item';
+                toolItem.style.cursor = 'pointer';
+                toolItem.onclick = () => selectTool(tool);
+                
+                let paramsHtml = '';
+                if (tool.parameters && tool.parameters.length > 0) {
+                    const params = tool.parameters.map(p => 
+                        `${p.name}: ${p.type}${p.required ? ' (required)' : ''}`
+                    ).join(', ');
+                    paramsHtml = `<div class="tool-params">Parameters: ${params}</div>`;
+                }
+                
+                toolItem.innerHTML = `
+                    <div class="tool-name">${tool.name}</div>
+                    <div class="tool-desc">${tool.description || 'No description'}</div>
+                    ${paramsHtml}
+                `;
+                
+                toolsList.appendChild(toolItem);
+            });
+        }
+        
+        // Select a tool for execution
+        function selectTool(tool) {
+            selectedTool = tool;
+            
+            // Update UI
+            document.querySelectorAll('.tool-item').forEach(item => {
+                item.style.border = '1px solid #e5e7eb';
+                item.style.background = '#f9fafb';
+            });
+            event.currentTarget.style.border = '2px solid #6366f1';
+            event.currentTarget.style.background = '#eef2ff';
+            
+            // Build form for tool parameters
+            const toolForm = document.getElementById('toolForm');
+            toolForm.innerHTML = `<h4 style="margin-bottom: 12px; color: #1f2937;">Execute: ${tool.name}</h4>`;
+            
+            if (tool.parameters && tool.parameters.length > 0) {
+                tool.parameters.forEach(param => {
                     const inputGroup = document.createElement('div');
                     inputGroup.className = 'input-group';
-                    inputGroup.innerHTML = `
-                        <label for="${paramName}">
-                            ${paramName} (${param.type})${param.required ? ' *' : ''}
-                            ${param.description ? `<br><small style="color: #666;">${param.description}</small>` : ''}
-                        </label>
-                        ${param.type === 'array' || param.type === 'object' ? 
-                            `<textarea id="${paramName}" placeholder='Enter JSON (e.g., ["item1", "item2"] or {"key": "value"})'></textarea>` :
-                            `<input type="text" id="${paramName}" placeholder="Enter ${param.type}">`
-                        }
-                    `;
-                    formDiv.appendChild(inputGroup);
-                }
+                    
+                    const label = document.createElement('label');
+                    label.textContent = `${param.name}${param.required ? ' *' : ''}`;
+                    if (param.description) {
+                        label.title = param.description;
+                    }
+                    inputGroup.appendChild(label);
+                    
+                    if (param.type === 'object' || param.type === 'array') {
+                        const textarea = document.createElement('textarea');
+                        textarea.id = `param-${param.name}`;
+                        textarea.placeholder = `Enter JSON ${param.type}`;
+                        inputGroup.appendChild(textarea);
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = param.type === 'number' ? 'number' : 'text';
+                        input.id = `param-${param.name}`;
+                        input.placeholder = param.description || `Enter ${param.name}`;
+                        inputGroup.appendChild(input);
+                    }
+                    
+                    toolForm.appendChild(inputGroup);
+                });
             } else {
-                formDiv.innerHTML = '<p>This tool requires no parameters.</p>';
+                toolForm.innerHTML += '<p style="color: #6b7280;">This tool requires no parameters.</p>';
             }
         }
-
-        async function callTool() {
-            if (!selectedTool || !currentAgentId) return;
-
-            const resultSection = document.getElementById('resultSection');
-            resultSection.innerHTML = '<div class="section"><span class="loading"></span> Calling tool...</div>';
-
-            // Collect arguments
+        
+        // Execute selected tool
+        async function executeTool() {
+            if (!selectedTool || !agentId) return;
+            
+            // Collect parameters
             const args = {};
             if (selectedTool.parameters) {
-                for (const paramName of Object.keys(selectedTool.parameters)) {
-                    const input = document.getElementById(paramName);
-                    if (input && input.value) {
-                        const param = selectedTool.parameters[paramName];
-                        if (param.type === 'array' || param.type === 'object') {
-                            try {
-                                args[paramName] = JSON.parse(input.value);
-                            } catch (e) {
-                                args[paramName] = input.value;
+                for (const param of selectedTool.parameters) {
+                    const element = document.getElementById(`param-${param.name}`);
+                    if (element) {
+                        const value = element.value.trim();
+                        if (value) {
+                            if (param.type === 'object' || param.type === 'array') {
+                                try {
+                                    args[param.name] = JSON.parse(value);
+                                } catch (e) {
+                                    alert(`Invalid JSON for parameter ${param.name}`);
+                                    return;
+                                }
+                            } else if (param.type === 'number') {
+                                args[param.name] = parseFloat(value);
+                            } else {
+                                args[param.name] = value;
                             }
-                        } else {
-                            args[paramName] = input.value;
+                        } else if (param.required) {
+                            alert(`Parameter ${param.name} is required`);
+                            return;
                         }
                     }
                 }
             }
-
+            
+            document.getElementById('executeBtn').disabled = true;
+            document.getElementById('executeBtn').innerHTML = 'Executing... <span class="loading"></span>';
+            document.getElementById('resultSection').style.display = 'none';
+            
             try {
                 const response = await fetch('/api/MCPDemo/tool-call', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        agentId: currentAgentId,
-                        serverName: selectedTool.serverName,
+                        agentId: agentId,
+                        serverName: selectedServer.name,
                         toolName: selectedTool.name,
                         arguments: args
                     })
                 });
-
+                
                 const data = await response.json();
-                console.log('Tool call response:', data);
-                displayResult(data);
-            } catch (error) {
-                resultSection.innerHTML = `
-                    <div class="error-box">
-                        <div class="error-title">Request Error</div>
-                        <div class="error-message">${error.message}</div>
-                    </div>
-                `;
-            }
-        }
-
-        function displayResult(data) {
-            const resultSection = document.getElementById('resultSection');
-            console.log('Display result data:', data);
-            
-            if (data.success && data.resultDisplay) {
-                const result = data.resultDisplay;
-                console.log('Result display:', result);
-                let content = '';
                 
-                // Tool execution info
-                content += `
-                    <div class="section">
-                        <div class="tool-info">
-                            <div class="info-item"><span class="info-label">Server:</span> ${data.toolInfo.serverName}</div>
-                            <div class="info-item"><span class="info-label">Tool:</span> ${data.toolInfo.toolName}</div>
-                            <div class="info-item"><span class="info-label">Executed at:</span> ${new Date(data.toolInfo.executedAt).toLocaleString()}</div>
-                        </div>
-                `;
-
-                if (result.hasResult) {
-                    // CRITICAL: Get the actual result content, never show undefined
-                    let displayContent = null;
-                    
-                    // Try multiple sources to find the actual content
-                    if (result.resultContent !== undefined && result.resultContent !== null) {
-                        displayContent = result.resultContent;
-                    } else if (result.formattedResult && result.formattedResult.value !== undefined) {
-                        displayContent = result.formattedResult.value;
-                    } else if (result.formattedResult && result.formattedResult.raw !== undefined) {
-                        displayContent = result.formattedResult.raw;
-                    } else if (data.result !== undefined) {
-                        displayContent = data.result;
-                    } else {
-                        // Last resort: show the entire data object
-                        displayContent = data;
-                    }
-                    
-                    // Format the content for display
-                    let formattedHtml = '';
-                    try {
-                        // Try to pretty-print if JSON
-                        const jsonStr = typeof displayContent === 'string' ? displayContent : JSON.stringify(displayContent);
-                        const parsed = JSON.parse(jsonStr);
-                        formattedHtml = `<pre>${escapeHtml(JSON.stringify(parsed, null, 2))}</pre>`;
-                    } catch (e) {
-                        // Not JSON, display as-is
-                        formattedHtml = `<pre>${escapeHtml(String(displayContent))}</pre>`;
-                    }
-                    
-                    content += `
-                        <div class="result-box">
-                            <div class="result-header">
-                                <div class="result-title">Execution Result</div>
-                                <div class="result-type">${result.resultType || 'Response'}</div>
-                            </div>
-                            <div class="result-content">
-                                ${formattedHtml}
-                            </div>
-                        </div>
-                    `;
-                    
-                    // Try to extract and display Result field separately
-                    let resultFieldValue = null;
-                    try {
-                        const jsonStr = typeof displayContent === 'string' ? displayContent : JSON.stringify(displayContent);
-                        const parsed = JSON.parse(jsonStr);
-                        if (parsed.Result !== undefined && parsed.Result !== null) {
-                            resultFieldValue = parsed.Result;
+                // Debug logging
+                console.log('MCP Tool Call Response:', data);
+                if (data.resultDisplay) {
+                    console.log('Result Display:', data.resultDisplay);
+                }
+                
+                // Display result
+                document.getElementById('resultSection').style.display = 'block';
+                const resultContent = document.getElementById('resultContent');
+                
+                if (data.success) {
+                    if (data.resultDisplay && data.resultDisplay.hasResult) {
+                        // First try to use formattedResult for better display
+                        let displayContent = data.resultDisplay.formattedResult || data.resultDisplay.resultContent;
+                        
+                        // Special handling for Result field extraction
+                        if (typeof displayContent === 'object' && displayContent !== null) {
+                            // If there's a Result field at the top level, extract it
+                            if ('Result' in displayContent) {
+                                displayContent = displayContent.Result;
+                            }
                         }
-                    } catch (e) {
-                        // Not JSON or no Result field
+                        
+                        // Convert to string for display
+                        if (typeof displayContent === 'string') {
+                            // If it's already a string, check if it's JSON
+                            try {
+                                const parsed = JSON.parse(displayContent);
+                                if (parsed && typeof parsed === 'object' && 'Result' in parsed) {
+                                    displayContent = parsed.Result;
+                                } else {
+                                    displayContent = parsed;
+                                }
+                            } catch (e) {
+                                // Not JSON, use as is
+                            }
+                        }
+                        
+                        // Final display
+                        if (displayContent === undefined || displayContent === null) {
+                            resultContent.innerHTML = '<div class="error-box">Tool executed but result is undefined or null</div>';
+                        } else {
+                            // Create highlighted result section
+                            let resultHtml = '<div style="padding: 16px; background: #f0fff4; border: 2px solid #34d399; border-radius: 8px;">';
+                            resultHtml += '<div style="font-weight: bold; color: #059669; margin-bottom: 12px;">Result:</div>';
+                            
+                            if (typeof displayContent === 'object') {
+                                resultHtml += `<pre style="background: white; padding: 12px; border-radius: 4px; overflow: auto; border: 1px solid #bbf7d0;">${JSON.stringify(displayContent, null, 2)}</pre>`;
+                            } else {
+                                resultHtml += `<pre style="background: white; padding: 12px; border-radius: 4px; overflow: auto; border: 1px solid #bbf7d0;">${escapeHtml(String(displayContent))}</pre>`;
+                            }
+                            
+                            resultHtml += '</div>';
+                            
+                            // Also show the full response data if different from the result
+                            if (data.resultDisplay && JSON.stringify(data.resultDisplay.resultContent) !== JSON.stringify(displayContent)) {
+                                resultHtml += '<details style="margin-top: 12px;">';
+                                resultHtml += '<summary style="cursor: pointer; color: #6b7280;">Full Response Data</summary>';
+                                resultHtml += `<pre style="margin-top: 8px; padding: 8px; background: #f9fafb; border-radius: 4px; font-size: 0.85em;">${JSON.stringify(data.resultDisplay, null, 2)}</pre>`;
+                                resultHtml += '</details>';
+                            }
+                            
+                            resultContent.innerHTML = resultHtml;
+                        }
+                        
+
+                    } else {
+                        resultContent.innerHTML = '<div class="error-box">Tool executed but returned no result</div>';
+                    }
+                } else {
+                    resultContent.innerHTML = `<div class="error-box">Error: ${data.errorMessage || data.error || 'Unknown error'}</div>`;
+                }
+                
+                // Refresh history
+                loadHistory();
+            } catch (error) {
+                console.error('Failed to execute tool:', error);
+                document.getElementById('resultSection').style.display = 'block';
+                document.getElementById('resultContent').innerHTML = 
+                    `<div class="error-box">Failed to execute tool: ${error.message}</div>`;
+            } finally {
+                document.getElementById('executeBtn').innerHTML = 'Execute Tool';
+                document.getElementById('executeBtn').disabled = false;
+            }
+        }
+        
+        // Load tool call history
+        async function loadHistory() {
+            if (!agentId) return;
+            
+            try {
+                const response = await fetch(`/api/MCPDemo/history/${agentId}`);
+                const data = await response.json();
+                
+                if (data.success && data.history) {
+                    const historyContent = document.getElementById('historyContent');
+                    
+                    if (data.history.length === 0) {
+                        historyContent.innerHTML = '<div style="color: #6b7280; text-align: center;">No tool calls yet...</div>';
+                        return;
                     }
                     
-                    // If Result field exists, display it in a separate box
-                    if (resultFieldValue !== null) {
-                        content += `
-                            <div class="result-box" style="background: #f0fff4; border-color: #34d399; margin-top: 16px;">
-                                <div class="result-header">
-                                    <div class="result-title" style="color: #059669;">Result Field Value</div>
-                                    <div class="result-type" style="background: #059669;">Extracted</div>
-                                </div>
-                                <div class="result-content">
-                                    <pre>${escapeHtml(String(resultFieldValue))}</pre>
-                                </div>
-                            </div>
+                    historyContent.innerHTML = '';
+                    
+                    data.history.forEach(item => {
+                        const historyItem = document.createElement('div');
+                        historyItem.className = 'history-item';
+                        
+                        const statusClass = item.success ? 'status-success' : 'status-error';
+                        const statusText = item.success ? 'Success' : 'Error';
+                        
+                        historyItem.innerHTML = `
+                            <div class="history-time">${new Date(item.timestamp).toLocaleString()}</div>
+                            <div class="history-tool">${item.serverName} → ${item.toolName}</div>
+                            <div class="history-status ${statusClass}">${statusText}</div>
                         `;
-                    }
+                        
+                        if (item.arguments && Object.keys(item.arguments).length > 0) {
+                            historyItem.innerHTML += `
+                                <div style="margin-top: 8px; font-size: 0.85em; color: #6b7280;">
+                                    Args: <code style="background: #f3f4f6; padding: 2px 4px; border-radius: 3px;">${JSON.stringify(item.arguments)}</code>
+                                </div>
+                            `;
+                        }
+                        
+                        // Show result if successful
+                        if (item.success && item.result !== undefined) {
+                            let displayResult = item.result;
+                            
+                            // Extract Result field if present
+                            if (typeof displayResult === 'object' && displayResult !== null && 'Result' in displayResult) {
+                                displayResult = displayResult.Result;
+                            } else if (typeof displayResult === 'string') {
+                                try {
+                                    const parsed = JSON.parse(displayResult);
+                                    if (parsed && typeof parsed === 'object' && 'Result' in parsed) {
+                                        displayResult = parsed.Result;
+                                    }
+                                } catch (e) {
+                                    // Not JSON, use as is
+                                }
+                            }
+                            
+                            historyItem.innerHTML += `
+                                <div style="margin-top: 8px; font-size: 0.85em; color: #059669;">
+                                    Result: <code style="background: #ecfdf5; padding: 2px 4px; border-radius: 3px; max-width: 100%; display: inline-block; overflow-wrap: break-word;">${JSON.stringify(displayResult)}</code>
+                                </div>
+                            `;
+                        } else if (!item.success && item.errorMessage) {
+                            historyItem.innerHTML += `
+                                <div style="margin-top: 8px; font-size: 0.85em; color: #dc2626;">
+                                    Error: ${item.errorMessage}
+                                </div>
+                            `;
+                        }
+                        
+                        historyContent.appendChild(historyItem);
+                    });
                 }
-                content += '</div>';
+            } catch (error) {
+                console.error('Failed to load history:', error);
+            }
+        }
+        
+        // Reset everything
+        function resetAll() {
+            if (confirm('Are you sure you want to reset all connections?')) {
+                agentId = null;
+                selectedServer = null;
+                selectedTool = null;
+                availableTools = {};
                 
-                resultSection.innerHTML = content;
-            } else {
-                resultSection.innerHTML = `
-                    <div class="error-box">
-                        <div class="error-title">Tool Execution Failed</div>
-                        <div class="tool-info">
-                            <div class="info-item"><span class="info-label">Server:</span> ${data.toolInfo?.serverName || 'Unknown'}</div>
-                            <div class="info-item"><span class="info-label">Tool:</span> ${data.toolInfo?.toolName || 'Unknown'}</div>
-                        </div>
-                        <div class="error-message">${data.errorMessage || data.resultDisplay?.errorDetails || 'Unknown error'}</div>
-                    </div>
-                `;
+                // Reset UI
+                document.querySelectorAll('.server-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                document.getElementById('initSelectedBtn').disabled = true;
+                document.getElementById('resetBtn').style.display = 'none';
+                document.getElementById('serverInfoSection').style.display = 'none';
+                document.getElementById('toolsSection').style.display = 'none';
+                document.getElementById('executionSection').style.display = 'none';
+                document.getElementById('historySection').style.display = 'none';
+                document.getElementById('resultSection').style.display = 'none';
             }
         }
-
-        function formatResultContent(formattedResult, rawContent) {
-            console.log('Formatting result:', formattedResult, 'Raw content:', rawContent);
-            
-            // Display the raw content as-is, like in the history
-            if (rawContent) {
-                try {
-                    // Try to parse and prettify if it's JSON
-                    const jsonStr = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent);
-                    const parsed = JSON.parse(jsonStr);
-                    const prettified = JSON.stringify(parsed, null, 2);
-                    console.log('Displaying prettified JSON');
-                    return `<pre>${escapeHtml(prettified)}</pre>`;
-                } catch (e) {
-                    // Not valid JSON, display as-is
-                    console.log('Not valid JSON, displaying as plain text');
-                    return `<pre>${escapeHtml(String(rawContent))}</pre>`;
-                }
-            }
-            
-            // If no raw content, try formattedResult
-            const result = formattedResult;
-            if (!result) return '<pre>No result data available</pre>';
-            
-            // Handle different result types but always show full content
-            if (result.type === 'json' && result.formatted) {
-                return `<pre>${escapeHtml(result.formatted)}</pre>`;
-            }
-            
-            if (result.value !== undefined) {
-                try {
-                    // Try to prettify if it's JSON
-                    const parsed = typeof result.value === 'string' ? JSON.parse(result.value) : result.value;
-                    const prettified = JSON.stringify(parsed, null, 2);
-                    return `<pre>${escapeHtml(prettified)}</pre>`;
-                } catch (e) {
-                    // Not JSON, display as-is
-                    return `<pre>${escapeHtml(String(result.value))}</pre>`;
-                }
-            }
-            
-            // Last resort: stringify whatever we have
-            try {
-                const stringified = JSON.stringify(result, null, 2);
-                return `<pre>${escapeHtml(stringified)}</pre>`;
-            } catch (e) {
-                console.error('Failed to stringify result:', e);
-                return '<pre>Unable to display result</pre>';
-            }
-        }
-
-        function escapeHtml(text) {
-            if (text === undefined || text === null) {
-                return 'No data available';
-            }
-            const div = document.createElement('div');
-            div.textContent = String(text);
-            return div.innerHTML;
-        }
-
-        function clearSelection() {
-            selectedTool = null;
-            document.getElementById('callSection').style.display = 'none';
-            document.getElementById('resultSection').innerHTML = '';
-        }
+        
+        // Event listeners
+        document.getElementById('refreshServersBtn').addEventListener('click', loadMCPServers);
+        document.getElementById('initSelectedBtn').addEventListener('click', initializeServer);
+        document.getElementById('executeBtn').addEventListener('click', executeTool);
+        document.getElementById('resetBtn').addEventListener('click', resetAll);
+        
+        // Initialize the page
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDescription();
+            loadMCPServers();
+        });
     </script>
 </body>
 </html> 
