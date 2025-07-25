@@ -1,3 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
 # GAgent 实现指南
 
 ## 概述

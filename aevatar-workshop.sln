@@ -50,6 +50,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rules", "rules", "{852D114D
 		.cursor\rules\code-practices.mdc = .cursor\rules\code-practices.mdc
 		.cursor\rules\test-practices.mdc = .cursor\rules\test-practices.mdc
 		.cursor\rules\gagent-implementation.md = .cursor\rules\gagent-implementation.md
+		.cursor\rules\gagent-implementation.mdc = .cursor\rules\gagent-implementation.mdc
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{626A0D27-0ABD-4A41-B555-1E5A248FBBCA}"
