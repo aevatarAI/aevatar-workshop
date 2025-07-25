@@ -129,24 +129,16 @@ using Aevatar.Core;
 using Aevatar.Core.Abstractions;
 using System.ComponentModel;
 
-[Description("我的自定义代理")]
 [GAgent("mycustom", "workshop")]
 public class MyCustomGAgent : GAgentBase<MyCustomState, MyCustomStateLogEvent>
 {
-    private readonly ILogger<MyCustomGAgent> _logger;
-    
-    public MyCustomGAgent(ILogger<MyCustomGAgent> logger)
-    {
-        _logger = logger;
-    }
-    
     public override Task<string> GetDescriptionAsync()
         => Task.FromResult("用于演示的自定义 GAgent");
 
     [EventHandler]
     public async Task HandleMyEventAsync(MyCustomEvent @event)
     {
-        _logger.LogInformation("收到事件: {Message}", @event.Message);
+        Logger.LogInformation("收到事件: {Message}", @event.Message);
         
         // 更新状态
         await RaiseStateEvent(new MyCustomStateLogEvent 
