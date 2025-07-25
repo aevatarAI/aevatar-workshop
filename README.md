@@ -1,80 +1,99 @@
-# Aevatar Workshop Quickstart Guide
+# Aevatar Workshop
 
-Welcome to the Aevatar Workshop! This guide will help you get started with the core features of the Aevatar framework, focusing on GAgent collaboration. You'll learn how to run the provided demos, understand the basics of event-driven agent communication, and create your own custom GAgent.
+Welcome to the Aevatar Workshop! This is a comprehensive demonstration and learning environment for the Aevatar framework, showcasing GAgent collaboration, event-driven architecture, and AI integration capabilities.
 
-## What is Aevatar?
-Aevatar is a framework for building distributed, event-driven systems using agents (GAgents). GAgents can be ordinary agents or AI-powered agents, and they can collaborate to accomplish complex tasks. This workshop repo is designed to help you quickly experience Aevatar's power and flexibility.
+## 🎯 What is Aevatar?
+
+Aevatar is a powerful framework for building distributed, event-driven systems using agents (GAgents). Built on Microsoft Orleans, it enables:
+- **Distributed Agents**: GAgents that can run across multiple nodes
+- **Event-Driven Communication**: Agents collaborate through events
+- **AI Integration**: Native support for AI-powered agents with tool calling
+- **MCP Support**: Model Context Protocol integration for external tools
 
 ---
 
-## Prerequisites
+## 📋 Prerequisites
+
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) installed
 - Git and a Unix-like shell (macOS/Linux recommended)
+- (Optional) Azure OpenAI or OpenAI API key for AI-powered demos
 
 ---
 
-## 1. Clone, Build, and Launch the Web Interface
+## 🚀 Quick Start
 
 ```bash
 git clone git@github.com:aevatarAI/aevatar-workshop.git
 cd aevatar-workshop
-sh quickstart.sh
+./quickstart.sh
 ```
 
 The `quickstart.sh` script will:
 - Build all projects
-- Start the Host service in the background (logs: `host.log`)
-- Start the Client service in the background (logs: `client.log`)
-- **Automatically open the client web interface in your browser** (http://localhost:5000)
+- Start the Host service (backend) - logs in `host.log`
+- Start the Client service (frontend) - logs in `client.log`
+- Display URL for the web interface: http://localhost:5000
 
-> **Tip:** To stop the services, use the `kill` command shown at the end of the script output, or run `./shutdown.sh`.
-
----
-
-## 2. Using the Web Interface
-
-After running `quickstart.sh`, visit [http://localhost:5000](http://localhost:5000) (should open automatically).
-
-> **All demo instructions and usage tips are now shown directly in the web interface. You do not need to refer to this README for running or understanding the demos.**
-> 
-> **Tip:** For MultiGAgentDemo, you can now choose the secret number (1-100) directly in the web interface before running the demo.
-
-The web interface allows you to:
-- Select and run any of the provided demos (EventHandlerDemo, MultiGAgentDemo, RouterDemo, YourOwnDemo)
-- Input parameters (e.g. greeting for EventHandlerDemo)
-- View real-time logs for both Host and Client (with manual refresh)
-- For MultiGAgentDemo, view the live chat messages between agents in a dedicated output area
-
-**No need to use command-line arguments for demo selection—everything is available via the website!**
+> **Tip:** To stop all services, use `./shutdown.sh`
 
 ---
 
-## 3. Running the Demos (via Web UI)
+## 🎮 Available Demos
 
-> **See the web interface for detailed instructions and scenario descriptions for each demo.**
+The workshop includes two categories of demos:
 
-- **EventHandlerDemo:** Event-driven GAgent collaboration. Optionally enter a greeting, run the demo, and check Host Log for details.
-- **MultiGAgentDemo:** Multi-agent number guessing game. Alice picks a secret number (default 42, you can choose 1-100 in the web UI), Bob guesses. Chat and guesses are shown in the chat panel. No need to edit code to change the number.
-- **RouterDemo:** AI routing and multi-agent orchestration. Requires API key configuration. Host Log shows orchestration, Client Log shows the final report.
-- **YourOwnDemo:** Run your own custom demo logic. Extend in `YourOwnDemo.cs`.
+### Basic Demos
+
+1. **Event Handler Demo** 🎯
+   - Interactive demonstration of GAgent event handling
+   - Shows how agents define and handle custom events
+   - Displays real-time event flow and statistics
+   - Perfect for understanding event-driven architecture
+
+2. **GAgent Service Demo** 🔧
+   - Basic GAgent service capabilities
+   - Demonstrates agent lifecycle and state management
+   - Shows inter-agent communication patterns
+
+3. **AI Tool Calling Demo** 🤖
+   - AI agents using other GAgents as tools
+   - Demonstrates Math and TimeConverter agent integration
+   - Shows how to build AI-powered workflows
+
+4. **MCP Demo** 🔌
+   - Model Context Protocol integration
+   - External tool integration capabilities
+   - Shows how to extend agents with external services
+
+### Advanced Demos
+
+1. **Dynamic AI MCP Integration** ⚡
+   - Dynamic tool registration and discovery
+   - Complex AI orchestration patterns
+   - Real-time tool adaptation
+
+2. **PsiGAgent Demo** 🧠
+   - Advanced AI agent with psychological modeling
+   - Complex reasoning and decision-making
+   - Multi-agent collaboration with AI
 
 ---
 
-## 4. MultiGAgentDemo Configuration
+## ⚙️ Configuration
 
-If you want to use advanced features in MultiGAgentDemo (such as AI agents or persistent state), you may need to configure additional settings or provide API keys.
+### AI Configuration (Required for AI Demos)
 
-Open Host's configuration file (`src/Aevatar.Workshop.Host/appsettings.json`) and configure the SystemLLMConfigs section. Here we have used Azure OpenAI. Please configure your Endpoint and ApiKey.
+Edit `src/Aevatar.Workshop.Host/appsettings.json`:
 
 ```json
 {
   "SystemLLMConfigs": {
     "OpenAI": {
-      "ProviderEnum": "Azure",
+      "ProviderEnum": "Azure",      // "Azure" or "OpenAI"
       "ModelIdEnum": "OpenAI",
       "ModelName": "gpt-4o",
-      "Endpoint": "",
-      "ApiKey": ""
+      "Endpoint": "YOUR_ENDPOINT",   // Azure: https://xxx.openai.azure.com/
+      "ApiKey": "YOUR_API_KEY"
     }
   }
 }
@@ -82,90 +101,189 @@ Open Host's configuration file (`src/Aevatar.Workshop.Host/appsettings.json`) an
 
 ---
 
-## 5. RouterDemo Configuration
+## 🏗️ Project Structure
 
-Before running RouterDemo, you must configure your API key and endpoint:
-
-Open Host's configuration file (`src/Aevatar.Workshop.Host/appsettings.json`) and configure the SystemLLMConfigs section. Here we have used Azure OpenAI. Please configure your Endpoint and ApiKey.
-
-```json
-{
-  "SystemLLMConfigs": {
-    "OpenAI": {
-      "ProviderEnum": "Azure",
-      "ModelIdEnum": "OpenAI",
-      "ModelName": "gpt-4o",
-      "Endpoint": "",
-      "ApiKey": ""
-    }
-  }
-}
+```
+aevatar-workshop/
+├── src/
+│   ├── Aevatar.Workshop.Host/      # Backend Orleans Silo
+│   ├── Aevatar.Workshop.Client/    # Frontend Web API & UI
+│   └── Aevatar.Workshop.GAgent/    # Custom GAgent implementations
+├── test/                           # Unit and integration tests
+├── docs/                          # Documentation
+│   └── demodesc/                  # Demo descriptions (EN/ZH)
+├── quickstart.sh                  # Start script
+├── shutdown.sh                    # Stop script
 ```
 
 ---
 
-## 6. Creating Your Own GAgent
-
-You can easily define your own GAgent and use it in the client. Here's how:
+## 🛠️ Creating Your Own GAgent
 
 ### Step 1: Define Your GAgent
-Create a new class in `src/Aevatar.Workshop.GAgent/`, e.g. `MyCustomGAgent.cs`:
+
+Create a new file in `src/Aevatar.Workshop.GAgent/GAgents/`:
 
 ```csharp
 using Aevatar.Core;
 using Aevatar.Core.Abstractions;
+using System.ComponentModel;
 
-[GAgent("mycustom", "demo")]
-public class MyCustomGAgent : GAgentBase<StateBase, StateLogEventBase<StateLogEventBase>>
+[Description("My Custom Agent")]
+[GAgent("mycustom", "workshop")]
+public class MyCustomGAgent : GAgentBase<MyCustomState, MyCustomStateLogEvent>
 {
+    private readonly ILogger<MyCustomGAgent> _logger;
+    
+    public MyCustomGAgent(ILogger<MyCustomGAgent> logger)
+    {
+        _logger = logger;
+    }
+    
     public override Task<string> GetDescriptionAsync()
-        => Task.FromResult("This is my custom GAgent.");
+        => Task.FromResult("My custom GAgent for demonstration");
 
     [EventHandler]
-    public Task HandleMyEventAsync(MyEvent eventData)
+    public async Task HandleMyEventAsync(MyCustomEvent @event)
     {
-        // Your logic here
-        return Task.CompletedTask;
+        _logger.LogInformation("Received event: {Message}", @event.Message);
+        
+        // Update state
+        await RaiseStateEvent(new MyCustomStateLogEvent 
+        { 
+            Message = @event.Message 
+        });
+        
+        // Publish response event
+        await PublishAsync(new MyResponseEvent 
+        { 
+            Response = $"Processed: {@event.Message}" 
+        });
     }
 }
 ```
 
-### Step 2: Define Your Event
-Create a new event class, e.g. `MyEvent.cs`:
+### Step 2: Define Your Events
 
 ```csharp
 using Aevatar.Core.Abstractions;
+using Orleans;
 
 [GenerateSerializer]
-public class MyEvent : EventBase
+public class MyCustomEvent : EventBase
 {
-    [Id(0)] public string Message { get; set; }
+    [Id(0)] public string Message { get; set; } = string.Empty;
+}
+
+[GenerateSerializer]
+public class MyResponseEvent : EventBase
+{
+    [Id(0)] public string Response { get; set; } = string.Empty;
 }
 ```
 
-### Step 3: Use Your GAgent in the Client
-In your client demo (e.g. in `YourOwnDemo.cs`):
+### Step 3: Define Your State
 
 ```csharp
-var myAgent = await gAgentFactory.GetGAgentAsync("mycustom", "demo");
-var publisher = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>();
-await publisher.PublishEventAsync(new MyEvent { Message = "Hello from my custom agent!" }, myAgent);
+[GenerateSerializer]
+public class MyCustomState : StateBase
+{
+    [Id(0)] public List<string> ProcessedMessages { get; set; } = new();
+}
+
+[GenerateSerializer]
+public class MyCustomStateLogEvent : StateLogEventBase<MyCustomStateLogEvent>
+{
+    [Id(0)] public string Message { get; set; } = string.Empty;
+    
+    public override void Apply(MyCustomState state)
+    {
+        state.ProcessedMessages.Add(Message);
+    }
+}
 ```
 
----
+### Step 4: Use Your GAgent
 
-## 7. Where to Look for Output
-- **host.log**: Logs from the Host service (agent backend)
-- **client.log**: Logs from the Client (demo execution, agent collaboration)
-- **Website**: All demo results, logs, and agent chat messages are visible in the web interface
+Your custom GAgent will automatically appear in the Event Handler Demo if placed in the Demo namespace, thanks to the reflection-based discovery system.
 
 ---
 
-## 8. Next Steps
-- Try modifying the demos or creating your own GAgent and event types
-- Explore the `src/Aevatar.Workshop.GAgent/` and `src/Aevatar.Workshop.Client/` directories for more examples
-- Read the other docs in the `docs/` directory for deeper dives into GAgent architecture and event handling
+## 🔍 Key Features
+
+### Event-Driven Architecture
+- Agents communicate through strongly-typed events
+- Support for event handlers with attributes
+- Event propagation through agent hierarchies
+
+### AI Integration
+- Native support for AI-powered agents
+- Tool calling capabilities
+- MCP (Model Context Protocol) support
+
+### Development Tools
+- **GAgent Reflection Extensions**: Automatic discovery of agents and their capabilities
+- **JsonConversionHelper**: Unified JSON serialization for Orleans
+- **Interactive Web UI**: Real-time monitoring and interaction
+
+### Testing Support
+- Comprehensive unit test examples
+- Integration test patterns
+- Orleans TestKit integration
 
 ---
 
-Happy hacking with Aevatar! 🚀 
+## 📚 Learning Path
+
+1. **Start with Event Handler Demo** - Understand basic event-driven patterns
+2. **Explore GAgent Service Demo** - Learn about agent lifecycle
+3. **Try AI Tool Calling Demo** - See AI integration in action
+4. **Experiment with MCP Demo** - Understand external tool integration
+5. **Create your own GAgent** - Apply what you've learned
+
+---
+
+## 🐛 Troubleshooting
+
+### Services won't start
+- Check if ports 5000 (Client) and 11111 (Orleans) are available
+- Ensure .NET 9.0 SDK is installed: `dotnet --version`
+- Check logs: `tail -f host.log` and `tail -f client.log`
+
+### AI demos not working
+- Verify API keys in `appsettings.json`
+- Check if endpoint URLs are correct
+- Ensure network connectivity to AI services
+
+### Build errors
+- Run `dotnet restore` to restore packages
+- If in dev mode, ensure all submodules are cloned
+- Switch to release mode if framework source is not available
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for new functionality
+4. Submit a pull request
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+## 🔗 Resources
+
+- [Aevatar Documentation](https://docs.aevatar.ai)
+- [Orleans Documentation](https://docs.microsoft.com/en-us/dotnet/orleans/)
+- [Discord Community](https://discord.gg/aevatar)
+
+---
+
+Happy coding with Aevatar! 🚀 
