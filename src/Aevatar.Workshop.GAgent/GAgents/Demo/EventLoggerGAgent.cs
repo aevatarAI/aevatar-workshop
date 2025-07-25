@@ -33,6 +33,18 @@ public class EventLoggerStateLogEvent : StateLogEventBase<EventLoggerStateLogEve
 {
 }
 
+// Specific state change events
+[GenerateSerializer]
+public class EventLogAddedEvent : EventLoggerStateLogEvent
+{
+    [Id(0)] public EventLogRecord Record { get; set; } = null!;
+}
+
+[GenerateSerializer]
+public class EventLogsClearedEvent : EventLoggerStateLogEvent
+{
+}
+
 public interface IEventLoggerGAgent : IStateGAgent<EventLoggerGAgentState>
 {
     Task<List<EventLogRecord>> SearchEventsAsync(
@@ -45,25 +57,18 @@ public interface IEventLoggerGAgent : IStateGAgent<EventLoggerGAgentState>
 [GAgent("event-logger-demo", "workshop")]
 public class EventLoggerGAgent : GAgentBase<EventLoggerGAgentState, EventLoggerStateLogEvent>, IEventLoggerGAgent
 {
-    private readonly ILogger<EventLoggerGAgent> _logger;
-
-    public EventLoggerGAgent(ILogger<EventLoggerGAgent> logger)
-    {
-        _logger = logger;
-    }
-
     public override Task<string> GetDescriptionAsync()
     {
-        return Task.FromResult("EventLoggerGAgent - 记录和分析系统中所有事件的演示GAgent");
+        return Task.FromResult("EventLoggerGAgent - Demo GAgent for logging and analyzing all events in the system");
     }
 
     /// <summary>
-    /// 处理事件记录事件（专门处理）
+    /// Handle event logged events (dedicated handler)
     /// </summary>
     [EventHandler]
-    public Task HandleEventLoggedAsync(EventLoggedEvent @event)
+    public async Task HandleEventLoggedAsync(EventLoggedEvent @event)
     {
-        _logger.LogInformation("记录事件: {EventType} from {SourceAgent}", 
+        Logger.LogInformation("Logging event: {EventType} from {SourceAgent}", 
             @event.EventType, @event.SourceAgent);
 
         var record = new EventLogRecord
@@ -76,76 +81,106 @@ public class EventLoggerGAgent : GAgentBase<EventLoggerGAgentState, EventLoggerS
             ErrorMessage = @event.ErrorMessage
         };
 
-        AddEventLog(record);
-        return Task.CompletedTask;
+        // Use event sourcing
+        RaiseEvent(new EventLogAddedEvent { Record = record });
+        await ConfirmEvents();
     }
 
     /// <summary>
-    /// 记录所有事件（使用AllEventHandler展示全局事件处理）
+    /// Log all events (demonstrates global event handling with AllEventHandler)
     /// </summary>
     [AllEventHandler(allowSelfHandling: true)]
-    public Task LogAllEventsAsync(EventWrapperBase eventWrapper)
+    public async Task LogAllEventsAsync(EventWrapperBase eventWrapper)
     {
-        if (eventWrapper is not EventWrapper<EventBase> typedWrapper)
+        // Extract the actual event using reflection due to generic covariance limitations
+        var eventWrapperType = eventWrapper.GetType();
+        var eventProperty = eventWrapperType.GetProperty("Event");
+        var publisherProperty = eventWrapperType.GetProperty("PublisherGrainId");
+        
+        if (eventProperty == null || publisherProperty == null)
         {
-            return Task.CompletedTask;
+            Logger.LogWarning("Unable to extract event information from EventWrapper");
+            return;
         }
 
-        if (typedWrapper.Event is EventBase eventBase)
+        var eventObj = eventProperty.GetValue(eventWrapper);
+        var publisherIdObj = publisherProperty.GetValue(eventWrapper);
+        
+        if (eventObj is EventBase eventBase)
         {
             var eventType = eventBase.GetType().Name;
             
-            // 避免重复记录EventLoggedEvent
-            if (eventBase is EventLoggedEvent eventLogged)
+            // Avoid duplicate logging of EventLoggedEvent
+            if (eventBase is EventLoggedEvent)
             {
-                // 已经在专门的handler中处理了
-                return Task.CompletedTask;
+                // Already handled in dedicated handler
+                return;
             }
 
-            _logger.LogDebug("捕获事件: {EventType} from {SenderId}", 
-                eventType, typedWrapper.PublisherGrainId.ToString());
+            var publisherIdString = publisherIdObj?.ToString() ?? "Unknown";
+            
+            Logger.LogDebug("Captured event: {EventType} from {SenderId}", 
+                eventType, publisherIdString);
 
             var record = new EventLogRecord
             {
                 EventType = eventType,
-                SourceAgent = typedWrapper.PublisherGrainId.ToString() ?? "Unknown",
+                SourceAgent = publisherIdString,
                 LoggedAt = DateTime.UtcNow,
                 EventData = GetEventSummary(eventBase),
                 Success = true
             };
 
-            AddEventLog(record);
+            // Use event sourcing
+            RaiseEvent(new EventLogAddedEvent { Record = record });
+            await ConfirmEvents();
         }
-
-        return Task.CompletedTask;
     }
 
-    private void AddEventLog(EventLogRecord record)
+    /// <summary>
+    /// Override GAgentTransitionState to handle custom state transitions
+    /// </summary>
+    protected override void GAgentTransitionState(EventLoggerGAgentState state, StateLogEventBase<EventLoggerStateLogEvent> @event)
     {
-        State.EventLogs.Add(record);
-        State.TotalEventsLogged++;
-
-        // 更新统计
-        if (!State.EventTypeCounts.ContainsKey(record.EventType))
+        switch (@event)
         {
-            State.EventTypeCounts[record.EventType] = 0;
-        }
-        State.EventTypeCounts[record.EventType]++;
+            case EventLogAddedEvent e:
+                // Add the log record
+                state.EventLogs.Add(e.Record);
+                state.TotalEventsLogged++;
 
-        if (!State.SourceAgentCounts.ContainsKey(record.SourceAgent))
-        {
-            State.SourceAgentCounts[record.SourceAgent] = 0;
-        }
-        State.SourceAgentCounts[record.SourceAgent]++;
+                // Update statistics
+                if (!state.EventTypeCounts.ContainsKey(e.Record.EventType))
+                {
+                    state.EventTypeCounts[e.Record.EventType] = 0;
+                }
+                state.EventTypeCounts[e.Record.EventType]++;
 
-        // 更新时间戳
-        State.FirstEventTime ??= record.LoggedAt;
-        State.LastEventTime = record.LoggedAt;
+                if (!state.SourceAgentCounts.ContainsKey(e.Record.SourceAgent))
+                {
+                    state.SourceAgentCounts[e.Record.SourceAgent] = 0;
+                }
+                state.SourceAgentCounts[e.Record.SourceAgent]++;
 
-        // 保持日志在最近200条
-        if (State.EventLogs.Count > 200)
-        {
-            State.EventLogs.RemoveAt(0);
+                // Update timestamps
+                state.FirstEventTime ??= e.Record.LoggedAt;
+                state.LastEventTime = e.Record.LoggedAt;
+
+                // Keep only last 200 logs
+                if (state.EventLogs.Count > 200)
+                {
+                    state.EventLogs.RemoveAt(0);
+                }
+                break;
+                
+            case EventLogsClearedEvent _:
+                state.EventLogs.Clear();
+                state.EventTypeCounts.Clear();
+                state.SourceAgentCounts.Clear();
+                state.TotalEventsLogged = 0;
+                state.FirstEventTime = null;
+                state.LastEventTime = null;
+                break;
         }
     }
 
@@ -163,47 +198,12 @@ public class EventLoggerGAgent : GAgentBase<EventLoggerGAgentState, EventLoggerS
     }
 
     /// <summary>
-    /// 获取事件日志统计信息
-    /// </summary>
-    public Task<EventLogStatistics> GetStatisticsAsync()
-    {
-        var stats = new EventLogStatistics
-        {
-            TotalEventsLogged = State.TotalEventsLogged,
-            EventTypeCounts = State.EventTypeCounts
-                .OrderByDescending(kvp => kvp.Value)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            SourceAgentCounts = State.SourceAgentCounts
-                .OrderByDescending(kvp => kvp.Value)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            RecentEvents = State.EventLogs
-                .OrderByDescending(e => e.LoggedAt)
-                .Take(20)
-                .ToList(),
-            FirstEventTime = State.FirstEventTime,
-            LastEventTime = State.LastEventTime
-        };
-
-        // 计算事件频率
-        if (State.FirstEventTime.HasValue && State.LastEventTime.HasValue)
-        {
-            var duration = State.LastEventTime.Value - State.FirstEventTime.Value;
-            if (duration.TotalMinutes > 0)
-            {
-                stats.EventsPerMinute = State.TotalEventsLogged / duration.TotalMinutes;
-            }
-        }
-
-        return Task.FromResult(stats);
-    }
-
-    /// <summary>
-    /// 搜索事件日志
+    /// Search event logs
     /// </summary>
     public Task<List<EventLogRecord>> SearchEventsAsync(
         string? eventType = null, 
-        string? sourceAgent = null,
-        DateTime? startTime = null,
+        string? sourceAgent = null, 
+        DateTime? startTime = null, 
         DateTime? endTime = null)
     {
         var query = State.EventLogs.AsEnumerable();
@@ -228,34 +228,56 @@ public class EventLoggerGAgent : GAgentBase<EventLoggerGAgentState, EventLoggerS
             query = query.Where(e => e.LoggedAt <= endTime.Value);
         }
 
-        return Task.FromResult(query.OrderByDescending(e => e.LoggedAt).Take(50).ToList());
+        return Task.FromResult(query.OrderByDescending(e => e.LoggedAt).ToList());
     }
 
     /// <summary>
-    /// 清除事件日志
+    /// Get recent event logs
     /// </summary>
-    public Task ClearLogsAsync()
+    public Task<List<EventLogRecord>> GetRecentEventsAsync(int count = 50)
     {
-        State.EventLogs.Clear();
-        State.EventTypeCounts.Clear();
-        State.SourceAgentCounts.Clear();
-        State.TotalEventsLogged = 0;
-        State.FirstEventTime = null;
-        State.LastEventTime = null;
+        return Task.FromResult(State.EventLogs
+            .OrderByDescending(e => e.LoggedAt)
+            .Take(count)
+            .ToList());
+    }
 
-        _logger.LogInformation("事件日志已清除");
-        return Task.CompletedTask;
+    /// <summary>
+    /// Get event statistics
+    /// </summary>
+    public Task<EventLoggerStatistics> GetStatisticsAsync()
+    {
+        return Task.FromResult(new EventLoggerStatistics
+        {
+            TotalEvents = State.TotalEventsLogged,
+            EventTypeCounts = new Dictionary<string, int>(State.EventTypeCounts),
+            SourceAgentCounts = new Dictionary<string, int>(State.SourceAgentCounts),
+            FirstEventTime = State.FirstEventTime,
+            LastEventTime = State.LastEventTime,
+            RecentEvents = State.EventLogs.OrderByDescending(e => e.LoggedAt).Take(10).ToList()
+        });
+    }
+
+    /// <summary>
+    /// Clear all event logs
+    /// </summary>
+    public async Task ClearEventLogsAsync()
+    {
+        // Use event sourcing
+        RaiseEvent(new EventLogsClearedEvent());
+        await ConfirmEvents();
+        
+        Logger.LogInformation("Event logs cleared");
     }
 }
 
 [GenerateSerializer]
-public class EventLogStatistics
+public class EventLoggerStatistics
 {
-    [Id(0)] public int TotalEventsLogged { get; set; }
+    [Id(0)] public int TotalEvents { get; set; }
     [Id(1)] public Dictionary<string, int> EventTypeCounts { get; set; } = new();
     [Id(2)] public Dictionary<string, int> SourceAgentCounts { get; set; } = new();
-    [Id(3)] public List<EventLogRecord> RecentEvents { get; set; } = new();
-    [Id(4)] public DateTime? FirstEventTime { get; set; }
-    [Id(5)] public DateTime? LastEventTime { get; set; }
-    [Id(6)] public double EventsPerMinute { get; set; }
+    [Id(3)] public DateTime? FirstEventTime { get; set; }
+    [Id(4)] public DateTime? LastEventTime { get; set; }
+    [Id(5)] public List<EventLogRecord> RecentEvents { get; set; } = new();
 } 

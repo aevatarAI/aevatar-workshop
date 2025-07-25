@@ -37,28 +37,21 @@ public interface INotificationGAgent : IStateGAgent<NotificationGAgentState>
 [GAgent("notification-demo", "workshop")]
 public class NotificationGAgent : GAgentBase<NotificationGAgentState, NotificationStateLogEvent>, INotificationGAgent
 {
-    private readonly ILogger<NotificationGAgent> _logger;
-
-    public NotificationGAgent(ILogger<NotificationGAgent> logger)
-    {
-        _logger = logger;
-    }
-
     public override Task<string> GetDescriptionAsync()
     {
-        return Task.FromResult("NotificationGAgent - 处理和记录通知事件的演示GAgent");
+        return Task.FromResult("NotificationGAgent - Demo GAgent for handling and logging notification events");
     }
 
     /// <summary>
-    /// 处理通知事件的主要handler
+    /// Main handler for notification events
     /// </summary>
     [EventHandler]
     public async Task HandleNotificationAsync(NotificationEvent @event)
     {
-        _logger.LogInformation("收到通知: {Title} - {Message} (级别: {Level})", 
+        Logger.LogInformation("Received notification: {Title} - {Message} (Level: {Level})", 
             @event.Title, @event.Message, @event.Level);
 
-        // 记录通知
+        // Record notification
         var record = new NotificationRecord
         {
             Title = @event.Title,
@@ -71,20 +64,20 @@ public class NotificationGAgent : GAgentBase<NotificationGAgentState, Notificati
         State.NotificationHistory.Add(record);
         State.TotalNotifications++;
 
-        // 更新计数
+        // Update count
         if (!State.NotificationCounts.ContainsKey(@event.Level))
         {
             State.NotificationCounts[@event.Level] = 0;
         }
         State.NotificationCounts[@event.Level]++;
 
-        // 保持历史记录在最近100条
+        // Keep history to last 100 records
         if (State.NotificationHistory.Count > 100)
         {
             State.NotificationHistory.RemoveAt(0);
         }
 
-        // 发送事件记录
+        // Send event log
         await PublishAsync(new EventLoggedEvent
         {
             SourceAgent = this.GetGrainId().ToString(),
@@ -93,7 +86,7 @@ public class NotificationGAgent : GAgentBase<NotificationGAgentState, Notificati
             Success = true
         });
 
-        // 如果是错误级别，可能需要触发其他操作
+        // If error level, may need to trigger other actions
         if (@event.Level == NotificationLevel.Error)
         {
             await HandleErrorNotificationAsync(@event);
@@ -101,7 +94,7 @@ public class NotificationGAgent : GAgentBase<NotificationGAgentState, Notificati
     }
 
     /// <summary>
-    /// 处理所有事件的通用handler（用于演示[AllEventHandler]）
+    /// Generic handler for all events (to demonstrate [AllEventHandler])
     /// </summary>
     [AllEventHandler]
     public Task LogAllEventsAsync(EventWrapperBase eventWrapper)
@@ -111,16 +104,16 @@ public class NotificationGAgent : GAgentBase<NotificationGAgentState, Notificati
             return Task.CompletedTask;
         }
 
-        _logger.LogDebug("NotificationGAgent收到事件: {EventType}",
+        Logger.LogDebug("NotificationGAgent received event: {EventType}",
             typedWrapper.Event.GetType().Name ?? "Unknown");
         return Task.CompletedTask;
     }
 
     private async Task HandleErrorNotificationAsync(NotificationEvent errorEvent)
     {
-        _logger.LogWarning("处理错误通知: {Title}", errorEvent.Title);
+        Logger.LogWarning("Processing error notification: {Title}", errorEvent.Title);
         
-        // 可以触发数据处理事件来记录错误
+        // Can trigger data processing event to log errors
         await PublishAsync(new DataProcessingEvent
         {
             DataType = "ErrorLog",
@@ -135,7 +128,7 @@ public class NotificationGAgent : GAgentBase<NotificationGAgentState, Notificati
     }
 
     /// <summary>
-    /// 获取通知统计信息
+    /// Get notification statistics
     /// </summary>
     public Task<NotificationStatistics> GetStatisticsAsync()
     {
@@ -153,7 +146,7 @@ public class NotificationGAgent : GAgentBase<NotificationGAgentState, Notificati
     }
 
     /// <summary>
-    /// 清除历史记录
+    /// Clear history
     /// </summary>
     public Task ClearHistoryAsync()
     {
@@ -161,7 +154,7 @@ public class NotificationGAgent : GAgentBase<NotificationGAgentState, Notificati
         State.TotalNotifications = 0;
         State.NotificationCounts.Clear();
         
-        _logger.LogInformation("通知历史已清除");
+        Logger.LogInformation("Notification history cleared");
         return Task.CompletedTask;
     }
 }

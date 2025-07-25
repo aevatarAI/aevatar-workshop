@@ -2,7 +2,9 @@ using Aevatar.Core;
 using Aevatar.Core.Abstractions;
 using Aevatar.Workshop.GAgent.Events;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Orleans;
+using System.ComponentModel;
 
 namespace Aevatar.Workshop.GAgent.GAgents.Demo;
 
@@ -39,27 +41,21 @@ public interface ICoordinatorDemoGAgent : IStateGAgent<CoordinatorDemoGAgentStat
 [GAgent("coordinator-demo", "workshop")]
 public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, CoordinatorDemoStateLogEvent>, ICoordinatorDemoGAgent
 {
-    private readonly ILogger<CoordinatorDemoGAgent> _logger;
-    private readonly IGrainFactory _grainFactory;
-
-    public CoordinatorDemoGAgent(ILogger<CoordinatorDemoGAgent> logger, IGrainFactory grainFactory)
-    {
-        _logger = logger;
-        _grainFactory = grainFactory;
-    }
+    // Simplified service access
+    private IGAgentFactory GAgentFactory => ServiceProvider.GetRequiredService<IGAgentFactory>();
 
     public override Task<string> GetDescriptionAsync()
     {
-        return Task.FromResult("CoordinatorDemoGAgent - 协调多个GAgent协同工作的演示GAgent");
+        return Task.FromResult("CoordinatorDemoGAgent - Demo GAgent for coordinating multiple GAgents to work together");
     }
 
     /// <summary>
-    /// 处理协调请求事件
+    /// Handle coordination request events
     /// </summary>
     [EventHandler]
     public async Task HandleCoordinationRequestAsync(CoordinationRequestEvent @event)
     {
-        _logger.LogInformation("收到协调请求 {RequestId}: {TaskName}",
+        Logger.LogInformation("Received coordination request {RequestId}: {TaskName}",
             @event.RequestId, @event.TaskName);
 
         var task = new CoordinationTask
@@ -73,7 +69,7 @@ public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, Coor
         State.CoordinationTasks.Add(task);
         State.TotalCoordinationRequests++;
 
-        // 记录事件
+        // Log event
         await PublishAsync(new EventLoggedEvent
         {
             SourceAgent = this.GetGrainId().ToString(),
@@ -82,12 +78,12 @@ public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, Coor
             Success = true
         });
 
-        // 开始协调流程
+        // Start coordination process
         await StartCoordinationAsync(@event, task);
     }
 
     /// <summary>
-    /// 处理协调响应事件
+    /// Handle coordination response events
     /// </summary>
     [EventHandler]
     public async Task HandleCoordinationResponseAsync(CoordinationResponseEvent @event)
@@ -103,10 +99,10 @@ public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, Coor
             }
             State.AgentResponses[@event.RequestId].Add(@event.RespondingAgent);
 
-            _logger.LogInformation("收到 {Agent} 对任务 {RequestId} 的响应: {Accepted}",
-                @event.RespondingAgent, @event.RequestId, @event.Accepted ? "接受" : "拒绝");
+            Logger.LogInformation("Received response from {Agent} for task {RequestId}: {Accepted}",
+                @event.RespondingAgent, @event.RequestId, @event.Accepted ? "Accepted" : "Rejected");
 
-            // 检查是否所有agent都已响应
+            // Check if all agents have responded
             if (task.AgentAcceptance.Count == task.RequiredAgents.Count)
             {
                 await CompleteCoordinationAsync(task);
@@ -116,21 +112,21 @@ public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, Coor
 
     private async Task StartCoordinationAsync(CoordinationRequestEvent request, CoordinationTask task)
     {
-        // 模拟向所需的agent发送协调请求
+        // Simulate sending coordination requests to required agents
         foreach (var agentName in request.RequiredAgents)
         {
             try
             {
-                // 发送通知给各个agent
+                // Send notification to each agent
                 await PublishAsync(new NotificationEvent
                 {
-                    Title = $"协调请求: {task.TaskName}",
-                    Message = $"需要您参与任务: {task.TaskName}",
+                    Title = $"Coordination Request: {task.TaskName}",
+                    Message = $"Your participation is needed for task: {task.TaskName}",
                     Level = NotificationLevel.Info,
                     Source = this.GetGrainId().ToString()
                 });
 
-                // 如果是处理任务，触发数据处理
+                // If processing task, trigger data processing
                 if (request.Parameters.ContainsKey("ProcessData") && 
                     request.Parameters["ProcessData"] == "true")
                 {
@@ -147,20 +143,20 @@ public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, Coor
                     });
                 }
 
-                // 模拟agent响应（实际应用中，其他agent会发送响应事件）
+                // Simulate agent response (in real applications, other agents would send response events)
                 await Task.Delay(Random.Shared.Next(100, 500));
                 await SimulateAgentResponseAsync(request.RequestId, agentName);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "协调 {Agent} 时发生错误", agentName);
+                Logger.LogError(ex, "Error occurred while coordinating {Agent}", agentName);
             }
         }
     }
 
     private async Task SimulateAgentResponseAsync(string requestId, string agentName)
     {
-        // 模拟agent响应（80%概率接受）
+        // Simulate agent response (80% probability of acceptance)
         var accepted = Random.Shared.Next(100) < 80;
         
         await PublishAsync(new CoordinationResponseEvent
@@ -180,19 +176,19 @@ public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, Coor
         var acceptedCount = task.AgentAcceptance.Count(kvp => kvp.Value);
         var success = acceptedCount == task.RequiredAgents.Count;
 
-        _logger.LogInformation("协调任务 {RequestId} 完成: {AcceptedCount}/{TotalCount} agents接受",
+        Logger.LogInformation("Coordination task {RequestId} completed: {AcceptedCount}/{TotalCount} agents accepted",
             task.RequestId, acceptedCount, task.RequiredAgents.Count);
 
-        // 发送完成通知
+        // Send completion notification
         await PublishAsync(new NotificationEvent
         {
-            Title = $"协调完成: {task.TaskName}",
-            Message = $"{acceptedCount}/{task.RequiredAgents.Count} agents参与任务",
+            Title = $"Coordination Completed: {task.TaskName}",
+            Message = $"{acceptedCount}/{task.RequiredAgents.Count} agents participated in the task",
             Level = success ? NotificationLevel.Success : NotificationLevel.Warning,
             Source = this.GetGrainId().ToString()
         });
 
-        // 保持任务历史在最近20条
+        // Keep task history to last 20 records
         if (State.CoordinationTasks.Count > 20)
         {
             var oldestTask = State.CoordinationTasks
@@ -209,7 +205,7 @@ public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, Coor
     }
 
     /// <summary>
-    /// 获取协调统计信息
+    /// Get coordination statistics
     /// </summary>
     public Task<CoordinationStatistics> GetStatisticsAsync()
     {
@@ -230,7 +226,7 @@ public class CoordinatorDemoGAgent : GAgentBase<CoordinatorDemoGAgentState, Coor
     }
 
     /// <summary>
-    /// 创建测试协调任务
+    /// Create test coordination task
     /// </summary>
     public async Task CreateTestCoordinationAsync(string taskName, List<string> agents)
     {

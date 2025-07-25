@@ -18,31 +18,45 @@ GAgent 可以通过两种方式定义事件处理器：
 - **CoordinationRequestEvent（协调请求事件）**：用于协调多个 GAgent 协同工作
 - **EventLoggedEvent（事件记录事件）**：用于记录事件处理活动
 
-### 3. 演示 GAgents
+### 3. PublishingGAgent - 事件中心
+演示使用 `PublishingGAgent` 作为中央父代理：
+```csharp
+public interface IPublishingGAgent : IGAgent
+{
+    Task PublishEventAsync<T>(T @event) where T : EventBase;
+}
+```
+- 作为所有演示 GAgent 的父代理
+- 将事件转发给所有注册的子代理
+- 提供集中的事件分发点
 
-#### NotificationGAgent（通知处理器）
-- 处理通知事件
+### 4. 演示 GAgents
+
+#### NotificationGAgent
+- 处理和记录通知事件的演示 GAgent
 - 维护通知历史记录
 - 按级别跟踪通知统计
 - 为错误通知触发数据处理
 
-#### ProcessingGAgent（数据处理器）
-- 支持优先级队列的数据处理
+#### ProcessingGAgent
+- 处理数据处理任务的演示 GAgent，支持优先级队列
 - 模拟异步任务处理
 - 发送完成通知
 - 演示 [EventHandler] 和方法名约定两种方式
 
-#### CoordinatorDemoGAgent（协调器）
-- 协调多个 GAgent 完成复杂任务
+#### CoordinatorDemoGAgent
+- 协调多个 GAgent 协同工作的演示 GAgent
 - 管理参与代理的任务接受情况
 - 跟踪协调成功率
 - 演示代理间通信
 
-#### EventLoggerGAgent（事件记录器）
+#### EventLoggerGAgent
+- 记录和分析系统中所有事件的演示 GAgent
 - 使用 [AllEventHandler] 记录系统中的所有事件
+- 可以注册为任何代理的子代理来记录其事件
+- 当注册到 PublishingGAgent 时，可以看到系统中流动的所有事件
 - 提供事件搜索和过滤功能
 - 计算事件统计信息
-- 展示如何全局处理所有事件
 
 ## 功能特性
 
@@ -67,8 +81,14 @@ GAgent 可以通过两种方式定义事件处理器：
 ## 使用方法
 
 1. **初始化演示**：点击"初始化Demo"创建并设置所有演示 GAgent
+   - 创建一个 `PublishingGAgent` 作为父代理
+   - 将所有演示 GAgent（`NotificationGAgent`、`ProcessingGAgent`、`CoordinatorDemoGAgent`）注册为子代理
+   - `EventLoggerGAgent` 订阅其他代理以记录它们的事件
 2. **选择 GAgent**：点击任意 GAgent 卡片查看详情
 3. **触发事件**：使用事件触发表单发送事件
+   - 事件通过父代理 `PublishingGAgent` 发布
+   - 父代理将事件转发给所有注册的子代理
+   - 子代理也可以向上发布事件到父代理
 4. **运行场景**：点击"模拟场景"进行自动演示
 5. **监控活动**：观察事件日志的实时更新
 
@@ -91,19 +111,99 @@ public Task LogAllEventsAsync(EventWrapperBase eventWrapper) { }
 
 ### 事件发布
 
-GAgent 可以向其订阅者发布事件：
+事件可以通过多种方式发布：
+
 ```csharp
+// 1. 从 GAgent 内部（发布到父代理和自身）
 await PublishAsync(new NotificationEvent { 
     Title = "任务完成",
     Message = "处理成功完成"
 });
+
+// 2. 通过 PublishingGAgent 父代理（广播到所有子代理）
+var publishingAgent = await gAgentFactory.GetGAgentAsync<IPublishingGAgent>(publishingAgentId);
+await publishingAgent.PublishEventAsync(new DataProcessingEvent {
+    DataType = "用户数据",
+    Priority = ProcessingPriority.High
+});
+
+// 3. 直接事件发布到特定目标
+await PublishEventAsync(myEvent, targetGAgent);
 ```
 
-### 订阅管理
+### 父子关系和事件流
 
-GAgent 可以订阅其他 GAgent：
+GAgent 使用层级父子结构进行事件通信：
+
+#### 建立关系
 ```csharp
-await agent1.SubscribeToAsync(agent2);
+// 将子代理注册到父代理
+await parentAgent.RegisterAsync(childAgent1);
+await parentAgent.RegisterAsync(childAgent2);
+
+// 或一次注册多个
+await parentAgent.RegisterManyAsync(new List<IGAgent> { child1, child2, child3 });
+```
+
+当调用 `RegisterAsync` 时：
+1. 子代理被添加到父代理的 `State.Children` 列表
+2. 子代理的 `State.Parent` 设置为父代理的 GrainId
+3. 子代理自动订阅父代理的事件流
+
+#### 事件流向
+
+**1. 向上事件发布（子 → 父）**
+```csharp
+// 在子 GAgent 中，向父代理发布事件
+await PublishAsync(new NotificationEvent { 
+    Title = "任务完成",
+    Message = "处理已完成"
+});
+// 此事件会向上传递到父代理
+```
+
+**2. 向下事件转发（父 → 子）**
+```csharp
+// 带有 [AllEventHandler] 的父 GAgent 会自动将事件转发给子代理
+[AllEventHandler(allowSelfHandling: true)]
+protected virtual async Task ForwardEventAsync(EventWrapperBase eventWrapper)
+{
+    // 事件自动转发给所有子代理
+    await SendEventDownwardsAsync(eventWrapper);
+}
+```
+
+**3. 定向事件发布**
+```csharp
+// 父代理可以发布事件，所有子代理都会接收到
+await parentAgent.PublishEventAsync(new CoordinationRequestEvent {
+    TaskName = "处理数据",
+    RequiredAgents = new List<string> { "agent1", "agent2" }
+});
+```
+
+#### 事件流示例
+```
+                  父 GAgent
+                  /    |    \
+               /       |       \
+         子代理1    子代理2    子代理3
+           ↑          ↑          ↑
+           └──────────┴──────────┘
+          事件从子代理向上流动
+                    并且
+          事件从父代理向下流动
+```
+
+#### 注销和清理
+```csharp
+// 从父代理移除子代理
+await parentAgent.UnregisterAsync(childAgent);
+
+// 这将会：
+// 1. 从父代理的 State.Children 中移除子代理
+// 2. 清除子代理的 State.Parent
+// 3. 取消子代理对父代理事件流的订阅
 ```
 
 ## 优势

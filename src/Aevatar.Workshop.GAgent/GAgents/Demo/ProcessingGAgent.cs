@@ -37,28 +37,21 @@ public interface IProcessingGAgent : IStateGAgent<ProcessingGAgentState>;
 [GAgent("processing-demo", "workshop")]
 public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStateLogEvent>
 {
-    private readonly ILogger<ProcessingGAgent> _logger;
-
-    public ProcessingGAgent(ILogger<ProcessingGAgent> logger)
-    {
-        _logger = logger;
-    }
-
     public override Task<string> GetDescriptionAsync()
     {
-        return Task.FromResult("ProcessingGAgent - 处理数据处理任务的演示GAgent，支持优先级队列");
+        return Task.FromResult("ProcessingGAgent - Demo GAgent for handling data processing tasks with priority queue support");
     }
 
     /// <summary>
-    /// 处理数据处理事件
+    /// Handle data processing events
     /// </summary>
     [EventHandler]
     public async Task HandleDataProcessingAsync(DataProcessingEvent @event)
     {
-        _logger.LogInformation("开始处理任务 {ProcessingId}, 类型: {DataType}, 优先级: {Priority}",
+        Logger.LogInformation("Starting processing task {ProcessingId}, Type: {DataType}, Priority: {Priority}",
             @event.ProcessingId, @event.DataType, @event.Priority);
 
-        // 创建处理任务
+        // Create processing task
         var task = new ProcessingTask
         {
             ProcessingId = @event.ProcessingId,
@@ -69,14 +62,14 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
 
         State.ActiveTasks.Add(task);
         
-        // 更新优先级统计
+        // Update priority statistics
         if (!State.TasksByPriority.ContainsKey(@event.Priority))
         {
             State.TasksByPriority[@event.Priority] = 0;
         }
         State.TasksByPriority[@event.Priority]++;
 
-        // 发送事件记录
+        // Send event log
         await PublishAsync(new EventLoggedEvent
         {
             SourceAgent = this.GetGrainId().ToString(),
@@ -85,12 +78,12 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
             Success = true
         });
 
-        // 模拟异步处理
+        // Simulate async processing
         await ProcessDataAsync(@event, task);
     }
 
     /// <summary>
-    /// 处理处理完成事件
+    /// Handle processing completed events
     /// </summary>
     [EventHandler]
     public async Task HandleProcessingCompletedAsync(ProcessingCompletedEvent @event)
@@ -106,20 +99,20 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
             State.CompletedTasks.Add(task);
             State.TotalTasksProcessed++;
 
-            // 保持完成任务历史在最近50条
+            // Keep completed task history to last 50 records
             if (State.CompletedTasks.Count > 50)
             {
                 State.CompletedTasks.RemoveAt(0);
             }
 
-            _logger.LogInformation("任务 {ProcessingId} 完成，结果: {Result}",
+            Logger.LogInformation("Task {ProcessingId} completed, Result: {Result}",
                 @event.ProcessingId, @event.Result);
 
-            // 发送通知
+            // Send notification
             await PublishAsync(new NotificationEvent
             {
-                Title = $"任务完成: {task.DataType}",
-                Message = $"处理结果: {@event.Result}",
+                Title = $"Task Completed: {task.DataType}",
+                Message = $"Processing Result: {@event.Result}",
                 Level = @event.Result == ProcessingResult.Success ? 
                     NotificationLevel.Success : NotificationLevel.Warning,
                 Source = this.GetGrainId().ToString()
@@ -128,11 +121,11 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
     }
 
     /// <summary>
-    /// 默认事件处理器（演示HandleEventAsync方法名约定）
+    /// Default event handler (demonstrates HandleEventAsync method name convention)
     /// </summary>
     public Task HandleEventAsync(EventBase @event)
     {
-        _logger.LogDebug("ProcessingGAgent收到通用事件: {EventType}", @event.GetType().Name);
+        Logger.LogDebug("ProcessingGAgent received generic event: {EventType}", @event.GetType().Name);
         return Task.CompletedTask;
     }
 
@@ -140,7 +133,7 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
     {
         try
         {
-            // 模拟处理时间（基于优先级）
+            // Simulate processing time (based on priority)
             var delay = @event.Priority switch
             {
                 ProcessingPriority.Critical => 100,
@@ -152,7 +145,7 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
 
             await Task.Delay(delay);
 
-            // 模拟处理逻辑
+            // Simulate processing logic
             var outputData = new Dictionary<string, object>
             {
                 ["ProcessedCount"] = @event.Data.Count,
@@ -160,7 +153,7 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
                 ["DataType"] = @event.DataType
             };
 
-            // 发送完成事件
+            // Send completion event
             await PublishAsync(new ProcessingCompletedEvent
             {
                 ProcessingId = @event.ProcessingId,
@@ -171,7 +164,7 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "处理任务 {ProcessingId} 时发生错误", @event.ProcessingId);
+            Logger.LogError(ex, "Error occurred while processing task {ProcessingId}", @event.ProcessingId);
             
             await PublishAsync(new ProcessingCompletedEvent
             {
@@ -184,7 +177,7 @@ public class ProcessingGAgent : GAgentBase<ProcessingGAgentState, ProcessingStat
     }
 
     /// <summary>
-    /// 获取处理统计信息
+    /// Get processing statistics
     /// </summary>
     public Task<ProcessingStatistics> GetStatisticsAsync()
     {
