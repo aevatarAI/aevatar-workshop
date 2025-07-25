@@ -27,23 +27,4 @@ public class LogController : ControllerBase
         var lastLines = string.Join("\n", lines.Skip(Math.Max(0, lines.Length - 100)));
         return Content(lastLines, "text/plain");
     }
-
-    [HttpGet("chat")]
-    public async Task<IActionResult> GetChatLog([FromQuery] string demo)
-    {
-        if (string.IsNullOrEmpty(demo))
-        {
-            return BadRequest("Demo name is required.");
-        }
-
-        var recorder = Common.GetRecorder(demo);
-        if (recorder == null)
-        {
-            return Ok("");
-        }
-
-        var state = await recorder.GetStateAsync();
-        var messages = state.ChatMessages.Select(e => e.ToString());
-        return Content(string.Join("\n", messages), "text/plain");
-    }
 }

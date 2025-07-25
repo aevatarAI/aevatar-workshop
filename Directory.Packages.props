@@ -1,45 +1,78 @@
 <Project>
-  <PropertyGroup>
-    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <AbpVersion>9.0.3</AbpVersion>
-    <OrleansVersion>9.0.1</OrleansVersion>
-    <AevatarCoreVersion>1.5.1-alpha.2</AevatarCoreVersion>
-    <AevatarGAgentVersion>1.5.0-workflow-2</AevatarGAgentVersion>
-    <AevatarSignalRVersion>1.5.6-upgrade-core.0</AevatarSignalRVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageVersion Include="Aevatar" Version="$(AevatarCoreVersion)" />
-    <PackageVersion Include="Aevatar.Core" Version="$(AevatarCoreVersion)" />
-    <PackageVersion Include="Aevatar.Core.Abstractions" Version="$(AevatarCoreVersion)" />
-    <PackageVersion Include="Aevatar.EventSourcing.Core" Version="$(AevatarCoreVersion)" />
-    <PackageVersion Include="Aevatar.GAgents.AIGAgent" Version="1.5.0-workflow-2" />
-    <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarSignalRVersion)" />
-    <PackageVersion Include="Aevatar.GAgents.Basic" Version="$(AevatarGAgentVersion)" />
-    <PackageVersion Include="Aevatar.GAgents.Router" Version="$(AevatarGAgentVersion)" />
-    <PackageVersion Include="Aevatar.GAgents.AI.Abstractions" Version="$(AevatarGAgentVersion)" />
-    <PackageVersion Include="Microsoft.Orleans.Server" Version="$(OrleansVersion)" />
-    <PackageVersion Include="Microsoft.Orleans.Client" Version="$(OrleansVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.App" Version="2.2.8" />
-    <PackageVersion Include="Microsoft.AspNetCore" Version="2.2.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
-    <PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.0" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Orleans.Providers.MongoDB" Version="8.1.0" />
-    <PackageVersion Include="Volo.Abp.AspNetCore.Serilog" Version="$(AbpVersion)" />
-    <PackageVersion Include="Volo.Abp.AutoMapper" Version="$(AbpVersion)" />
-    <PackageVersion Include="Volo.Abp.Autofac" Version="$(AbpVersion)" />
-    <PackageVersion Include="Serilog" Version="4.0.0" />
-    <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
-    <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.1" />
-    <PackageVersion Include="Serilog.AspNetCore" Version="8.0.1" />
-    <PackageVersion Include="Serilog.Extensions.Logging" Version="8.0.0" />
-    <PackageVersion Include="Serilog.Sinks.Async" Version="1.5.0" />
-    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="3.0.0" />
-  </ItemGroup>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+        <AbpVersion>9.0.3</AbpVersion>
+        <OrleansVersion>9.0.1</OrleansVersion>
+        <SkVersion>1.57.0-alpha</SkVersion>
+        <AevatarCoreVersion>1.5.2-tool.2</AevatarCoreVersion>
+        <AevatarGAgentsVersion>1.5.2-toolworkflow.2</AevatarGAgentsVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- aevatar-framework package versions -->
+        <PackageVersion Include="Aevatar" Version="$(AevatarCoreVersion)" />
+        <PackageVersion Include="Aevatar.Core" Version="$(AevatarCoreVersion)" />
+        <PackageVersion Include="Aevatar.Core.Abstractions" Version="$(AevatarCoreVersion)" />
+        <PackageVersion Include="Aevatar.EventSourcing.Core" Version="$(AevatarCoreVersion)" />
+
+        <!-- aevatar-signalR package versions -->
+        <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarCoreVersion)" />
+
+        <!-- aevatar-gagents package versions -->
+        <PackageVersion Include="Aevatar.GAgents.AI.Abstractions" Version="$(AevatarGAgentsVersion)" />
+        <PackageVersion Include="Aevatar.GAgents.AIGAgent" Version="$(AevatarGAgentsVersion)" />
+        <PackageVersion Include="Aevatar.GAgents.Basic" Version="$(AevatarGAgentsVersion)" />
+        <PackageVersion Include="Aevatar.GAgents.Executor" Version="$(AevatarGAgentsVersion)" />
+        <PackageVersion Include="Aevatar.GAgents.PsiOmni" Version="$(AevatarGAgentsVersion)" />
+        <PackageVersion Include="Aevatar.GAgents.GroupChat" Version="$(AevatarGAgentsVersion)" />
+        <PackageVersion Include="Aevatar.GAgents.MCP" Version="$(AevatarGAgentsVersion)" />
+        <PackageVersion Include="Aevatar.GAgents.PsiOmni.Plugins" Version="$(AevatarGAgentsVersion)" />
+        <PackageVersion Include="Aevatar.GAgents.Router" Version="$(AevatarGAgentsVersion)" />
+
+        <PackageVersion Include="HtmlAgilityPack" Version="1.11.71" />
+        <PackageVersion Include="Microsoft.Orleans.Server" Version="$(OrleansVersion)" />
+        <PackageVersion Include="Microsoft.Orleans.Client" Version="$(OrleansVersion)" />
+        <PackageVersion Include="Microsoft.Orleans.TestingHost" Version="$(OrleansVersion)" />
+        <PackageVersion Include="Volo.Abp.ObjectMapping" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.EventBus" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.Auditing" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.Autofac" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.AutoMapper" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.TestBase" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.Authorization" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.BlobStoring.Aws" Version="$(AbpVersion)" />
+        <PackageVersion Include="OrleansDashboard" Version="8.2.0" />
+        <PackageVersion Include="Microsoft.SemanticKernel.Abstractions" Version="$(SkVersion)" />
+        <PackageVersion Include="Microsoft.SemanticKernel" Version="$(SkVersion)" />
+        <PackageVersion Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="$(SkVersion)" />
+        <PackageVersion Include="Microsoft.SemanticKernel.Plugins.Web" Version="$(SkVersion)" />
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.App" Version="2.2.8" />
+        <PackageVersion Include="Microsoft.AspNetCore" Version="2.2.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Hosting" Version="2.2.7" />
+        <PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+        <PackageVersion Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="7.0.0" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageVersion Include="Orleans.Providers.MongoDB" Version="8.1.0" />
+        <PackageVersion Include="Volo.Abp.AspNetCore.Serilog" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.AutoMapper" Version="$(AbpVersion)" />
+        <PackageVersion Include="Volo.Abp.Autofac" Version="$(AbpVersion)" />
+        <PackageVersion Include="Serilog" Version="4.0.0" />
+        <PackageVersion Include="Serilog.Extensions.Hosting" Version="8.0.0" />
+        <PackageVersion Include="Serilog.Settings.Configuration" Version="8.0.1" />
+        <PackageVersion Include="Serilog.AspNetCore" Version="8.0.1" />
+        <PackageVersion Include="Serilog.Extensions.Logging" Version="8.0.0" />
+        <PackageVersion Include="Serilog.Sinks.Async" Version="1.5.0" />
+        <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageVersion Include="Serilog.Sinks.File" Version="5.0.0" />
+        <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="3.0.0" />
+        <PackageVersion Include="coverlet.collector" Version="6.0.2" />
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+        <PackageVersion Include="xunit" Version="2.9.2" />
+        <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageVersion Include="Moq" Version="4.20.70" />
+        <PackageVersion Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+        <PackageVersion Include="Shouldly" Version="4.2.1" />
+    </ItemGroup>
 </Project>

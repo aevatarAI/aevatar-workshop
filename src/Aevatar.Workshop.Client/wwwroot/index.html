@@ -251,47 +251,47 @@
     }
     /* Styles for rendered markdown in desc-content */
     .desc-content h3 {
-        font-size: 1.4rem;
-        color: #1e293b;
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 8px;
-        margin-top: 24px;
-        margin-bottom: 16px;
+      font-size: 1.4rem;
+      color: #1e293b;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 8px;
+      margin-top: 24px;
+      margin-bottom: 16px;
     }
     .desc-content p, .desc-content li {
-        font-size: 1.05rem;
-        line-height: 1.6;
-        color: #334155;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #334155;
     }
     .desc-content code {
-        background-color: #f1f5f9;
-        color: #475569;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-family: 'Courier New', Courier, monospace;
+      background-color: #f1f5f9;
+      color: #475569;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', Courier, monospace;
     }
     .desc-content pre {
-        background-color: #282c34; /* atom-one-dark background */
-        color: #abb2bf;
-        padding: 1em;
-        border-radius: 8px;
-        overflow-x: auto;
-        white-space: pre;
+      background-color: #282c34; /* atom-one-dark background */
+      color: #abb2bf;
+      padding: 1em;
+      border-radius: 8px;
+      overflow-x: auto;
+      white-space: pre;
     }
     .desc-content pre code.hljs {
-        padding: 0;
-        background: transparent;
-        color: inherit;
+      padding: 0;
+      background: transparent;
+      color: inherit;
     }
     .desc-content blockquote {
-        border-left: 4px solid #94a3b8;
-        padding-left: 16px;
-        margin-left: 0;
-        color: #475569;
-        font-style: italic;
+      border-left: 4px solid #94a3b8;
+      padding-left: 16px;
+      margin-left: 0;
+      color: #475569;
+      font-style: italic;
     }
     .desc-content ul {
-        padding-left: 20px;
+      padding-left: 20px;
     }
     pre#result {
       margin-top: 10px;
@@ -314,74 +314,70 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <script src="/js/restart-service.js?v=2"></script>
 </head>
 <body>
-  <div id="lang-switcher" style="position: fixed; top: 10px; right: 20px; z-index: 10000; background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px;">
-    <button id="lang-en" style="background:none;border:none;cursor:pointer;font-weight:bold;">EN</button> |
-    <button id="lang-zh" style="background:none;border:none;cursor:pointer;">ZH</button>
-  </div>
-  <div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:400px;text-align:center;">
-      <div style="font-size:1.15rem;font-weight:bold;color:#b91c1c;margin-bottom:18px;" data-i18n-key="api-key-not-configured">API key not configured</div>
-      <div style="font-size:1rem;margin-bottom:18px;" data-i18n-key="edit-appsettings-notice">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>.<br><br>After saving the configuration, you can click the Restart Services button below.</div>
-      <details style="text-align:left;margin-bottom:18px;">
-        <summary style="cursor:pointer;font-weight:bold;color:#2563eb;" data-i18n-key="what-is-systemllmconfigs">What is SystemLLMConfigs? How to configure?</summary>
-        <div style="font-size:0.98rem;margin-top:10px;" data-i18n-key="systemllmconfigs-desc">
-          <b>SystemLLMConfigs</b> is the section in <code>appsettings.json</code> where you configure your LLM (Large Language Model) provider.<br><br>
-          <ul style="margin-left:0.5em;">
-            <li><b>ProviderEnum</b>: The provider type, e.g. <code>OpenAI</code> or <code>Azure</code>.</li>
-            <li><b>ModelIdEnum</b>: The model identifier, e.g. <code>OpenAI</code> or your provider's model ID.</li>
-            <li><b>ModelName</b>: The name of the model to use, e.g. <code>gpt-4o</code> or <code>gpt-3.5-turbo</code>.</li>
-            <li><b>Endpoint</b>: The API endpoint URL for your LLM provider.</li>
-            <li><b>ApiKey</b>: Your secret API key for accessing the LLM service.</li>
-          </ul>
-          <div style="margin-top:8px;">
-            <b>How to get these values?</b><br>
-            - For <b>OpenAI</b>: <a href="https://platform.openai.com/account/api-keys" target="_blank">Get your API key here</a>.<br>
-            - For <b>Azure OpenAI</b>: <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource" target="_blank">See Azure OpenAI setup guide</a>.<br>
-            - For more details, see <a href="https://github.com/aevatarAI/aevatar-workshop#4-multigagentdemo-configuration" target="_blank">Aevatar Workshop Configuration Docs</a>.
-          </div>
+<div id="lang-switcher" style="position: fixed; top: 10px; right: 20px; z-index: 10000; background: rgba(255,255,255,0.8); padding: 5px 10px; border-radius: 5px;">
+  <button id="lang-en" style="background:none;border:none;cursor:pointer;font-weight:bold;">EN</button> |
+  <button id="lang-zh" style="background:none;border:none;cursor:pointer;">ZH</button>
+</div>
+<div id="configModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:400px;text-align:center;">
+    <div style="font-size:1.15rem;font-weight:bold;color:#b91c1c;margin-bottom:18px;" data-i18n-key="api-key-not-configured">API key not configured</div>
+    <div style="font-size:1rem;margin-bottom:18px;" data-i18n-key="edit-appsettings-notice">Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>. Configuration changes will be applied automatically.</div>
+    <details style="text-align:left;margin-bottom:18px;">
+      <summary style="cursor:pointer;font-weight:bold;color:#2563eb;" data-i18n-key="what-is-systemllmconfigs">What is SystemLLMConfigs? How to configure?</summary>
+      <div style="font-size:0.98rem;margin-top:10px;" data-i18n-key="systemllmconfigs-desc">
+        <b>SystemLLMConfigs</b> is the section in <code>appsettings.json</code> where you configure your LLM (Large Language Model) provider.<br><br>
+        <ul style="margin-left:0.5em;">
+          <li><b>ProviderEnum</b>: The provider type, e.g. <code>OpenAI</code> or <code>Azure</code>.</li>
+          <li><b>ModelIdEnum</b>: The model identifier, e.g. <code>OpenAI</code> or your provider's model ID.</li>
+          <li><b>ModelName</b>: The name of the model to use, e.g. <code>gpt-4o</code> or <code>gpt-3.5-turbo</code>.</li>
+          <li><b>Endpoint</b>: The API endpoint URL for your LLM provider.</li>
+          <li><b>ApiKey</b>: Your secret API key for accessing the LLM service.</li>
+        </ul>
+        <div style="margin-top:8px;">
+          <b>How to get these values?</b><br>
+          - For <b>OpenAI</b>: <a href="https://platform.openai.com/account/api-keys" target="_blank">Get your API key here</a>.<br>
+          - For <b>Azure OpenAI</b>: <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource" target="_blank">See Azure OpenAI setup guide</a>.<br>
+          - For more details, see <a href="https://github.com/aevatarAI/aevatar-workshop#4-multigagentdemo-configuration" target="_blank">Aevatar Workshop Configuration Docs</a>.
         </div>
-      </details>
-      <button id="modalRestartBtn" style="background:#ef4444;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;" data-i18n-key="restart-services">Restart Services</button>
-      <button id="modalCloseBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;" data-i18n-key="close">Close</button>
-    </div>
-  </div>
-  <div id="sidebar">
-    <button id="restartBtn" style="width:90%;margin:0 auto 24px auto;display:block;font-size:1.08rem;padding:12px 0;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;" data-i18n-key="restart-services">Restart Services</button>
-    <button id="configLlmBtn" style="width:90%;margin:0 auto 18px auto;display:block;font-size:1.08rem;padding:12px 0;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;" data-i18n-key="config-llm">Config LLM</button>
-    <h2 data-i18n-key="aevatar-demos">Aevatar Demos</h2>
-    <ul class="sidebar-list" id="sidebar-list"></ul>
-  </div>
-  <div id="main-content"></div>
-  <!-- LLM Config Modal -->
-  <div id="llmConfigModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
-    <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:600px;text-align:left;min-width:340px;">
-      <div style="font-size:1.15rem;font-weight:bold;color:#2563eb;margin-bottom:18px;" data-i18n-key="edit-llm-configs">Edit SystemLLMConfigs</div>
-      <div id="llmConfigForm"></div>
-      <div style="margin-top:18px;text-align:right;">
-        <button id="llmConfigSaveBtn" style="background:#22c55e;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;" data-i18n-key="save">Save</button>
-        <button id="llmConfigCancelBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;" data-i18n-key="cancel">Cancel</button>
       </div>
-      <div id="llmConfigMsg" style="margin-top:12px;color:#b91c1c;font-weight:bold;"></div>
-    </div>
+    </details>
+    <button id="modalCloseBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin:0 auto;display:block;" data-i18n-key="close">Close</button>
   </div>
+</div>
+<div id="sidebar">
+  <button id="configLlmBtn" style="width:90%;margin:0 auto 18px auto;display:block;font-size:1.08rem;padding:12px 0;background:#3b82f6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:bold;" data-i18n-key="config-llm">Config LLM</button>
+  <h2 data-i18n-key="aevatar-demos">Aevatar Demos</h2>
+  <ul class="sidebar-list" id="sidebar-list"></ul>
+</div>
+<div id="main-content"></div>
+<!-- LLM Config Modal -->
+<div id="llmConfigModal" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:32px 36px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);max-width:600px;text-align:left;min-width:340px;">
+    <div style="font-size:1.15rem;font-weight:bold;color:#2563eb;margin-bottom:18px;" data-i18n-key="edit-llm-configs">Edit SystemLLMConfigs</div>
+    <div id="llmConfigForm"></div>
+    <div style="margin-top:18px;text-align:right;">
+      <button id="llmConfigSaveBtn" style="background:#22c55e;color:#fff;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;margin-right:12px;" data-i18n-key="save">Save</button>
+      <button id="llmConfigCancelBtn" style="background:#e5e7eb;color:#222;padding:8px 22px;border:none;border-radius:6px;font-weight:bold;" data-i18n-key="cancel">Cancel</button>
+    </div>
+    <div id="llmConfigMsg" style="margin-top:12px;color:#b91c1c;font-weight:bold;"></div>
+  </div>
+</div>
 <script>
-// --- I18n ---
-const translations = {
-  en: {
-    'restart-services': 'Restart Services',
-    'config-llm': 'Config LLM',
-    'aevatar-demos': 'Aevatar Demos',
-    'edit-llm-configs': 'Edit SystemLLMConfigs',
-    'save': 'Save',
-    'cancel': 'Cancel',
-    'api-key-not-configured': 'API key not configured',
-    'edit-appsettings-notice': 'Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>.<br><br>After saving the configuration, you can click the Restart Services button below.',
-    'close': 'Close',
-    'what-is-systemllmconfigs': 'What is SystemLLMConfigs? How to configure?',
-    'systemllmconfigs-desc': `
+  // --- I18n ---
+  const translations = {
+    en: {
+      'config-llm': 'Config LLM',
+      'aevatar-demos': 'Aevatar Demos',
+      'edit-llm-configs': 'Edit SystemLLMConfigs',
+      'save': 'Save',
+      'cancel': 'Cancel',
+      'api-key-not-configured': 'API key not configured',
+      'edit-appsettings-notice': 'Please edit <b>src/Aevatar.Workshop.Host/appsettings.json</b> and set values on the <b>SystemLLMConfigs section</b>. Configuration changes will be applied automatically.',
+      'close': 'Close',
+      'what-is-systemllmconfigs': 'What is SystemLLMConfigs? How to configure?',
+      'systemllmconfigs-desc': `
       <b>SystemLLMConfigs</b> is the section in <code>appsettings.json</code> where you configure your LLM (Large Language Model) provider.<br><br>
       <ul style="margin-left:0.5em;">
         <li><b>ProviderEnum</b>: The provider type, e.g. <code>OpenAI</code> or <code>Azure</code>.</li>
@@ -396,30 +392,29 @@ const translations = {
         - For <b>Azure OpenAI</b>: <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource" target="_blank">See Azure OpenAI setup guide</a>.<br>
         - For more details, see <a href="https://github.com/aevatarAI/aevatar-workshop#4-multigagentdemo-configuration" target="_blank">Aevatar Workshop Configuration Docs</a>.
       </div>`,
-    'loading': 'Loading...',
-    'failed-to-load-config': 'Failed to load config.',
-    'saving': 'Saving...',
-    'saved-restarting': 'Saved! Restarting services...',
-    'save-failed': 'Save failed.',
-    'run-demo': 'Run Demo',
-    'host-log': 'Host Log',
-    'client-log': 'Client Log',
-    'refresh-log': 'Refresh Log',
-    'multigagent-messages': 'MultiGAgentDemo AI Messages',
-    'router-messages': 'RouterDemo AI Messages'
-  },
-  zh: {
-    'restart-services': '重启服务',
-    'config-llm': '配置 LLM',
-    'aevatar-demos': 'Aevatar 演示',
-    'edit-llm-configs': '编辑 SystemLLMConfigs',
-    'save': '保存',
-    'cancel': '取消',
-    'api-key-not-configured': 'API 密钥未配置',
-    'edit-appsettings-notice': '请编辑 <b>src/Aevatar.Workshop.Host/appsettings.json</b> 并在 <b>SystemLLMConfigs 部分</b>设置值。<br><br>保存配置后，您可以点击下方的"重启服务"按钮。',
-    'close': '关闭',
-    'what-is-systemllmconfigs': '什么是 SystemLLMConfigs？如何配置？',
-    'systemllmconfigs-desc': `
+      'loading': 'Loading...',
+      'failed-to-load-config': 'Failed to load config.',
+      'saving': 'Saving...',
+      'saved-successfully': 'Configuration saved successfully!',
+      'save-failed': 'Save failed.',
+      'run-demo': 'Run Demo',
+      'host-log': 'Host Log',
+      'client-log': 'Client Log',
+      'refresh-log': 'Refresh Log',
+      // Removed translation keys for deleted demos
+
+    },
+    zh: {
+      'config-llm': '配置 LLM',
+      'aevatar-demos': 'Aevatar 演示',
+      'edit-llm-configs': '编辑 SystemLLMConfigs',
+      'save': '保存',
+      'cancel': '取消',
+      'api-key-not-configured': 'API 密钥未配置',
+      'edit-appsettings-notice': '请编辑 <b>src/Aevatar.Workshop.Host/appsettings.json</b> 并在 <b>SystemLLMConfigs 部分</b>设置值。配置更改将自动应用。',
+      'close': '关闭',
+      'what-is-systemllmconfigs': '什么是 SystemLLMConfigs？如何配置？',
+      'systemllmconfigs-desc': `
       <b>SystemLLMConfigs</b> 是 <code>appsettings.json</code> 中的一个部分，您可以在其中配置您的 LLM（大型语言模型）提供商。<br><br>
       <ul style="margin-left:0.5em;">
         <li><b>ProviderEnum</b>：提供商类型，例如 <code>OpenAI</code> 或 <code>Azure</code>。</li>
@@ -434,772 +429,2681 @@ const translations = {
         - 对于 <b>Azure OpenAI</b>：<a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/create-resource" target="_blank">请参阅 Azure OpenAI 设置指南</a>。<br>
         - 更多详情，请参阅 <a href="https://github.com/aevatarAI/aevatar-workshop#4-multigagentdemo-configuration" target="_blank">Aevatar Workshop 配置文档</a>。
       </div>`,
-    'loading': '加载中...',
-    'failed-to-load-config': '加载配置失败。',
-    'saving': '保存中...',
-    'saved-restarting': '已保存！正在重启服务...',
-    'save-failed': '保存失败。',
-    'run-demo': '运行演示',
-    'host-log': '主机日志',
-    'client-log': '客户端日志',
-    'refresh-log': '刷新日志',
-    'multigagent-messages': 'MultiGAgentDemo AI 消息',
-    'router-messages': 'RouterDemo AI 消息'
-  }
-};
-let currentLanguage = localStorage.getItem('language') || 'en';
+      'loading': '加载中...',
+      'failed-to-load-config': '加载配置失败。',
+      'saving': '保存中...',
+      'saved-successfully': '配置保存成功！',
+      'save-failed': '保存失败。',
+      'run-demo': '运行演示',
+      'host-log': '主机日志',
+      'client-log': '客户端日志',
+      'refresh-log': '刷新日志',
+      // Removed translation keys for deleted demos
 
-function applyTranslations() {
-  document.querySelectorAll('[data-i18n-key]').forEach(el => {
-    const key = el.getAttribute('data-i18n-key');
-    if (translations[currentLanguage] && translations[currentLanguage][key]) {
-      el.innerHTML = translations[currentLanguage][key];
     }
-  });
-}
+  };
+  let currentLanguage = localStorage.getItem('language') || 'en';
 
-function setLanguage(lang) {
-  currentLanguage = lang;
-  localStorage.setItem('language', lang);
-  document.getElementById('lang-en').style.fontWeight = lang === 'en' ? 'bold' : 'normal';
-  document.getElementById('lang-zh').style.fontWeight = lang === 'zh' ? 'bold' : 'normal';
-  applyTranslations();
-  renderSidebar();
-  renderMainContent();
-}
-
-// LLM Config Modal global variables
-const llmConfigModal = document.getElementById('llmConfigModal');
-const llmConfigForm = document.getElementById('llmConfigForm');
-const llmConfigSaveBtn = document.getElementById('llmConfigSaveBtn');
-const llmConfigCancelBtn = document.getElementById('llmConfigCancelBtn');
-const llmConfigMsg = document.getElementById('llmConfigMsg');
-let llmConfigData = {};
-// --- Demo definitions ---
-const demos = [
-  {
-    key: 'EventHandlerDemo',
-    name: { en: 'EventHandler Demo', zh: 'EventHandler Demo' },
-    desc: { en: 'demodesc/EventHandlerDemo.md', zh: 'demodesc/EventHandlerDemo.zh.md' },
-    form: [
-      { type: 'text', id: 'greeting', label: { en: 'Greeting', zh: '问候语' }, default: 'Hello, Aevatar!' }
-    ],
-    notebookCells: [
-      { type: 'markdown', contentKey: 'desc' },
-      { type: 'input', fieldsKey: 'form' },
-      { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
-      { type: 'output' }
-    ]
-  },
-  {
-    key: 'MultiGAgentDemo',
-    name: { en: 'Multi-GAgent Demo', zh: 'Multi-GAgent Demo' },
-    desc: { en: 'demodesc/MultiGAgentDemo.md', zh: 'demodesc/MultiGAgentDemo.zh.md' },
-    form: [
-      { type: 'number', id: 'number', label: { en: 'Secret Number (1-100)', zh: '神秘数字 (1-100)' }, default: 42, min: 1, max: 100 },
-      { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
-    ],
-    notebookCells: [
-      { type: 'markdown', contentKey: 'desc' },
-      { type: 'input', fieldsKey: 'form' },
-      { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
-      { type: 'output' },
-      { type: 'chat', chatKey: 'MultiGAgentDemo' }
-    ]
-  },
-  {
-    key: 'RouterDemo',
-    name: { en: 'Router Demo', zh: 'Router Demo' },
-    desc: { en: 'demodesc/RouterDemo.md', zh: 'demodesc/RouterDemo.zh.md' },
-    form: [
-      { type: 'llm', id: 'systemLLM', label: { en: 'LLM System', zh: 'LLM 系统' } }
-    ],
-    notebookCells: [
-      { type: 'markdown', contentKey: 'desc' },
-      { type: 'input', fieldsKey: 'form' },
-      { type: 'button', label: { en: 'Run Demo', zh: '运行演示' } },
-      { type: 'output' },
-      { type: 'chat', chatKey: 'RouterDemo' }
-    ]
-  },
-];
-const logs = [
-  { key: 'HostLog', name: 'Host Log' },
-  { key: 'ClientLog', name: 'Client Log' }
-];
-
-// --- Sidebar rendering ---
-const sidebarList = document.getElementById('sidebar-list');
-const mainContent = document.getElementById('main-content');
-let selectedKey = demos[0].key;
-let logInterval = null;
-let multichatInterval = null;
-let routerchatInterval = null;
-
-// markdown -> html
-function simpleMarkdownToHtml(md) {
-  let html = md
-    .replace(/^###### (.*$)/gim, '<h6>$1</h6>')
-    .replace(/^##### (.*$)/gim, '<h5>$1</h5>')
-    .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
-    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
-    .replace(/\*(.*?)\*/gim, '<i>$1</i>')
-    .replace(/`([^`]+)`/gim, '<code>$1</code>')
-    .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
-    .replace(/^\s*\n/gim, '<br>')
-    .replace(/\n/gim, '<br>');
-  // for list
-  html = html.replace(/<br>\s*[-*] (.*?)(?=<br>|$)/g, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
-  return html;
-}
-
-function renderSidebar() {
-  console.log('DEBUG: renderSidebar called');
-  sidebarList.innerHTML = '';
-  demos.forEach(demo => {
-    const li = document.createElement('li');
-    li.className = 'sidebar-item' + (selectedKey === demo.key ? ' selected' : '');
-    li.textContent = demo.name[currentLanguage] || demo.name['en'];
-    li.onclick = () => { selectSidebar(demo.key); };
-    sidebarList.appendChild(li);
-  });
-  // Divider between demos and logs
-  const divider = document.createElement('div');
-  divider.style.height = '1px';
-  divider.style.background = '#334155';
-  divider.style.margin = '18px 0 12px 0';
-  sidebarList.appendChild(divider);
-  logs.forEach(log => {
-    const li = document.createElement('li');
-    li.className = 'sidebar-item' + (selectedKey === log.key ? ' selected' : '');
-    li.textContent = log.name;
-    li.onclick = () => { selectSidebar(log.key); };
-    sidebarList.appendChild(li);
-  });
-  const configLlmBtn = document.getElementById('configLlmBtn');
-  if (configLlmBtn) {
-    configLlmBtn.onclick = async function() {
-      llmConfigMsg.textContent = '';
-      llmConfigForm.innerHTML = `<span data-i18n-key="loading">Loading...</span>`;
-      setLanguage(currentLanguage);
-      llmConfigModal.style.display = 'flex';
-      try {
-        const resp = await fetch('/api/llm-configs');
-        llmConfigData = await resp.json();
-        renderLlmConfigForm();
-      } catch {
-        llmConfigForm.innerHTML = `<span style="color:#b91c1c;" data-i18n-key="failed-to-load-config">Failed to load config.</span>`;
-        setLanguage(currentLanguage);
+  function applyTranslations() {
+    document.querySelectorAll('[data-i18n-key]').forEach(el => {
+      const key = el.getAttribute('data-i18n-key');
+      if (translations[currentLanguage] && translations[currentLanguage][key]) {
+        el.innerHTML = translations[currentLanguage][key];
       }
-      llmConfigCancelBtn.onclick = () => { llmConfigModal.style.display = 'none'; };
-      llmConfigSaveBtn.onclick = async function() {
-        llmConfigMsg.setAttribute('data-i18n-key', 'saving');
-        llmConfigMsg.textContent = 'Saving...';
+    });
+  }
+
+  function setLanguage(lang) {
+    currentLanguage = lang;
+    localStorage.setItem('language', lang);
+    document.getElementById('lang-en').style.fontWeight = lang === 'en' ? 'bold' : 'normal';
+    document.getElementById('lang-zh').style.fontWeight = lang === 'zh' ? 'bold' : 'normal';
+    applyTranslations();
+    renderSidebar();
+    renderMainContent();
+  }
+
+  // LLM Config Modal global variables
+  const llmConfigModal = document.getElementById('llmConfigModal');
+  const llmConfigForm = document.getElementById('llmConfigForm');
+  const llmConfigSaveBtn = document.getElementById('llmConfigSaveBtn');
+  const llmConfigCancelBtn = document.getElementById('llmConfigCancelBtn');
+  const llmConfigMsg = document.getElementById('llmConfigMsg');
+  let llmConfigData = {};
+  // --- Demo definitions ---
+  const basicDemos = [
+    {
+      key: 'EventHandlerDemo',
+      name: { en: 'Event Handler Demo', zh: '事件处理器演示' },
+      desc: { en: 'demodesc/EventHandlerDemo.md', zh: 'demodesc/EventHandlerDemo.zh.md' },
+      isCustom: true // Custom rendering for event handler demo
+    },
+    {
+      key: 'GAgentServiceDemo',
+      name: { en: 'GAgent Service Demo', zh: 'GAgent Service 演示' },
+      desc: { en: 'demodesc/GAgentServiceDemo.md', zh: 'demodesc/GAgentServiceDemo.zh.md' },
+      isCustom: true // Custom rendering flag
+    },
+    {
+      key: 'AIToolCallingDemo',
+      name: { en: 'AI Tool Calling Demo', zh: 'AI 工具调用演示' },
+      desc: { en: 'demodesc/AIToolCallingDemo.md', zh: 'demodesc/AIToolCallingDemo.zh.md' },
+      isCustom: true // Custom rendering for AI tool calling
+    },
+    {
+      key: 'MCPDemo',
+      name: { en: 'MCP Demo', zh: 'MCP 演示' },
+      desc: { en: 'demodesc/MCPDemo.md', zh: 'demodesc/MCPDemo.zh.md' },
+      isCustom: true // Custom rendering for MCP demo
+    }
+  ];
+
+  const advancedDemos = [
+    {
+      key: 'DynamicAIMCPDemo',
+      name: { en: 'Dynamic AI MCP Integration', zh: '动态 AI MCP 集成' },
+      desc: { en: 'demodesc/DynamicAIMCPDemo.md', zh: 'demodesc/DynamicAIMCPDemo.zh.md' },
+      isCustom: true // Custom rendering for dynamic AI MCP integration
+    },
+    {
+      key: 'PsiGAgentDemo',
+      name: { en: 'PsiGAgent Demo', zh: 'PsiGAgent 演示' },
+      desc: { en: 'demodesc/PsiGAgentDemo.md', zh: 'demodesc/PsiGAgentDemo.zh.md' },
+      isCustom: true // Custom rendering for PsiGAgent demo
+    }
+  ];
+
+  // Combine all demos for compatibility with existing code
+  const demos = [...basicDemos, ...advancedDemos];
+  
+  const logs = [
+    { key: 'HostLog', name: 'Host Log' },
+    { key: 'ClientLog', name: 'Client Log' }
+  ];
+
+  // --- Sidebar rendering ---
+  const sidebarList = document.getElementById('sidebar-list');
+  const mainContent = document.getElementById('main-content');
+  let selectedKey = demos[0].key;
+  let logInterval = null;
+  // Remove multichatInterval and routerchatInterval as they're no longer needed
+  // let multichatInterval = null;
+  // let routerchatInterval = null;
+
+  // markdown -> html
+  function simpleMarkdownToHtml(md) {
+    let html = md
+            .replace(/^###### (.*$)/gim, '<h6>$1</h6>')
+            .replace(/^##### (.*$)/gim, '<h5>$1</h5>')
+            .replace(/^#### (.*$)/gim, '<h4>$1</h4>')
+            .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+            .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+            .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+            .replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>')
+            .replace(/\*(.*?)\*/gim, '<i>$1</i>')
+            .replace(/`([^`]+)`/gim, '<code>$1</code>')
+            .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
+            .replace(/^\s*\n/gim, '<br>')
+            .replace(/\n/gim, '<br>');
+    // for list
+    html = html.replace(/<br>\s*[-*] (.*?)(?=<br>|$)/g, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
+    return html;
+  }
+
+  function renderSidebar() {
+    console.log('DEBUG: renderSidebar called');
+    sidebarList.innerHTML = '';
+    
+    // Basic Demos section
+    const basicTitle = document.createElement('div');
+    basicTitle.style.padding = '8px 16px';
+    basicTitle.style.color = '#94a3b8';
+    basicTitle.style.fontSize = '0.85rem';
+    basicTitle.style.fontWeight = 'bold';
+    basicTitle.style.textTransform = 'uppercase';
+    basicTitle.style.letterSpacing = '0.05em';
+    basicTitle.textContent = currentLanguage === 'zh' ? '基础功能' : 'Basic Features';
+    sidebarList.appendChild(basicTitle);
+    
+    basicDemos.forEach(demo => {
+      const li = document.createElement('li');
+      li.className = 'sidebar-item' + (selectedKey === demo.key ? ' selected' : '');
+      li.textContent = demo.name[currentLanguage] || demo.name['en'];
+      li.onclick = () => { selectSidebar(demo.key); };
+      sidebarList.appendChild(li);
+    });
+    
+    // Divider between basic and advanced demos
+    const demosDivider = document.createElement('div');
+    demosDivider.style.height = '1px';
+    demosDivider.style.background = '#334155';
+    demosDivider.style.margin = '18px 0 12px 0';
+    sidebarList.appendChild(demosDivider);
+    
+    // Advanced Demos section
+    const advancedTitle = document.createElement('div');
+    advancedTitle.style.padding = '8px 16px';
+    advancedTitle.style.color = '#94a3b8';
+    advancedTitle.style.fontSize = '0.85rem';
+    advancedTitle.style.fontWeight = 'bold';
+    advancedTitle.style.textTransform = 'uppercase';
+    advancedTitle.style.letterSpacing = '0.05em';
+    advancedTitle.textContent = currentLanguage === 'zh' ? '进阶功能' : 'Advanced Demos';
+    sidebarList.appendChild(advancedTitle);
+    
+    advancedDemos.forEach(demo => {
+      const li = document.createElement('li');
+      li.className = 'sidebar-item' + (selectedKey === demo.key ? ' selected' : '');
+      li.textContent = demo.name[currentLanguage] || demo.name['en'];
+      li.onclick = () => { selectSidebar(demo.key); };
+      sidebarList.appendChild(li);
+    });
+    
+    // Divider between demos and logs
+    const divider = document.createElement('div');
+    divider.style.height = '1px';
+    divider.style.background = '#334155';
+    divider.style.margin = '18px 0 12px 0';
+    sidebarList.appendChild(divider);
+    logs.forEach(log => {
+      const li = document.createElement('li');
+      li.className = 'sidebar-item' + (selectedKey === log.key ? ' selected' : '');
+      li.textContent = log.name;
+      li.onclick = () => { selectSidebar(log.key); };
+      sidebarList.appendChild(li);
+    });
+    const configLlmBtn = document.getElementById('configLlmBtn');
+    if (configLlmBtn) {
+      configLlmBtn.onclick = async function() {
+        llmConfigMsg.textContent = '';
+        llmConfigForm.innerHTML = `<span data-i18n-key="loading">Loading...</span>`;
         setLanguage(currentLanguage);
+        llmConfigModal.style.display = 'flex';
         try {
-          const resp = await fetch('/api/llm-configs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(llmConfigData)
-          });
-          if (resp.ok) {
-            llmConfigMsg.setAttribute('data-i18n-key', 'saved-restarting');
-            llmConfigMsg.textContent = 'Saved! Restarting services...';
-            setLanguage(currentLanguage);
-            setTimeout(() => {
-              llmConfigModal.style.display = 'none';
-              document.getElementById('restartBtn').click();
-            }, 1000);
-          } else {
+          const resp = await fetch('/api/llm-configs');
+          llmConfigData = await resp.json();
+          renderLlmConfigForm();
+        } catch {
+          llmConfigForm.innerHTML = `<span style="color:#b91c1c;" data-i18n-key="failed-to-load-config">Failed to load config.</span>`;
+          setLanguage(currentLanguage);
+        }
+        llmConfigCancelBtn.onclick = () => { llmConfigModal.style.display = 'none'; };
+        llmConfigSaveBtn.onclick = async function() {
+          llmConfigMsg.setAttribute('data-i18n-key', 'saving');
+          llmConfigMsg.textContent = 'Saving...';
+          setLanguage(currentLanguage);
+          try {
+            const resp = await fetch('/api/llm-configs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(llmConfigData)
+            });
+            if (resp.ok) {
+              llmConfigMsg.setAttribute('data-i18n-key', 'saved-successfully');
+              llmConfigMsg.textContent = 'Configuration saved successfully!';
+              setLanguage(currentLanguage);
+              setTimeout(() => {
+                llmConfigModal.style.display = 'none';
+              }, 1500);
+            } else {
+              llmConfigMsg.setAttribute('data-i18n-key', 'save-failed');
+              llmConfigMsg.textContent = 'Save failed.';
+              setLanguage(currentLanguage);
+            }
+          } catch {
             llmConfigMsg.setAttribute('data-i18n-key', 'save-failed');
             llmConfigMsg.textContent = 'Save failed.';
             setLanguage(currentLanguage);
           }
-        } catch {
-          llmConfigMsg.setAttribute('data-i18n-key', 'save-failed');
-          llmConfigMsg.textContent = 'Save failed.';
-          setLanguage(currentLanguage);
-        }
+        };
       };
-    };
+    }
   }
-}
 
-function selectSidebar(key) {
-  selectedKey = key;
+  function selectSidebar(key) {
+    selectedKey = key;
+    renderSidebar();
+    renderMainContent();
+  }
+
+  // --- Main content rendering ---
+  async function renderMainContent() {
+    clearInterval(logInterval);
+    // clearInterval(multichatInterval);
+    // clearInterval(routerchatInterval);
+    mainContent.innerHTML = '';
+    if (selectedKey === 'HostLog' || selectedKey === 'ClientLog') {
+      renderLogPanel(selectedKey);
+      return;
+    }
+    const demo = demos.find(d => d.key === selectedKey);
+    if (!demo) return;
+
+    // Handle custom demos
+    if (demo.isCustom && demo.key === 'EventHandlerDemo') {
+      renderEventHandlerDemo(demo);
+      return;
+    }
+
+    if (demo.isCustom && demo.key === 'GAgentServiceDemo') {
+      renderGAgentServiceDemo(demo);
+      return;
+    }
+
+    if (demo.isCustom && demo.key === 'AIToolCallingDemo') {
+      renderAIToolCallingDemo(demo);
+      return;
+    }
+
+    if (demo.isCustom && demo.key === 'MCPDemo') {
+      renderMCPDemo(demo);
+      return;
+    }
+
+    if (demo.isCustom && demo.key === 'DynamicAIMCPDemo') {
+      renderDynamicAIMCPDemo(demo);
+      return;
+    }
+
+    if (demo.isCustom && demo.key === 'PsiGAgentDemo') {
+      renderPsiGAgentDemo(demo);
+      return;
+    }
+
+    // notebook 状态
+    let notebookState = window.notebookState || {};
+    if (!notebookState[demo.key]) {
+      notebookState[demo.key] = { input: {}, output: '', running: false };
+    }
+    window.notebookState = notebookState;
+    const state = notebookState[demo.key];
+
+    // notebook 渲染
+    const notebook = document.createElement('div');
+    notebook.className = 'notebook';
+    for (const cell of (demo.notebookCells || [])) {
+      if (cell.type === 'markdown') {
+        const desc = document.createElement('div');
+        desc.className = 'demo-desc';
+        desc.innerHTML = 'Loading...';
+        const descPath = demo[cell.contentKey][currentLanguage] || demo[cell.contentKey]['en'];
+        fetch(descPath).then(r => r.text()).then(md => {
+          const mdWithoutTitle = md.replace(/^# .*\n/, '');
+          // 使用 marked 渲染 markdown，支持 fenced code block
+          desc.innerHTML = marked.parse(mdWithoutTitle, {
+            highlight: function(code, lang) {
+              if (window.hljs && lang && hljs.getLanguage(lang)) {
+                return hljs.highlight(code, { language: lang }).value;
+              }
+              return code;
+            }
+          });
+          // 渲染后高亮所有代码块
+          if (window.hljs) {
+            desc.querySelectorAll('pre code').forEach(block => {
+              hljs.highlightElement(block);
+            });
+          }
+        });
+        notebook.appendChild(desc);
+      } else if (cell.type === 'input') {
+        const form = document.createElement('form');
+        form.className = 'demo-form';
+        form.onsubmit = e => { e.preventDefault(); };
+        for (const field of demo[cell.fieldsKey]) {
+          if (field.type === 'text') {
+            const label = document.createElement('label');
+            label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = field.id;
+            input.value = state.input[field.id] ?? field.default;
+            input.oninput = e => { state.input[field.id] = e.target.value; };
+            form.appendChild(label);
+            form.appendChild(input);
+          } else if (field.type === 'number') {
+            const label = document.createElement('label');
+            label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.id = field.id;
+            input.value = state.input[field.id] ?? field.default;
+            input.min = field.min;
+            input.max = field.max;
+            input.style.width = '80px';
+            input.oninput = e => { state.input[field.id] = e.target.value; };
+            form.appendChild(label);
+            form.appendChild(input);
+          } else if (field.type === 'llm') {
+            const label = document.createElement('label');
+            label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
+            const select = document.createElement('select');
+            select.id = field.id;
+            select.style.minWidth = '120px';
+            select.onchange = e => { state.input[field.id] = e.target.value; };
+            form.appendChild(label);
+            form.appendChild(select);
+            fetch('/api/llm-configs/list').then(r => r.json()).then(arr => {
+              select.innerHTML = '';
+              arr.forEach(key => {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = key;
+                select.appendChild(opt);
+              });
+              select.value = state.input[field.id] ?? (arr.includes('OpenAI') ? 'OpenAI' : arr[0]);
+              // Update state.input to keep it in sync with the actual selected value
+              if (!state.input[field.id] && select.value) {
+                state.input[field.id] = select.value;
+              }
+            });
+          }
+        }
+        notebook.appendChild(form);
+      } else if (cell.type === 'button') {
+        const btnWrapper = document.createElement('div');
+        btnWrapper.style.display = 'flex';
+        btnWrapper.style.justifyContent = 'center';
+        btnWrapper.style.width = '100%';
+        btnWrapper.style.flexDirection = 'column';
+        const runBtn = document.createElement('button');
+        runBtn.type = 'button';
+        runBtn.textContent = cell.label[currentLanguage] || cell.label['en'];
+        runBtn.style.display = 'block';
+        runBtn.style.margin = '0 auto';
+        // Remove LLM System status display as it's no longer needed
+        runBtn.onclick = async function() {
+          state.running = true;
+          renderMainContent();
+          let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
+          for (const field of demo.form) {
+            let val = state.input[field.id] ?? field.default;
+            // For llm type fields, get the actual value from DOM if not in state
+            if (field.type === 'llm' && !state.input[field.id]) {
+              const selectElement = document.getElementById(field.id);
+              if (selectElement) {
+                val = selectElement.value;
+                // Also update state to keep it in sync
+                state.input[field.id] = val;
+              }
+            }
+            url += `&${field.id}=${encodeURIComponent(val)}`;
+          }
+          try {
+            const resp = await fetch(url);
+            if (resp.ok) {
+              state.output = await resp.text();
+            } else {
+              const clonedResponse = resp.clone();
+              try {
+                const errorData = await resp.json();
+                state.output = errorData.message || 'An unknown error occurred.';
+              } catch {
+                const errorText = await clonedResponse.text();
+                state.output = errorText || 'An unknown server error occurred.';
+              }
+            }
+          } catch (error) {
+            state.output = `Network error: ${error.message}`;
+          }
+          state.running = false;
+          renderMainContent();
+        };
+        runBtn.disabled = state.running;
+        btnWrapper.appendChild(runBtn);
+        notebook.appendChild(btnWrapper);
+      } else if (cell.type === 'output') {
+        const resultBox = document.createElement('pre');
+        resultBox.id = 'result';
+        resultBox.style.marginTop = '10px';
+        resultBox.style.background = '#f1f5f9';
+        resultBox.style.borderRadius = '5px';
+        resultBox.style.padding = '10px';
+        resultBox.style.minHeight = '24px';
+        resultBox.style.width = '100%';
+        resultBox.style.maxWidth = '500px';
+        resultBox.style.boxSizing = 'border-box';
+        resultBox.style.fontFamily = 'monospace';
+        resultBox.style.display = 'flex';
+        resultBox.style.justifyContent = 'center';
+        resultBox.style.alignItems = 'center';
+        resultBox.textContent = state.running ? 'Running...' : (state.output || '');
+        notebook.appendChild(resultBox);
+      } else if (cell.type === 'chat') {
+        // Chat type is no longer used after removing MultiGAgentDemo and RouterDemo
+      }
+    }
+    mainContent.appendChild(notebook);
+  }
+
+  function renderLogPanel(logKey) {
+    clearInterval(logInterval);
+    const isHost = logKey === 'HostLog';
+    const panel = document.createElement('div');
+    panel.className = 'log-panel';
+    const title = document.createElement('div');
+    title.className = 'log-title';
+    title.setAttribute('data-i18n-key', isHost ? 'host-log' : 'client-log');
+    title.textContent = isHost ? 'Host Log' : 'Client Log';
+    panel.appendChild(title);
+    const refreshBtn = document.createElement('button');
+    refreshBtn.className = 'refresh-btn';
+    refreshBtn.setAttribute('data-i18n-key', 'refresh-log');
+    refreshBtn.textContent = 'Refresh Log';
+    panel.appendChild(refreshBtn);
+    const logBox = document.createElement('div');
+    logBox.className = 'log-box';
+    logBox.id = isHost ? 'hostLogBox' : 'clientLogBox';
+    panel.appendChild(logBox);
+    mainContent.appendChild(panel);
+    // Fetch log
+    const fetchLog = async () => {
+      logBox.textContent = 'Loading...';
+      const resp = await fetch(isHost ? '/api/log/host' : '/api/log/client');
+      let text = await resp.text();
+      if (isHost) {
+        text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
+        logBox.innerHTML = text;
+      } else {
+        logBox.textContent = text;
+      }
+    };
+    refreshBtn.onclick = fetchLog;
+    fetchLog();
+    // Real-time refresh
+    logInterval = setInterval(fetchLog, 2000);
+  }
+
+  // Event Handler Demo rendering
+  async function renderEventHandlerDemo(demo) {
+    // Create an iframe to load the standalone demo page
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = '/demos/event-handler-demo.html';
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+
+    // Demo iframe
+    const iframeContainer = document.createElement('div');
+    iframeContainer.style.marginTop = '20px';
+    iframeContainer.style.padding = '20px';
+    iframeContainer.style.background = '#f7fafc';
+    iframeContainer.style.borderRadius = '8px';
+    iframeContainer.style.border = '1px solid #e2e8f0';
+    iframeContainer.style.height = '800px';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = '/demos/event-handler-demo.html';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.style.borderRadius = '4px';
+    iframe.style.background = 'white';
+
+    iframeContainer.appendChild(iframe);
+    demoCard.appendChild(iframeContainer);
+
+    mainContent.appendChild(demoCard);
+  }
+
+  // GAgent Service Demo rendering
+  async function renderGAgentServiceDemo(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1200px';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+
+    // Interactive sections container
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.style.marginTop = '32px';
+    sectionsContainer.style.display = 'grid';
+    sectionsContainer.style.gridTemplateColumns = 'repeat(auto-fit, minmax(400px, 1fr))';
+    sectionsContainer.style.gap = '24px';
+
+    // 1. List All GAgents Section
+    const listSection = createGAgentSection(
+            currentLanguage === 'zh' ? '列出所有 GAgent' : 'List All GAgents',
+            async () => {
+              const resp = await fetch('/api/GAgentService/list');
+              return await resp.json();
+            },
+            (data) => {
+              if (!data.success) return `Error: ${data.error}`;
+              let html = `<div style="font-weight:bold;margin-bottom:8px;">Total GAgents: ${data.total}</div>`;
+              data.gAgents.forEach(g => {
+                html += `<details style="margin-bottom:8px;border:1px solid #e5e7eb;border-radius:4px;padding:8px;">`;
+                html += `<summary style="cursor:pointer;font-weight:bold;">${g.grainType} (${g.eventCount} events)</summary>`;
+                html += `<ul style="margin-top:8px;margin-left:20px;">`;
+                g.events.forEach(e => {
+                  html += `<li>${e.name}</li>`;
+                });
+                html += `</ul></details>`;
+              });
+              return html;
+            }
+    );
+    sectionsContainer.appendChild(listSection);
+
+    // 2. Get GAgent Details Section
+    const detailSection = createGAgentSection(
+            currentLanguage === 'zh' ? '获取 GAgent 详情' : 'Get GAgent Details',
+            async (grainType) => {
+              if (!grainType) throw new Error('Please enter a GrainType');
+              const resp = await fetch(`/api/GAgentService/info?grainType=${encodeURIComponent(grainType)}`);
+              return await resp.json();
+            },
+            (data) => {
+              if (!data.success) return `Error: ${data.error}`;
+              const info = data.info;
+              let html = `<div style="margin-bottom:8px;"><strong>GrainType:</strong> ${info.grainType}</div>`;
+              html += `<div style="margin-bottom:8px;"><strong>Description:</strong> ${info.description || 'N/A'}</div>`;
+              html += `<div style="margin-bottom:8px;"><strong>Configuration Type:</strong> ${info.configurationType || 'N/A'}</div>`;
+              html += `<div><strong>Supported Events:</strong></div>`;
+              html += `<ul style="margin-left:20px;">`;
+              info.supportedEvents.forEach(e => {
+                html += `<li>${e.name}</li>`;
+              });
+              html += `</ul>`;
+              return html;
+            },
+            { inputLabel: 'GrainType:', inputPlaceholder: 'e.g., gagent.alice' }
+    );
+    sectionsContainer.appendChild(detailSection);
+
+    // 3. Find GAgents by Event Section
+    const findSection = createGAgentSection(
+            currentLanguage === 'zh' ? '按事件查找 GAgent' : 'Find GAgents by Event',
+            async (eventTypeName) => {
+              if (!eventTypeName) throw new Error('Please enter an event type name');
+              const resp = await fetch(`/api/GAgentService/find-by-event?eventTypeName=${encodeURIComponent(eventTypeName)}`);
+              return await resp.json();
+            },
+            (data) => {
+              if (!data.success) return `Error: ${data.error}`;
+              let html = `<div style="font-weight:bold;margin-bottom:8px;">Found ${data.total} GAgent(s)</div>`;
+              if (data.total === 0) {
+                html += '<div style="color:#6b7280;">No GAgents found supporting this event type.</div>';
+              } else {
+                data.gAgents.forEach(g => {
+                  html += `<div style="margin-bottom:8px;padding:8px;background:#f3f4f6;border-radius:4px;">`;
+                  html += `<div><strong>GrainType:</strong> ${g.grainType}</div>`;
+                  html += `<div><strong>Event:</strong> ${g.eventType.name}</div>`;
+                  html += `</div>`;
+                });
+              }
+              return html;
+            },
+            { inputLabel: 'Event Type Name:', inputPlaceholder: 'e.g., GreetingEvent' }
+    );
+    sectionsContainer.appendChild(findSection);
+
+    // 4. Execute GAgent Section
+    const executeSection = createGAgentExecuteSection();
+    sectionsContainer.appendChild(executeSection);
+
+    demoCard.appendChild(sectionsContainer);
+    mainContent.appendChild(demoCard);
+  }
+
+  // Helper function to create a GAgent section
+  function createGAgentSection(title, fetchFn, renderFn, options = {}) {
+    const section = document.createElement('div');
+    section.style.background = '#fff';
+    section.style.padding = '20px';
+    section.style.borderRadius = '8px';
+    section.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+
+    const sectionTitle = document.createElement('h3');
+    sectionTitle.style.marginTop = '0';
+    sectionTitle.style.marginBottom = '16px';
+    sectionTitle.style.color = '#1e293b';
+    sectionTitle.textContent = title;
+    section.appendChild(sectionTitle);
+
+    if (options.inputLabel) {
+      const inputGroup = document.createElement('div');
+      inputGroup.style.marginBottom = '12px';
+
+      const label = document.createElement('label');
+      label.style.display = 'block';
+      label.style.marginBottom = '4px';
+      label.style.fontWeight = 'bold';
+      label.textContent = options.inputLabel;
+      inputGroup.appendChild(label);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.style.width = '100%';
+      input.style.padding = '8px';
+      input.style.border = '1px solid #d1d5db';
+      input.style.borderRadius = '4px';
+      input.placeholder = options.inputPlaceholder || '';
+      inputGroup.appendChild(input);
+
+      section.appendChild(inputGroup);
+    }
+
+    const button = document.createElement('button');
+    button.style.padding = '8px 16px';
+    button.style.background = '#3b82f6';
+    button.style.color = '#fff';
+    button.style.border = 'none';
+    button.style.borderRadius = '4px';
+    button.style.cursor = 'pointer';
+    button.style.fontWeight = 'bold';
+    button.textContent = currentLanguage === 'zh' ? '执行' : 'Execute';
+    section.appendChild(button);
+
+    const resultDiv = document.createElement('div');
+    resultDiv.style.marginTop = '16px';
+    resultDiv.style.padding = '12px';
+    resultDiv.style.background = '#f9fafb';
+    resultDiv.style.borderRadius = '4px';
+    resultDiv.style.minHeight = '60px';
+    resultDiv.style.maxHeight = '300px';
+    resultDiv.style.overflow = 'auto';
+    resultDiv.innerHTML = '<span style="color:#6b7280;">Results will appear here...</span>';
+    section.appendChild(resultDiv);
+
+    button.onclick = async () => {
+      try {
+        button.disabled = true;
+        resultDiv.innerHTML = '<span style="color:#6b7280;">Loading...</span>';
+
+        const input = section.querySelector('input');
+        const data = await fetchFn(input ? input.value : undefined);
+        resultDiv.innerHTML = renderFn(data);
+      } catch (error) {
+        resultDiv.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+      } finally {
+        button.disabled = false;
+      }
+    };
+
+    return section;
+  }
+
+  // Helper function to create Execute GAgent section with more complex UI
+  function createGAgentExecuteSection() {
+    const section = document.createElement('div');
+    section.style.background = '#fff';
+    section.style.padding = '20px';
+    section.style.borderRadius = '8px';
+    section.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    section.style.gridColumn = '1 / -1'; // Span full width
+
+    const sectionTitle = document.createElement('h3');
+    sectionTitle.style.marginTop = '0';
+    sectionTitle.style.marginBottom = '16px';
+    sectionTitle.style.color = '#1e293b';
+    sectionTitle.textContent = currentLanguage === 'zh' ? '执行 GAgent' : 'Execute GAgent';
+    section.appendChild(sectionTitle);
+
+    // Form inputs
+    const formGrid = document.createElement('div');
+    formGrid.style.display = 'grid';
+    formGrid.style.gridTemplateColumns = '1fr 1fr';
+    formGrid.style.gap = '12px';
+    formGrid.style.marginBottom = '16px';
+
+    // GrainType input
+    const grainTypeGroup = createInputGroup('GrainType:', 'e.g., tools.math, gagent.alice');
+    formGrid.appendChild(grainTypeGroup);
+
+    // EventTypeName input
+    const eventTypeGroup = createInputGroup('Event Type Name:', 'e.g., MathCalculateEvent, GreetingEvent');
+    formGrid.appendChild(eventTypeGroup);
+
+    section.appendChild(formGrid);
+
+    // Event Parameters textarea
+    const paramsGroup = document.createElement('div');
+    paramsGroup.style.marginBottom = '16px';
+
+    const paramsLabel = document.createElement('label');
+    paramsLabel.style.display = 'block';
+    paramsLabel.style.marginBottom = '4px';
+    paramsLabel.style.fontWeight = 'bold';
+    paramsLabel.textContent = 'Event Parameters (JSON):';
+    paramsGroup.appendChild(paramsLabel);
+
+    const paramsTextarea = document.createElement('textarea');
+    paramsTextarea.style.width = '100%';
+    paramsTextarea.style.minHeight = '100px';
+    paramsTextarea.style.padding = '8px';
+    paramsTextarea.style.border = '1px solid #d1d5db';
+    paramsTextarea.style.borderRadius = '4px';
+    paramsTextarea.style.fontFamily = 'monospace';
+    paramsTextarea.placeholder = '{\n  "expression": "1+1"\n}\n// or for GreetingEvent:\n{\n  "message": "Hello World"\n}';
+    paramsTextarea.value = '{\n  "expression": "1+1"\n}';
+    paramsGroup.appendChild(paramsTextarea);
+
+    section.appendChild(paramsGroup);
+
+    // Execute button
+    const button = document.createElement('button');
+    button.style.padding = '10px 24px';
+    button.style.background = '#10b981';
+    button.style.color = '#fff';
+    button.style.border = 'none';
+    button.style.borderRadius = '4px';
+    button.style.cursor = 'pointer';
+    button.style.fontWeight = 'bold';
+    button.style.fontSize = '16px';
+    button.textContent = currentLanguage === 'zh' ? '执行事件' : 'Execute Event';
+    section.appendChild(button);
+
+    // Result display
+    const resultDiv = document.createElement('div');
+    resultDiv.style.marginTop = '20px';
+    resultDiv.style.padding = '16px';
+    resultDiv.style.background = '#f9fafb';
+    resultDiv.style.borderRadius = '4px';
+    resultDiv.style.minHeight = '100px';
+    resultDiv.style.maxHeight = '400px';
+    resultDiv.style.overflow = 'auto';
+    resultDiv.innerHTML = '<span style="color:#6b7280;">Execution results will appear here...</span>';
+    section.appendChild(resultDiv);
+
+    button.onclick = async () => {
+      try {
+        button.disabled = true;
+        resultDiv.innerHTML = '<span style="color:#6b7280;">Executing...</span>';
+
+        const grainType = formGrid.querySelector('input').value;
+        const eventTypeName = formGrid.querySelectorAll('input')[1].value;
+        const eventParameters = paramsTextarea.value;
+
+        if (!grainType || !eventTypeName) {
+          throw new Error('GrainType and Event Type Name are required');
+        }
+
+        const resp = await fetch('/api/GAgentService/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grainType,
+            eventTypeName,
+            eventParameters
+          })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          // Check if result is pending (timeout case)
+          if (data.result === 'PENDING' && data.resultGAgentId) {
+            resultDiv.innerHTML = `<div style="color:#3b82f6;font-weight:bold;margin-bottom:8px;">⏳ Execution in progress...</div>`;
+            resultDiv.innerHTML += `<div style="margin-top:8px;">ResultGAgent ID: ${data.resultGAgentId}</div>`;
+            resultDiv.innerHTML += `<div style="margin-top:4px;color:#6b7280;">Polling for result...</div>`;
+
+            // Start polling for result
+            let pollCount = 0;
+            const maxPolls = 10; // Poll for up to 10 seconds
+            const pollInterval = setInterval(async () => {
+              pollCount++;
+
+              try {
+                const stateResponse = await fetch(`/api/GAgentService/result-state/${data.resultGAgentId}`);
+                const stateData = await stateResponse.json();
+
+                if (stateData.success && stateData.state.hasResult) {
+                  clearInterval(pollInterval);
+                  resultDiv.innerHTML = `<div style="color:#059669;font-weight:bold;margin-bottom:8px;">✓ Execution Successful</div>`;
+                  try {
+                    // Try to parse and display as formatted JSON
+                    const parsedResult = JSON.parse(stateData.state.result);
+                    resultDiv.innerHTML += `<pre style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;overflow-x:auto;">${JSON.stringify(parsedResult, null, 2)}</pre>`;
+                  } catch (parseError) {
+                    // If parsing fails, display raw result
+                    console.error('Failed to parse result as JSON:', parseError);
+                    resultDiv.innerHTML += `<div style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;">`;
+                    resultDiv.innerHTML += `<div style="color:#ef4444;margin-bottom:8px;">⚠️ Result is not valid JSON, showing raw output:</div>`;
+                    resultDiv.innerHTML += `<pre style="overflow-x:auto;">${stateData.state.result}</pre>`;
+                    resultDiv.innerHTML += `</div>`;
+                  }
+                } else if (pollCount >= maxPolls) {
+                  clearInterval(pollInterval);
+                  resultDiv.innerHTML = `<div style="color:#f59e0b;font-weight:bold;">⚠️ Timeout</div>`;
+                  resultDiv.innerHTML += `<div style="margin-top:8px;">No result received after ${maxPolls} seconds</div>`;
+                  resultDiv.innerHTML += `<div style="margin-top:4px;color:#6b7280;">ResultGAgent ID: ${data.resultGAgentId}</div>`;
+                } else {
+                  // Update polling status
+                  resultDiv.innerHTML = `<div style="color:#3b82f6;font-weight:bold;margin-bottom:8px;">⏳ Execution in progress...</div>`;
+                  resultDiv.innerHTML += `<div style="margin-top:8px;">ResultGAgent ID: ${data.resultGAgentId}</div>`;
+                  resultDiv.innerHTML += `<div style="margin-top:4px;color:#6b7280;">Polling for result... (${pollCount}/${maxPolls})</div>`;
+                }
+              } catch (error) {
+                clearInterval(pollInterval);
+                resultDiv.innerHTML = `<div style="color:#ef4444;font-weight:bold;">✗ Polling Error</div>`;
+                resultDiv.innerHTML += `<div style="margin-top:8px;">${error.message}</div>`;
+              }
+            }, 1000); // Poll every second
+          } else {
+            // Normal case - result returned immediately
+            resultDiv.innerHTML = `<div style="color:#059669;font-weight:bold;margin-bottom:8px;">✓ Execution Successful</div>`;
+            try {
+              // Try to parse and display as formatted JSON
+              const parsedResult = JSON.parse(data.result);
+              resultDiv.innerHTML += `<pre style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;overflow-x:auto;">${JSON.stringify(parsedResult, null, 2)}</pre>`;
+            } catch (parseError) {
+              // If parsing fails, display raw result
+              console.error('Failed to parse result as JSON:', parseError);
+              resultDiv.innerHTML += `<div style="background:#fff;padding:12px;border-radius:4px;border:1px solid #e5e7eb;">`;
+              resultDiv.innerHTML += `<div style="color:#ef4444;margin-bottom:8px;">⚠️ Result is not valid JSON, showing raw output:</div>`;
+              resultDiv.innerHTML += `<pre style="overflow-x:auto;">${data.result}</pre>`;
+              resultDiv.innerHTML += `</div>`;
+            }
+          }
+        } else {
+          resultDiv.innerHTML = `<div style="color:#ef4444;font-weight:bold;">✗ Execution Failed</div>`;
+          resultDiv.innerHTML += `<div style="margin-top:8px;">${data.error}</div>`;
+          if (data.details) {
+            resultDiv.innerHTML += `<div style="margin-top:4px;color:#6b7280;font-size:0.9em;">${data.details}</div>`;
+          }
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+      } finally {
+        button.disabled = false;
+      }
+    };
+
+    return section;
+  }
+
+  // Helper function to create input groups
+  function createInputGroup(label, placeholder) {
+    const group = document.createElement('div');
+
+    const labelEl = document.createElement('label');
+    labelEl.style.display = 'block';
+    labelEl.style.marginBottom = '4px';
+    labelEl.style.fontWeight = 'bold';
+    labelEl.textContent = label;
+    group.appendChild(labelEl);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.style.width = '100%';
+    input.style.padding = '8px';
+    input.style.border = '1px solid #d1d5db';
+    input.style.borderRadius = '4px';
+    input.placeholder = placeholder;
+    group.appendChild(input);
+
+    return group;
+  }
+
+  // Initial render
   renderSidebar();
   renderMainContent();
-}
+  setLanguage(currentLanguage); // Apply initial language
 
-// --- Main content rendering ---
-async function renderMainContent() {
-  clearInterval(logInterval);
-  clearInterval(multichatInterval);
-  clearInterval(routerchatInterval);
-  mainContent.innerHTML = '';
-  if (selectedKey === 'HostLog' || selectedKey === 'ClientLog') {
-    renderLogPanel(selectedKey);
-    return;
+  // Removed multichatBox as MultiGAgentDemo is deleted
+  const configModal = document.getElementById('configModal');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+  let configChecked = false;
+
+  async function checkConfigAndMaybeShowModal() {
+    if (configChecked) return;
+    try {
+      const resp = await fetch('/api/llm-configs/check');
+      const data = await resp.json();
+      if (!data.ok) {
+        configModal.style.display = 'flex';
+        configChecked = true;
+      }
+    } catch {}
   }
-  const demo = demos.find(d => d.key === selectedKey);
-  if (!demo) return;
 
-  // notebook 状态
-  let notebookState = window.notebookState || {};
-  if (!notebookState[demo.key]) {
-    notebookState[demo.key] = { input: {}, output: '', running: false };
+  modalCloseBtn.onclick = () => { configModal.style.display = 'none'; };
+
+  document.getElementById('lang-en').onclick = () => setLanguage('en');
+  document.getElementById('lang-zh').onclick = () => setLanguage('zh');
+
+  window.onload = function() {
+    checkConfigAndMaybeShowModal();
+  };
+
+  function setupManualLogPanel(boxId, btnId, api) {
+    // This function is intentionally left empty to prevent runtime errors
+    // from legacy code. The log panel rendering is now handled by
+    // the 'renderLogPanel' function.
   }
-  window.notebookState = notebookState;
-  const state = notebookState[demo.key];
 
-  // notebook 渲染
-  const notebook = document.createElement('div');
-  notebook.className = 'notebook';
-  for (const cell of (demo.notebookCells || [])) {
-    if (cell.type === 'markdown') {
-      const desc = document.createElement('div');
-      desc.className = 'demo-desc';
-      desc.innerHTML = 'Loading...';
-      const descPath = demo[cell.contentKey][currentLanguage] || demo[cell.contentKey]['en'];
-      fetch(descPath).then(r => r.text()).then(md => {
-        const mdWithoutTitle = md.replace(/^# .*\n/, '');
-        // 使用 marked 渲染 markdown，支持 fenced code block
-        desc.innerHTML = marked.parse(mdWithoutTitle, {
-          highlight: function(code, lang) {
-            if (window.hljs && lang && hljs.getLanguage(lang)) {
-              return hljs.highlight(code, { language: lang }).value;
-            }
-            return code;
-          }
-        });
-        // 渲染后高亮所有代码块
-        if (window.hljs) {
-          desc.querySelectorAll('pre code').forEach(block => {
-            hljs.highlightElement(block);
-          });
+  // Removed fetchMultichat function as MultiGAgentDemo is deleted
+
+  const configLlmBtn = document.getElementById('configLlmBtn');
+  function renderLlmConfigForm() {
+    const providerOptions = ['Azure', 'Google', 'OpenAI', 'DeepSeek'];
+    const modelIdOptions = {
+      Azure: ['OpenAI', 'DeepSeek'],
+      Google: ['Gemini'],
+      OpenAI: ['OpenAI'],
+      DeepSeek: ['DeepSeek']
+    };
+    const FIELD_ORDER = [
+      'ProviderEnum', 'ModelIdEnum', 'ModelName', 'Endpoint', 'ApiKey'
+    ];
+    for (const key in llmConfigData) {
+      FIELD_ORDER.forEach(f => {
+        if (!(f in llmConfigData[key])) {
+          llmConfigData[key][f] = '';
         }
       });
-      notebook.appendChild(desc);
-    } else if (cell.type === 'input') {
-      const form = document.createElement('form');
-      form.className = 'demo-form';
-      form.onsubmit = e => { e.preventDefault(); };
-      for (const field of demo[cell.fieldsKey]) {
-        if (field.type === 'text') {
-          const label = document.createElement('label');
-          label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
-          const input = document.createElement('input');
-          input.type = 'text';
-          input.id = field.id;
-          input.value = state.input[field.id] ?? field.default;
-          input.oninput = e => { state.input[field.id] = e.target.value; };
-          form.appendChild(label);
-          form.appendChild(input);
-        } else if (field.type === 'number') {
-          const label = document.createElement('label');
-          label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
-          const input = document.createElement('input');
-          input.type = 'number';
-          input.id = field.id;
-          input.value = state.input[field.id] ?? field.default;
-          input.min = field.min;
-          input.max = field.max;
-          input.style.width = '80px';
-          input.oninput = e => { state.input[field.id] = e.target.value; };
-          form.appendChild(label);
-          form.appendChild(input);
-        } else if (field.type === 'llm') {
-          const label = document.createElement('label');
-          label.textContent = (field.label[currentLanguage] || field.label['en']) + ':';
-          const select = document.createElement('select');
-          select.id = field.id;
-          select.style.minWidth = '120px';
-          select.onchange = e => { state.input[field.id] = e.target.value; };
-          form.appendChild(label);
-          form.appendChild(select);
-          fetch('/api/llm-configs/list').then(r => r.json()).then(arr => {
-            select.innerHTML = '';
-            arr.forEach(key => {
-              const opt = document.createElement('option');
-              opt.value = key;
-              opt.textContent = key;
-              select.appendChild(opt);
-            });
-            select.value = state.input[field.id] ?? (arr.includes('OpenAI') ? 'OpenAI' : arr[0]);
+      if (!llmConfigData[key]['ProviderEnum']) llmConfigData[key]['ProviderEnum'] = 'Azure';
+      const provider = llmConfigData[key]['ProviderEnum'];
+      const validModels = modelIdOptions[provider] || modelIdOptions['Azure'];
+      if (!validModels.includes(llmConfigData[key]['ModelIdEnum'])) {
+        llmConfigData[key]['ModelIdEnum'] = validModels[0];
+      }
+    }
+    let html = '';
+    let idx = 0;
+    for (const key in llmConfigData) {
+      const collapseId = `llm-collapse-${idx}`;
+      html += `<div style='margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:8px;'>`;
+      html += `<div style='display:flex;align-items:center;'>`;
+      html += `<button type='button' class='llm-collapse-btn' data-target='${collapseId}' style='margin-right:8px;font-size:1.1em;'>+</button>`;
+      html += `<label style='font-weight:bold;'>Key: <input type='text' value='${key}' data-key='${key}' class='llm-key' style='width:120px;margin-left:6px;'></label>`;
+      html += `<button type='button' class='llm-del-btn' data-key='${key}' style='margin-left:8px;color:#ef4444;background:none;border:none;cursor:pointer;'>Delete</button>`;
+      html += `</div>`;
+      html += `<div id='${collapseId}' class='llm-fields' style='display:none;margin-left:18px;margin-top:8px;'>`;
+      FIELD_ORDER.forEach(f => {
+        if (f === 'ProviderEnum') {
+          html += `<div style='margin-top:4px;'><label>${f}: <select data-key='${key}' data-field='${f}' class='llm-provider' style='width:180px;'>`;
+          providerOptions.forEach(opt => {
+            html += `<option value='${opt}'${llmConfigData[key][f]===opt?' selected':''}>${opt}</option>`;
           });
+          html += `</select></label></div>`;
+        } else if (f === 'ModelIdEnum') {
+          const provider = llmConfigData[key]['ProviderEnum'] || 'Azure';
+          const models = modelIdOptions[provider] || modelIdOptions['Azure'];
+          html += `<div style='margin-top:4px;'><label>${f}: <select data-key='${key}' data-field='${f}' class='llm-modelid' style='width:180px;'>`;
+          models.forEach(opt => {
+            html += `<option value='${opt}'${llmConfigData[key][f]===opt?' selected':''}>${opt}</option>`;
+          });
+          html += `</select></label></div>`;
+        } else {
+          html += `<div style='margin-top:4px;'><label>${f}: <input type='text' value='${llmConfigData[key][f]||''}' data-key='${key}' data-field='${f}' class='llm-val' style='width:260px;'></label></div>`;
         }
-      }
-      notebook.appendChild(form);
-    } else if (cell.type === 'button') {
-      const btnWrapper = document.createElement('div');
-      btnWrapper.style.display = 'flex';
-      btnWrapper.style.justifyContent = 'center';
-      btnWrapper.style.width = '100%';
-      btnWrapper.style.flexDirection = 'column';
-      const runBtn = document.createElement('button');
-      runBtn.type = 'button';
-      runBtn.textContent = cell.label[currentLanguage] || cell.label['en'];
-      runBtn.style.display = 'block';
-      runBtn.style.margin = '0 auto';
-      // 新增 LLM System 状态提示
-      let llmStatus = null;
-      if (demo.key === 'MultiGAgentDemo' || demo.key === 'RouterDemo') {
-        llmStatus = document.createElement('div');
-        llmStatus.style.marginTop = '10px';
-        llmStatus.style.fontSize = '1rem';
-        llmStatus.style.color = '#0ea5e9';
-        llmStatus.style.textAlign = 'center';
-        llmStatus.style.fontWeight = 'bold';
-        llmStatus.style.minHeight = '22px';
-        btnWrapper.appendChild(llmStatus);
-      }
-      runBtn.onclick = async function() {
-        state.running = true;
-        // 运行前立即显示 LLM System
-        if (llmStatus) {
-          const llmVal = state.input['systemLLM'] || (demo.form.find(f => f.id === 'systemLLM')?.default ?? '');
-          llmStatus.textContent = llmVal ? `Using LLM System: ${llmVal}` : '';
+      });
+      html += `</div>`;
+      html += `</div>`;
+      idx++;
+    }
+    html += `<button type='button' id='llmAddKeyBtn' style='margin-top:8px;background:#fbbf24;color:#222;padding:4px 14px;border:none;border-radius:5px;font-weight:bold;'>Add Key</button>`;
+    llmConfigForm.innerHTML = html;
+    llmConfigForm.querySelectorAll('.llm-del-btn').forEach(btn => {
+      btn.onclick = function() {
+        const k = btn.getAttribute('data-key');
+        delete llmConfigData[k];
+        renderLlmConfigForm();
+      };
+    });
+    llmConfigForm.querySelectorAll('.llm-key').forEach(inp => {
+      inp.onchange = function() {
+        const oldKey = inp.getAttribute('data-key');
+        const newKey = inp.value;
+        if (oldKey !== newKey && newKey) {
+          llmConfigData[newKey] = llmConfigData[oldKey];
+          delete llmConfigData[oldKey];
+          renderLlmConfigForm();
         }
-        renderMainContent();
-        let url = `/api/demo?mode=${demos.findIndex(d => d.key === demo.key)}`;
-        for (const field of demo.form) {
-          const val = state.input[field.id] ?? field.default;
-          url += `&${field.id}=${encodeURIComponent(val)}`;
-        }
-        try {
-          const resp = await fetch(url);
-          if (resp.ok) {
-            state.output = await resp.text();
-          } else {
-            const clonedResponse = resp.clone();
-            try {
-              const errorData = await resp.json();
-              state.output = errorData.message || 'An unknown error occurred.';
-            } catch {
-              const errorText = await clonedResponse.text();
-              state.output = errorText || 'An unknown server error occurred.';
-            }
+      };
+    });
+    llmConfigForm.querySelectorAll('.llm-val').forEach(inp => {
+      inp.onchange = function() {
+        const k = inp.getAttribute('data-key');
+        const f = inp.getAttribute('data-field');
+        llmConfigData[k][f] = inp.value;
+      };
+    });
+    llmConfigForm.querySelectorAll('.llm-provider').forEach(sel => {
+      sel.onchange = function() {
+        const k = sel.getAttribute('data-key');
+        const f = sel.getAttribute('data-field');
+        const newProvider = sel.value;
+        llmConfigData[k][f] = newProvider;
+        const newModel = (modelIdOptions[newProvider]||['OpenAI'])[0];
+        llmConfigData[k]['ModelIdEnum'] = newModel;
+        const parent = sel.closest('.llm-fields');
+        if (parent) {
+          const modelSel = parent.querySelector('select.llm-modelid[data-key="'+k+'"]');
+          if (modelSel) {
+            while (modelSel.firstChild) modelSel.removeChild(modelSel.firstChild);
+            (modelIdOptions[newProvider]||['OpenAI']).forEach(opt => {
+              const option = document.createElement('option');
+              option.value = opt;
+              option.textContent = opt;
+              if (opt === newModel) option.selected = true;
+              modelSel.appendChild(option);
+            });
           }
-        } catch (error) {
-          state.output = `Network error: ${error.message}`;
         }
-        state.running = false;
-        renderMainContent();
       };
-      runBtn.disabled = state.running;
-      btnWrapper.appendChild(runBtn);
-      notebook.appendChild(btnWrapper);
-    } else if (cell.type === 'output') {
-      const resultBox = document.createElement('pre');
-      resultBox.id = 'result';
-      resultBox.style.marginTop = '10px';
-      resultBox.style.background = '#f1f5f9';
-      resultBox.style.borderRadius = '5px';
-      resultBox.style.padding = '10px';
-      resultBox.style.minHeight = '24px';
-      resultBox.style.width = '100%';
-      resultBox.style.maxWidth = '500px';
-      resultBox.style.boxSizing = 'border-box';
-      resultBox.style.fontFamily = 'monospace';
-      resultBox.style.display = 'flex';
-      resultBox.style.justifyContent = 'center';
-      resultBox.style.alignItems = 'center';
-      resultBox.textContent = state.running ? 'Running...' : (state.output || '');
-      notebook.appendChild(resultBox);
-    } else if (cell.type === 'chat') {
-      const chatPanel = document.createElement('div');
-      chatPanel.className = 'chat-panel';
-      const chatTitle = document.createElement('div');
-      chatTitle.className = 'chat-title';
-      chatTitle.setAttribute('data-i18n-key', cell.chatKey === 'MultiGAgentDemo' ? 'multigagent-messages' : 'router-messages');
-      chatTitle.textContent = cell.chatKey === 'MultiGAgentDemo' ? 'MultiGAgentDemo AI Messages' : 'RouterDemo AI Messages';
-      const chatBox = document.createElement('div');
-      chatBox.className = 'chatBox';
-      chatBox.textContent = 'Loading...';
-      chatPanel.appendChild(chatTitle);
-      chatPanel.appendChild(chatBox);
-      notebook.appendChild(chatPanel);
-      // Auto-refresh chat
-      const fetchChat = async () => {
-        chatBox.textContent = 'Loading...';
-        const resp = await fetch(`/api/log/chat?demo=${cell.chatKey}`);
-        let text = await resp.text();
-        text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
-        chatBox.innerHTML = text;
+    });
+    llmConfigForm.querySelectorAll('.llm-modelid').forEach(sel => {
+      sel.onchange = function() {
+        const k = sel.getAttribute('data-key');
+        const f = sel.getAttribute('data-field');
+        llmConfigData[k][f] = sel.value;
       };
-      fetchChat();
-      if (cell.chatKey === 'MultiGAgentDemo') multichatInterval = setInterval(fetchChat, 5000);
-      if (cell.chatKey === 'RouterDemo') routerchatInterval = setInterval(fetchChat, 5000);
-    }
-  }
-  mainContent.appendChild(notebook);
-}
-
-function renderLogPanel(logKey) {
-  clearInterval(logInterval);
-  const isHost = logKey === 'HostLog';
-  const panel = document.createElement('div');
-  panel.className = 'log-panel';
-  const title = document.createElement('div');
-  title.className = 'log-title';
-  title.setAttribute('data-i18n-key', isHost ? 'host-log' : 'client-log');
-  title.textContent = isHost ? 'Host Log' : 'Client Log';
-  panel.appendChild(title);
-  const refreshBtn = document.createElement('button');
-  refreshBtn.className = 'refresh-btn';
-  refreshBtn.setAttribute('data-i18n-key', 'refresh-log');
-  refreshBtn.textContent = 'Refresh Log';
-  panel.appendChild(refreshBtn);
-  const logBox = document.createElement('div');
-  logBox.className = 'log-box';
-  logBox.id = isHost ? 'hostLogBox' : 'clientLogBox';
-  panel.appendChild(logBox);
-  mainContent.appendChild(panel);
-  // Fetch log
-  const fetchLog = async () => {
-    logBox.textContent = 'Loading...';
-    const resp = await fetch(isHost ? '/api/log/host' : '/api/log/client');
-    let text = await resp.text();
-    if (isHost) {
-      text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
-      logBox.innerHTML = text;
-    } else {
-      logBox.textContent = text;
-    }
-  };
-  refreshBtn.onclick = fetchLog;
-  fetchLog();
-  // Real-time refresh
-  logInterval = setInterval(fetchLog, 2000);
-}
-
-// Initial render
-renderSidebar();
-renderMainContent();
-setLanguage(currentLanguage); // Apply initial language
-
-const multichatBox = document.getElementById('multichatBox');
-const configModal = document.getElementById('configModal');
-const modalRestartBtn = document.getElementById('modalRestartBtn');
-const modalCloseBtn = document.getElementById('modalCloseBtn');
-let configChecked = false;
-
-async function checkConfigAndMaybeShowModal() {
-  if (configChecked) return;
-  try {
-    const resp = await fetch('/api/llm-configs/check');
-    const data = await resp.json();
-    if (!data.ok) {
-      configModal.style.display = 'flex';
-      configChecked = true;
-    }
-  } catch {}
-}
-
-modalCloseBtn.onclick = () => { configModal.style.display = 'none'; };
-modalRestartBtn.onclick = () => { configModal.style.display = 'none'; restartBtn.onclick(); };
-
-document.getElementById('lang-en').onclick = () => setLanguage('en');
-document.getElementById('lang-zh').onclick = () => setLanguage('zh');
-
-window.onload = function() { 
-  checkConfigAndMaybeShowModal();
-};
-
-function setupManualLogPanel(boxId, btnId, api) {
-  // This function is intentionally left empty to prevent runtime errors
-  // from legacy code. The log panel rendering is now handled by
-  // the 'renderLogPanel' function.
-}
-
-async function fetchMultichat() {
-  multichatBox.textContent = 'Loading...';
-  try {
-    const resp = await fetch('/api/log/chat?demo=MultiGAgentDemo');
-    const result = await handleFetchResponse(resp, multichatBox);
-    if (result && typeof result === 'string') {
-      let text = result;
-      text = text.replace(/【([^】]+)】:/g, '<span style="color:#e11d48;font-weight:bold;">【$1】:</span>');
-      multichatBox.innerHTML = text;
-    }
-  } catch (error) {
-    console.error('Error fetching multichat:', error);
-    multichatBox.innerHTML = `
-      <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px;">
-        An error occurred while processing your request. Please try again later.
-      </div>`;
-  }
-}
-
-const configLlmBtn = document.getElementById('configLlmBtn');
-function renderLlmConfigForm() {
-  const providerOptions = ['Azure', 'Google', 'OpenAI', 'DeepSeek'];
-  const modelIdOptions = {
-    Azure: ['OpenAI', 'DeepSeek'],
-    Google: ['Gemini'],
-    OpenAI: ['OpenAI'],
-    DeepSeek: ['DeepSeek']
-  };
-  const FIELD_ORDER = [
-    'ProviderEnum', 'ModelIdEnum', 'ModelName', 'Endpoint', 'ApiKey'
-  ];
-  for (const key in llmConfigData) {
-    FIELD_ORDER.forEach(f => {
-      if (!(f in llmConfigData[key])) {
-        llmConfigData[key][f] = '';
-      }
     });
-    if (!llmConfigData[key]['ProviderEnum']) llmConfigData[key]['ProviderEnum'] = 'Azure';
-    const provider = llmConfigData[key]['ProviderEnum'];
-    const validModels = modelIdOptions[provider] || modelIdOptions['Azure'];
-    if (!validModels.includes(llmConfigData[key]['ModelIdEnum'])) {
-      llmConfigData[key]['ModelIdEnum'] = validModels[0];
-    }
-  }
-  let html = '';
-  let idx = 0;
-  for (const key in llmConfigData) {
-    const collapseId = `llm-collapse-${idx}`;
-    html += `<div style='margin-bottom:12px;border-bottom:1px solid #eee;padding-bottom:8px;'>`;
-    html += `<div style='display:flex;align-items:center;'>`;
-    html += `<button type='button' class='llm-collapse-btn' data-target='${collapseId}' style='margin-right:8px;font-size:1.1em;'>+</button>`;
-    html += `<label style='font-weight:bold;'>Key: <input type='text' value='${key}' data-key='${key}' class='llm-key' style='width:120px;margin-left:6px;'></label>`;
-    html += `<button type='button' class='llm-del-btn' data-key='${key}' style='margin-left:8px;color:#ef4444;background:none;border:none;cursor:pointer;'>Delete</button>`;
-    html += `</div>`;
-    html += `<div id='${collapseId}' class='llm-fields' style='display:none;margin-left:18px;margin-top:8px;'>`;
-    FIELD_ORDER.forEach(f => {
-      if (f === 'ProviderEnum') {
-        html += `<div style='margin-top:4px;'><label>${f}: <select data-key='${key}' data-field='${f}' class='llm-provider' style='width:180px;'>`;
-        providerOptions.forEach(opt => {
-          html += `<option value='${opt}'${llmConfigData[key][f]===opt?' selected':''}>${opt}</option>`;
-        });
-        html += `</select></label></div>`;
-      } else if (f === 'ModelIdEnum') {
-        const provider = llmConfigData[key]['ProviderEnum'] || 'Azure';
-        const models = modelIdOptions[provider] || modelIdOptions['Azure'];
-        html += `<div style='margin-top:4px;'><label>${f}: <select data-key='${key}' data-field='${f}' class='llm-modelid' style='width:180px;'>`;
-        models.forEach(opt => {
-          html += `<option value='${opt}'${llmConfigData[key][f]===opt?' selected':''}>${opt}</option>`;
-        });
-        html += `</select></label></div>`;
-      } else {
-        html += `<div style='margin-top:4px;'><label>${f}: <input type='text' value='${llmConfigData[key][f]||''}' data-key='${key}' data-field='${f}' class='llm-val' style='width:260px;'></label></div>`;
-      }
+    llmConfigForm.querySelectorAll('.llm-collapse-btn').forEach(btn => {
+      btn.onclick = function() {
+        const target = btn.getAttribute('data-target');
+        const fields = document.getElementById(target);
+        if (fields.style.display === 'none') {
+          fields.style.display = 'block';
+          btn.textContent = '-';
+        } else {
+          fields.style.display = 'none';
+          btn.textContent = '+';
+        }
+      };
     });
-    html += `</div>`;
-    html += `</div>`;
-    idx++;
-  }
-  html += `<button type='button' id='llmAddKeyBtn' style='margin-top:8px;background:#fbbf24;color:#222;padding:4px 14px;border:none;border-radius:5px;font-weight:bold;'>Add Key</button>`;
-  llmConfigForm.innerHTML = html;
-  llmConfigForm.querySelectorAll('.llm-del-btn').forEach(btn => {
-    btn.onclick = function() {
-      const k = btn.getAttribute('data-key');
-      delete llmConfigData[k];
+    document.getElementById('llmAddKeyBtn').onclick = function() {
+      let newKey = 'NewKey';
+      let idx = 1;
+      while (llmConfigData[newKey]) { newKey = 'NewKey'+(idx++); }
+      llmConfigData[newKey] = { ProviderEnum:'', ModelIdEnum:'', ModelName:'', Endpoint:'', ApiKey:'' };
       renderLlmConfigForm();
     };
-  });
-  llmConfigForm.querySelectorAll('.llm-key').forEach(inp => {
-    inp.onchange = function() {
-      const oldKey = inp.getAttribute('data-key');
-      const newKey = inp.value;
-      if (oldKey !== newKey && newKey) {
-        llmConfigData[newKey] = llmConfigData[oldKey];
-        delete llmConfigData[oldKey];
-        renderLlmConfigForm();
-      }
-    };
-  });
-  llmConfigForm.querySelectorAll('.llm-val').forEach(inp => {
-    inp.onchange = function() {
-      const k = inp.getAttribute('data-key');
-      const f = inp.getAttribute('data-field');
-      llmConfigData[k][f] = inp.value;
-    };
-  });
-  llmConfigForm.querySelectorAll('.llm-provider').forEach(sel => {
-    sel.onchange = function() {
-      const k = sel.getAttribute('data-key');
-      const f = sel.getAttribute('data-field');
-      const newProvider = sel.value;
-      llmConfigData[k][f] = newProvider;
-      const newModel = (modelIdOptions[newProvider]||['OpenAI'])[0];
-      llmConfigData[k]['ModelIdEnum'] = newModel;
-      const parent = sel.closest('.llm-fields');
-      if (parent) {
-        const modelSel = parent.querySelector('select.llm-modelid[data-key="'+k+'"]');
-        if (modelSel) {
-          while (modelSel.firstChild) modelSel.removeChild(modelSel.firstChild);
-          (modelIdOptions[newProvider]||['OpenAI']).forEach(opt => {
-            const option = document.createElement('option');
-            option.value = opt;
-            option.textContent = opt;
-            if (opt === newModel) option.selected = true;
-            modelSel.appendChild(option);
-          });
-        }
-      }
-    };
-  });
-  llmConfigForm.querySelectorAll('.llm-modelid').forEach(sel => {
-    sel.onchange = function() {
-      const k = sel.getAttribute('data-key');
-      const f = sel.getAttribute('data-field');
-      llmConfigData[k][f] = sel.value;
-    };
-  });
-  llmConfigForm.querySelectorAll('.llm-collapse-btn').forEach(btn => {
-    btn.onclick = function() {
-      const target = btn.getAttribute('data-target');
-      const fields = document.getElementById(target);
-      if (fields.style.display === 'none') {
-        fields.style.display = 'block';
-        btn.textContent = '-';
-      } else {
-        fields.style.display = 'none';
-        btn.textContent = '+';
-      }
-    };
-  });
-  document.getElementById('llmAddKeyBtn').onclick = function() {
-    let newKey = 'NewKey';
-    let idx = 1;
-    while (llmConfigData[newKey]) { newKey = 'NewKey'+(idx++); }
-    llmConfigData[newKey] = { ProviderEnum:'', ModelIdEnum:'', ModelName:'', Endpoint:'', ApiKey:'' };
-    renderLlmConfigForm();
-  };
-}
-
-// Global error handlers
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-  console.error('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
-  return false;
-};
-
-window.addEventListener('unhandledrejection', function(event) {
-  console.error('Unhandled promise rejection:', event.reason);
-});
-
-// Add global error handler for fetch responses
-async function handleFetchResponse(response, errorBox) {
-  const text = await response.text();
-  try {
-    const data = JSON.parse(text);
-    if (data.error === 'AIHttpOperationException') {
-      errorBox.innerHTML = `
-        <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px; margin: 8px 0;">
-          ${data.message}
-        </div>`;
-      return null;
-    }
-    if (data.error) {
-      errorBox.innerHTML = `
-        <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px; margin: 8px 0;">
-          ${data.message}
-        </div>`;
-      return null;
-    }
-    return data;
-  } catch (e) {
-    // If it's not JSON, treat it as plain text
-    return text;
   }
-}
 
-// Fetch and display logs
-async function fetchLog(logType) {
+  // Global error handlers
+  window.onerror = function(msg, url, lineNo, columnNo, error) {
+    console.error('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+    return false;
+  };
+
+  window.addEventListener('unhandledrejection', function(event) {
+    console.error('Unhandled promise rejection:', event.reason);
+  });
+
+  // Add global error handler for fetch responses
+  async function handleFetchResponse(response, errorBox) {
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      if (data.error === 'AIHttpOperationException') {
+        errorBox.innerHTML = `
+        <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px; margin: 8px 0;">
+          ${data.message}
+        </div>`;
+        return null;
+      }
+      if (data.error) {
+        errorBox.innerHTML = `
+        <div style="color: #b91c1c; padding: 12px; background: #fee2e2; border-radius: 6px; margin: 8px 0;">
+          ${data.message}
+        </div>`;
+        return null;
+      }
+      return data;
+    } catch (e) {
+      // If it's not JSON, treat it as plain text
+      return text;
+    }
+  }
+
+  // Fetch and display logs
+  async function fetchLog(logType) {
     const logContent = document.getElementById(`${logType}LogContent`);
     try {
-        const response = await fetch(`/api/log/${logType.toLowerCase()}`);
-        if (!response.ok) {
-            logContent.textContent = `Error fetching ${logType} log: ${response.statusText}`;
-            return;
-        }
-        const text = await response.text();
-        logContent.textContent = text;
+      const response = await fetch(`/api/log/${logType.toLowerCase()}`);
+      if (!response.ok) {
+        logContent.textContent = `Error fetching ${logType} log: ${response.statusText}`;
+        return;
+      }
+      const text = await response.text();
+      logContent.textContent = text;
     } catch (error) {
-        logContent.textContent = `Error fetching ${logType} log: ${error}`;
+      logContent.textContent = `Error fetching ${logType} log: ${error}`;
     }
-}
+  }
 
-// Fetch chat history for a demo
-async function fetchChat(demo) {
+  // Fetch chat history for a demo
+  async function fetchChat(demo) {
     try {
-        const response = await fetch(`/api/log/chat?demo=${demo}`);
-        if (!response.ok) {
-            console.error('Failed to fetch chat log');
-            return '';
-        }
-        return await response.text();
-    } catch (error) {
-        console.error('Error fetching chat log:', error);
+      const response = await fetch(`/api/log/chat?demo=${demo}`);
+      if (!response.ok) {
+        console.error('Failed to fetch chat log');
         return '';
+      }
+      return await response.text();
+    } catch (error) {
+      console.error('Error fetching chat log:', error);
+      return '';
     }
-}
+  }
 
-// Initial log fetch
-fetchLog('HostLog');
-fetchLog('ClientLog');
+  // Initial log fetch
+  fetchLog('HostLog');
+  fetchLog('ClientLog');
 
-function formatHostLog(text) {
+  function formatHostLog(text) {
     const overdueBalanceRegex = /Microsoft\.SemanticKernel\.HttpOperationException:.*?The request failed because your account has an overdue balance\.( Request id: [a-zA-Z0-9]+)?/;
     const match = text.match(overdueBalanceRegex);
 
     if (match) {
-        const friendlyErrorRegex = /(The request failed because your account has an overdue balance\.( Request id: [a-zA-Z0-9]+)?)/;
-        const friendlyMatch = match[0].match(friendlyErrorRegex);
-        if (friendlyMatch && friendlyMatch[1]) {
-            return `<span class="error-highlight">${friendlyMatch[1]}</span>`;
-        }
+      const friendlyErrorRegex = /(The request failed because your account has an overdue balance\.( Request id: [a-zA-Z0-9]+)?)/;
+      const friendlyMatch = match[0].match(friendlyErrorRegex);
+      if (friendlyMatch && friendlyMatch[1]) {
+        return `<span class="error-highlight">${friendlyMatch[1]}</span>`;
+      }
     }
 
     // Apply other highlights if no critical error is found
     text = text.replace(/^(.*New greeting event received by ExecuteAsync.*)$/gm, '<span class="green-highlight">$1</span>');
-    
+
     return text.replace(/\n/g, '<br>');
-}
+  }
 
-function escapeHtml(text) {
-  return text.replace(/\n/g, '<br>');
-}
+  function escapeHtml(text) {
+    return text.replace(/\n/g, '<br>');
+  }
 
-function showDescription(demoKey, lang) {
-  const descriptionElement = document.querySelector('.desc-card');
-  const descriptionContent = descriptionElement.querySelector('.desc-content');
-  const descUrl = `demodesc/${demoKey}${lang === 'zh' ? '.zh' : ''}.md`;
+  function showDescription(demoKey, lang) {
+    const descriptionElement = document.querySelector('.desc-card');
+    const descriptionContent = descriptionElement.querySelector('.desc-content');
+    const descUrl = `demodesc/${demoKey}${lang === 'zh' ? '.zh' : ''}.md`;
 
-  descriptionElement.style.display = 'block';
-  descriptionContent.innerHTML = '<p>Loading...</p>'; // Show loading indicator
+    descriptionElement.style.display = 'block';
+    descriptionContent.innerHTML = '<p>Loading...</p>'; // Show loading indicator
 
-  fetch(descUrl)
-    .then(response => {
-      if (response.ok) {
-        return response.text();
+    fetch(descUrl)
+            .then(response => {
+              if (response.ok) {
+                return response.text();
+              }
+              throw new Error('Network response was not ok.');
+            })
+            .then(mdContent => {
+              const cleanHtml = DOMPurify.sanitize(mdContent);
+              descriptionContent.innerHTML = marked.parse(cleanHtml);
+              descriptionContent.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+              });
+            })
+            .catch(error => {
+              console.error('Fetch error:', error);
+              descriptionContent.innerHTML = '<p style="color:red;">Failed to load description.</p>';
+            });
+  }
+
+  function hideDescription() {
+    // This function is intentionally left empty to prevent runtime errors
+    // from legacy code. The log panel rendering is now handled by
+    // the 'renderLogPanel' function.
+  }
+
+  // AI Tool Calling Demo rendering
+  async function renderAIToolCallingDemo(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1200px';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
       }
-      throw new Error('Network response was not ok.');
-    })
-    .then(mdContent => {
-      const cleanHtml = DOMPurify.sanitize(mdContent);
-      descriptionContent.innerHTML = marked.parse(cleanHtml);
-      descriptionContent.querySelectorAll('pre code').forEach((block) => {
-        hljs.highlightElement(block);
-      });
-    })
-    .catch(error => {
-      console.error('Fetch error:', error);
-      descriptionContent.innerHTML = '<p style="color:red;">Failed to load description.</p>';
     });
-}
+    demoCard.appendChild(desc);
 
-function hideDescription() {
-  // This function is intentionally left empty to prevent runtime errors
-  // from legacy code. The log panel rendering is now handled by
-  // the 'renderLogPanel' function.
-}
+    // State management
+    let agentId = null;
+    let chatHistory = [];
+
+    // Interactive sections container
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.style.marginTop = '32px';
+    sectionsContainer.style.display = 'grid';
+    sectionsContainer.style.gridTemplateColumns = '1fr 1fr';
+    sectionsContainer.style.gap = '24px';
+
+    // 1. Initialize Agent Section
+    const initSection = document.createElement('div');
+    initSection.style.background = '#fff';
+    initSection.style.padding = '20px';
+    initSection.style.borderRadius = '8px';
+    initSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+
+    const initTitle = document.createElement('h3');
+    initTitle.style.marginTop = '0';
+    initTitle.style.color = '#1e293b';
+    initTitle.textContent = currentLanguage === 'zh' ? '初始化 AI 代理' : 'Initialize AI Agent';
+    initSection.appendChild(initTitle);
+
+    // LLM System selector
+    const llmGroup = document.createElement('div');
+    llmGroup.style.marginBottom = '12px';
+
+    const llmLabel = document.createElement('label');
+    llmLabel.style.display = 'block';
+    llmLabel.style.marginBottom = '4px';
+    llmLabel.style.fontWeight = 'bold';
+    llmLabel.textContent = currentLanguage === 'zh' ? 'LLM 系统:' : 'LLM System:';
+    llmGroup.appendChild(llmLabel);
+
+    const llmSelect = document.createElement('select');
+    llmSelect.style.width = '100%';
+    llmSelect.style.padding = '8px';
+    llmSelect.style.border = '1px solid #d1d5db';
+    llmSelect.style.borderRadius = '4px';
+    llmGroup.appendChild(llmSelect);
+
+    initSection.appendChild(llmGroup);
+
+    // Load LLM options
+    fetch('/api/llm-configs/list').then(r => r.json()).then(systems => {
+      systems.forEach(sys => {
+        const option = document.createElement('option');
+        option.value = sys;
+        option.textContent = sys;
+        llmSelect.appendChild(option);
+      });
+      if (systems.includes('OpenAI')) {
+        llmSelect.value = 'OpenAI';
+      }
+    });
+
+    const initButton = document.createElement('button');
+    initButton.style.padding = '10px 20px';
+    initButton.style.background = '#3b82f6';
+    initButton.style.color = '#fff';
+    initButton.style.border = 'none';
+    initButton.style.borderRadius = '4px';
+    initButton.style.cursor = 'pointer';
+    initButton.style.fontWeight = 'bold';
+    initButton.textContent = currentLanguage === 'zh' ? '初始化' : 'Initialize';
+    initSection.appendChild(initButton);
+
+    const initStatus = document.createElement('div');
+    initStatus.style.marginTop = '12px';
+    initStatus.style.padding = '8px';
+    initStatus.style.background = '#f9fafb';
+    initStatus.style.borderRadius = '4px';
+    initStatus.style.color = '#6b7280';
+    initStatus.textContent = currentLanguage === 'zh' ? '等待初始化...' : 'Waiting for initialization...';
+    initSection.appendChild(initStatus);
+
+    sectionsContainer.appendChild(initSection);
+
+    // 2. Agent State Section
+    const stateSection = document.createElement('div');
+    stateSection.style.background = '#fff';
+    stateSection.style.padding = '20px';
+    stateSection.style.borderRadius = '8px';
+    stateSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+
+    const stateTitle = document.createElement('h3');
+    stateTitle.style.marginTop = '0';
+    stateTitle.style.color = '#1e293b';
+    stateTitle.textContent = currentLanguage === 'zh' ? '代理状态' : 'Agent State';
+    stateSection.appendChild(stateTitle);
+
+    const stateContent = document.createElement('div');
+    stateContent.style.padding = '12px';
+    stateContent.style.background = '#f9fafb';
+    stateContent.style.borderRadius = '4px';
+    stateContent.innerHTML = `
+    <div style="margin-bottom:8px;"><strong>${currentLanguage === 'zh' ? '状态' : 'Status'}:</strong> <span id="agentStatus">${currentLanguage === 'zh' ? '未初始化' : 'Not initialized'}</span></div>
+    <div style="margin-bottom:8px;"><strong>${currentLanguage === 'zh' ? '代理 ID' : 'Agent ID'}:</strong> <span id="agentIdDisplay">-</span></div>
+    <div><strong>${currentLanguage === 'zh' ? '可用工具' : 'Available Tools'}:</strong> <span id="toolCount">0</span></div>
+  `;
+    stateSection.appendChild(stateContent);
+
+    sectionsContainer.appendChild(stateSection);
+
+    // 3. Available Tools Section (full width)
+    const toolsSection = document.createElement('div');
+    toolsSection.style.background = '#fff';
+    toolsSection.style.padding = '20px';
+    toolsSection.style.borderRadius = '8px';
+    toolsSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    toolsSection.style.gridColumn = '1 / -1';
+
+    const toolsTitle = document.createElement('h3');
+    toolsTitle.style.marginTop = '0';
+    toolsTitle.style.color = '#1e293b';
+    toolsTitle.textContent = currentLanguage === 'zh' ? '可用工具' : 'Available Tools';
+    toolsSection.appendChild(toolsTitle);
+
+    const toolsList = document.createElement('div');
+    toolsList.style.display = 'grid';
+    toolsList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+    toolsList.style.gap = '16px';
+    toolsList.innerHTML = `<div style="color:#6b7280;">${currentLanguage === 'zh' ? '初始化后显示工具...' : 'Tools will appear after initialization...'}</div>`;
+    toolsSection.appendChild(toolsList);
+
+    sectionsContainer.appendChild(toolsSection);
+
+    // 4. Chat Interface Section (full width)
+    const chatSection = document.createElement('div');
+    chatSection.style.background = '#fff';
+    chatSection.style.padding = '20px';
+    chatSection.style.borderRadius = '8px';
+    chatSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    chatSection.style.gridColumn = '1 / -1';
+
+    const chatTitle = document.createElement('h3');
+    chatTitle.style.marginTop = '0';
+    chatTitle.style.color = '#1e293b';
+    chatTitle.textContent = currentLanguage === 'zh' ? '与 AI 对话' : 'Chat with AI';
+    chatSection.appendChild(chatTitle);
+
+    // Chat history
+    const chatHistoryDiv = document.createElement('div');
+    chatHistoryDiv.style.height = '300px';
+    chatHistoryDiv.style.overflowY = 'auto';
+    chatHistoryDiv.style.border = '1px solid #e5e7eb';
+    chatHistoryDiv.style.borderRadius = '4px';
+    chatHistoryDiv.style.padding = '12px';
+    chatHistoryDiv.style.marginBottom = '12px';
+    chatHistoryDiv.style.background = '#f9fafb';
+    chatSection.appendChild(chatHistoryDiv);
+
+    // Chat input
+    const chatInputGroup = document.createElement('div');
+    chatInputGroup.style.display = 'flex';
+    chatInputGroup.style.gap = '8px';
+
+    const chatInput = document.createElement('input');
+    chatInput.type = 'text';
+    chatInput.style.flex = '1';
+    chatInput.style.padding = '10px';
+    chatInput.style.border = '1px solid #d1d5db';
+    chatInput.style.borderRadius = '4px';
+    chatInput.placeholder = currentLanguage === 'zh' ? '试试："计算25的平方根" 或 "东京现在几点？"' : 'Try: "Calculate square root of 25" or "What time is it in Tokyo?"';
+    chatInput.disabled = true;
+    chatInputGroup.appendChild(chatInput);
+
+    const sendButton = document.createElement('button');
+    sendButton.style.padding = '10px 20px';
+    sendButton.style.background = '#10b981';
+    sendButton.style.color = '#fff';
+    sendButton.style.border = 'none';
+    sendButton.style.borderRadius = '4px';
+    sendButton.style.cursor = 'pointer';
+    sendButton.style.fontWeight = 'bold';
+    sendButton.textContent = currentLanguage === 'zh' ? '发送' : 'Send';
+    sendButton.disabled = true;
+    chatInputGroup.appendChild(sendButton);
+
+    chatSection.appendChild(chatInputGroup);
+
+    sectionsContainer.appendChild(chatSection);
+
+    // 5. Tool Call History Section (full width)
+    const historySection = document.createElement('div');
+    historySection.style.background = '#fff';
+    historySection.style.padding = '20px';
+    historySection.style.borderRadius = '8px';
+    historySection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    historySection.style.gridColumn = '1 / -1';
+
+    const historyTitle = document.createElement('h3');
+    historyTitle.style.marginTop = '0';
+    historyTitle.style.color = '#1e293b';
+    historyTitle.textContent = currentLanguage === 'zh' ? '工具调用历史' : 'Tool Call History';
+    historySection.appendChild(historyTitle);
+
+    const historyContent = document.createElement('div');
+    historyContent.style.maxHeight = '200px';
+    historyContent.style.overflowY = 'auto';
+    historyContent.style.padding = '12px';
+    historyContent.style.background = '#f9fafb';
+    historyContent.style.borderRadius = '4px';
+    historyContent.innerHTML = `<div style="color:#6b7280;">${currentLanguage === 'zh' ? '工具调用将显示在这里...' : 'Tool calls will appear here...'}</div>`;
+    historySection.appendChild(historyContent);
+
+    sectionsContainer.appendChild(historySection);
+
+    // Demo Tools Section
+    const demoSection = document.createElement('div');
+    demoSection.style.background = '#fff';
+    demoSection.style.padding = '20px';
+    demoSection.style.borderRadius = '8px';
+    demoSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    demoSection.style.gridColumn = '1 / -1';
+    demoSection.style.marginTop = '24px';
+
+    const demoTitle = document.createElement('h3');
+    demoTitle.style.marginTop = '0';
+    demoTitle.style.color = '#1e293b';
+    demoTitle.textContent = currentLanguage === 'zh' ? '直接测试工具' : 'Test Tools Directly';
+    demoSection.appendChild(demoTitle);
+
+    const demoButtons = document.createElement('div');
+    demoButtons.style.display = 'flex';
+    demoButtons.style.gap = '12px';
+    demoButtons.style.marginBottom = '16px';
+
+    const mathDemoBtn = document.createElement('button');
+    mathDemoBtn.style.padding = '8px 16px';
+    mathDemoBtn.style.background = '#8b5cf6';
+    mathDemoBtn.style.color = '#fff';
+    mathDemoBtn.style.border = 'none';
+    mathDemoBtn.style.borderRadius = '4px';
+    mathDemoBtn.style.cursor = 'pointer';
+    mathDemoBtn.textContent = currentLanguage === 'zh' ? '测试数学工具' : 'Test Math Tool';
+    demoButtons.appendChild(mathDemoBtn);
+
+    const timeDemoBtn = document.createElement('button');
+    timeDemoBtn.style.padding = '8px 16px';
+    timeDemoBtn.style.background = '#f59e0b';
+    timeDemoBtn.style.color = '#fff';
+    timeDemoBtn.style.border = 'none';
+    timeDemoBtn.style.borderRadius = '4px';
+    timeDemoBtn.style.cursor = 'pointer';
+    timeDemoBtn.textContent = currentLanguage === 'zh' ? '测试时间工具' : 'Test Time Tool';
+    demoButtons.appendChild(timeDemoBtn);
+
+    demoSection.appendChild(demoButtons);
+
+    const demoResult = document.createElement('div');
+    demoResult.style.padding = '12px';
+    demoResult.style.background = '#f9fafb';
+    demoResult.style.borderRadius = '4px';
+    demoResult.style.minHeight = '60px';
+    demoSection.appendChild(demoResult);
+
+    sectionsContainer.appendChild(demoSection);
+
+    demoCard.appendChild(sectionsContainer);
+    mainContent.appendChild(demoCard);
+
+    // Event handlers
+    initButton.onclick = async () => {
+      try {
+        initButton.disabled = true;
+        initStatus.textContent = currentLanguage === 'zh' ? '初始化中...' : 'Initializing...';
+        initStatus.style.color = '#3b82f6';
+
+        const resp = await fetch('/api/AIToolCallingDemo/initialize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            LLMSystem: llmSelect.value
+          })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          agentId = data.agentId;
+          initStatus.textContent = currentLanguage === 'zh' ? '✓ 初始化成功！' : '✓ Initialized successfully!';
+          initStatus.style.color = '#10b981';
+
+          // Update state display
+          document.getElementById('agentStatus').textContent = currentLanguage === 'zh' ? '已初始化' : 'Initialized';
+          document.getElementById('agentStatus').style.color = '#10b981';
+          document.getElementById('agentIdDisplay').textContent = agentId;
+          document.getElementById('toolCount').textContent = data.availableTools.length;
+
+          // Display available tools
+          toolsList.innerHTML = '';
+          data.availableTools.forEach(tool => {
+            const toolCard = document.createElement('div');
+            toolCard.style.padding = '12px';
+            toolCard.style.background = '#f3f4f6';
+            toolCard.style.borderRadius = '4px';
+            toolCard.innerHTML = `
+            <div style="font-weight:bold;color:#1f2937;margin-bottom:4px;">${tool.name}</div>
+            <div style="font-size:0.9em;color:#6b7280;margin-bottom:4px;">${tool.description}</div>
+            <div style="font-size:0.85em;color:#9ca3af;">Functions: ${tool.functions.join(', ')}</div>
+          `;
+            toolsList.appendChild(toolCard);
+          });
+
+          // Enable chat
+          chatInput.disabled = false;
+          sendButton.disabled = false;
+          chatInput.focus();
+
+          // Update tool history to show initialization
+          updateToolHistory();
+        } else {
+          initStatus.textContent = `✗ ${data.error}`;
+          initStatus.style.color = '#ef4444';
+        }
+      } catch (error) {
+        initStatus.textContent = `✗ ${error.message}`;
+        initStatus.style.color = '#ef4444';
+      } finally {
+        initButton.disabled = false;
+      }
+    };
+
+    // Chat functionality
+    const sendMessage = async () => {
+      const message = chatInput.value.trim();
+      if (!message || !agentId) return;
+
+      chatInput.disabled = true;
+      sendButton.disabled = true;
+
+      // Add user message to chat
+      addChatMessage('user', message);
+      chatInput.value = '';
+
+      try {
+        const resp = await fetch('/api/AIToolCallingDemo/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agentId: agentId,
+            message: message
+          })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          // Add AI response
+          addChatMessage('assistant', data.response);
+
+          // Update tool call history
+          updateToolHistory();
+
+          // Log recent tool calls for debugging
+          if (data.recentToolCalls && data.recentToolCalls.length > 0) {
+            console.log('Recent tool calls:', data.recentToolCalls);
+          }
+        } else {
+          addChatMessage('system', `Error: ${data.error}`);
+        }
+      } catch (error) {
+        addChatMessage('system', `Error: ${error.message}`);
+      } finally {
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+        chatInput.focus();
+      }
+    };
+
+    sendButton.onclick = sendMessage;
+    chatInput.onkeypress = (e) => {
+      if (e.key === 'Enter') sendMessage();
+    };
+
+    // Add chat message
+    function addChatMessage(role, content) {
+      const messageDiv = document.createElement('div');
+      messageDiv.style.marginBottom = '12px';
+
+      const roleSpan = document.createElement('span');
+      roleSpan.style.fontWeight = 'bold';
+      roleSpan.style.marginRight = '8px';
+
+      if (role === 'user') {
+        roleSpan.style.color = '#3b82f6';
+        roleSpan.textContent = currentLanguage === 'zh' ? '用户:' : 'User:';
+      } else if (role === 'assistant') {
+        roleSpan.style.color = '#10b981';
+        roleSpan.textContent = 'AI:';
+      } else {
+        roleSpan.style.color = '#ef4444';
+        roleSpan.textContent = currentLanguage === 'zh' ? '系统:' : 'System:';
+      }
+
+      messageDiv.appendChild(roleSpan);
+      messageDiv.appendChild(document.createTextNode(content));
+
+      chatHistoryDiv.appendChild(messageDiv);
+      chatHistoryDiv.scrollTop = chatHistoryDiv.scrollHeight;
+    }
+
+    // Update tool history
+    async function updateToolHistory() {
+      if (!agentId) return;
+
+      try {
+        const resp = await fetch(`/api/AIToolCallingDemo/history/${agentId}`);
+        const data = await resp.json();
+
+        if (data.success && data.toolCalls.length > 0) {
+          historyContent.innerHTML = '';
+          data.toolCalls.forEach(call => {
+            const callDiv = document.createElement('div');
+            callDiv.style.marginBottom = '8px';
+            callDiv.style.padding = '8px';
+            callDiv.style.background = '#fff';
+            callDiv.style.borderRadius = '4px';
+            callDiv.style.border = '1px solid #e5e7eb';
+
+            // Special styling for system_init
+            if (call.tool === 'system_init') {
+              callDiv.style.background = '#f0f9ff';
+              callDiv.style.borderColor = '#3b82f6';
+            }
+
+            // Get tool display name
+            const toolDisplayName = {
+              'calculate_math': '🧮 Math Calculator',
+              'get_time_in_zone': '🕐 Time Zone',
+              'convert_time': '🔄 Time Converter',
+              'system_init': '🚀 System'
+            }[call.tool] || call.tool;
+
+            callDiv.innerHTML = `
+            <div style="font-size:0.85em;color:#6b7280;">${new Date(call.timestamp).toLocaleTimeString()}</div>
+            <div style="font-weight:bold;color:#1f2937;">${toolDisplayName}</div>
+            <div style="font-size:0.9em;color:#4b5563;">${call.parameters || call.input || 'N/A'}</div>
+          `;
+            historyContent.appendChild(callDiv);
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch tool history:', error);
+      }
+    }
+
+    // Demo tool buttons
+    mathDemoBtn.onclick = async () => {
+      try {
+        mathDemoBtn.disabled = true;
+        demoResult.innerHTML = '<span style="color:#6b7280;">Testing math tool...</span>';
+
+        const resp = await fetch('/api/AIToolCallingDemo/demo-tools', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ demoMath: true, demoTime: false })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          demoResult.innerHTML = '';
+          data.demos.forEach(demo => {
+            demoResult.innerHTML += `
+            <div style="margin-bottom:8px;">
+              <strong>${demo.tool}:</strong> ${demo.operation}<br>
+              <span style="color:#10b981;">Result: ${demo.result}</span>
+            </div>
+          `;
+          });
+        } else {
+          demoResult.innerHTML = `<span style="color:#ef4444;">Error: ${data.error}</span>`;
+        }
+      } catch (error) {
+        demoResult.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+      } finally {
+        mathDemoBtn.disabled = false;
+      }
+    };
+
+    timeDemoBtn.onclick = async () => {
+      try {
+        timeDemoBtn.disabled = true;
+        demoResult.innerHTML = '<span style="color:#6b7280;">Testing time tool...</span>';
+
+        const resp = await fetch('/api/AIToolCallingDemo/demo-tools', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ demoMath: false, demoTime: true })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          demoResult.innerHTML = '';
+          data.demos.forEach(demo => {
+            demoResult.innerHTML += `
+            <div style="margin-bottom:8px;">
+              <strong>${demo.tool}:</strong> ${demo.operation}<br>
+              <span style="color:#10b981;">Result: ${demo.result}</span>
+            </div>
+          `;
+          });
+        } else {
+          demoResult.innerHTML = `<span style="color:#ef4444;">Error: ${data.error}</span>`;
+        }
+      } catch (error) {
+        demoResult.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+      } finally {
+        timeDemoBtn.disabled = false;
+      }
+    };
+  }
+
+  // MCP Demo rendering
+  async function renderMCPDemo(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '800px';
+    demoCard.style.margin = '0 auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+
+    // State management
+    let agentId = null;
+    let availableTools = {};
+    let serverStates = [];
+
+    // Interactive sections container
+    const sectionsContainer = document.createElement('div');
+    sectionsContainer.style.marginTop = '32px';
+
+    // 1. MCP Server Configuration Section
+    const configSection = document.createElement('div');
+    configSection.style.background = '#fff';
+    configSection.style.padding = '20px';
+    configSection.style.borderRadius = '8px';
+    configSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    configSection.style.marginBottom = '24px';
+
+    const configTitle = document.createElement('h3');
+    configTitle.style.marginTop = '0';
+    configTitle.style.color = '#1e293b';
+    configTitle.textContent = currentLanguage === 'zh' ? '配置 MCP 服务器' : 'Configure MCP Servers';
+    configSection.appendChild(configTitle);
+
+    // Server list
+    const serverList = document.createElement('div');
+    serverList.style.marginBottom = '16px';
+
+    // Default servers
+    const defaultServers = [
+      {
+        name: 'filesystem',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-filesystem', '/tmp', '/Users', '/System/Volumes/Data/Users'],
+        description: currentLanguage === 'zh' ? '文件系统服务器 - 访问系统和用户目录' : 'Filesystem Server - Access system and user directories'
+      },
+      {
+        name: 'memory',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-memory'],
+        description: currentLanguage === 'zh' ? '内存存储服务器 - 临时键值存储' : 'Memory Server - Temporary key-value storage'
+      },
+      {
+        name: 'sequential-thinking',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-sequential-thinking'],
+        description: currentLanguage === 'zh' ? '顺序思考服务器 - 分步解决问题' : 'Sequential Thinking Server - Step-by-step problem solving'
+      },
+      {
+        name: 'everything',
+        command: 'npx',
+        args: ['-y', '@modelcontextprotocol/server-everything'],
+        description: currentLanguage === 'zh' ? '测试服务器 - 展示所有MCP功能' : 'Everything Server - Demonstrates all MCP features'
+      }
+    ];
+
+    const selectedServers = new Set();
+
+    defaultServers.forEach(server => {
+      const serverDiv = document.createElement('div');
+      serverDiv.style.marginBottom = '8px';
+      serverDiv.style.padding = '12px';
+      serverDiv.style.background = '#f9fafb';
+      serverDiv.style.borderRadius = '4px';
+      serverDiv.style.display = 'flex';
+      serverDiv.style.alignItems = 'center';
+      serverDiv.style.gap = '12px';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = server.name;
+      checkbox.onchange = (e) => {
+        if (e.target.checked) {
+          selectedServers.add(server);
+        } else {
+          selectedServers.delete(server);
+        }
+      };
+      serverDiv.appendChild(checkbox);
+
+      const serverInfo = document.createElement('div');
+      serverInfo.style.flex = '1';
+      serverInfo.innerHTML = `
+      <div style="font-weight:bold;">${server.name}</div>
+      <div style="font-size:0.9em;color:#6b7280;">${server.description}</div>
+      <div style="font-size:0.85em;color:#9ca3af;font-family:monospace;word-wrap:break-word;overflow-wrap:break-word;">${server.command} ${server.args.join(' ')}</div>
+    `;
+      serverDiv.appendChild(serverInfo);
+
+      serverList.appendChild(serverDiv);
+    });
+
+    configSection.appendChild(serverList);
+
+    // Initialize button
+    const initButton = document.createElement('button');
+    initButton.style.padding = '10px 24px';
+    initButton.style.background = '#3b82f6';
+    initButton.style.color = '#fff';
+    initButton.style.border = 'none';
+    initButton.style.borderRadius = '4px';
+    initButton.style.cursor = 'pointer';
+    initButton.style.fontWeight = 'bold';
+    initButton.textContent = currentLanguage === 'zh' ? '初始化 MCP 代理' : 'Initialize MCP Agent';
+    configSection.appendChild(initButton);
+
+    const initStatus = document.createElement('div');
+    initStatus.style.marginTop = '12px';
+    initStatus.style.padding = '8px';
+    initStatus.style.background = '#f9fafb';
+    initStatus.style.borderRadius = '4px';
+    initStatus.style.color = '#6b7280';
+    initStatus.textContent = currentLanguage === 'zh' ? '选择服务器并点击初始化...' : 'Select servers and click initialize...';
+    configSection.appendChild(initStatus);
+
+    sectionsContainer.appendChild(configSection);
+
+    // 2. Server States Section
+    const statesSection = document.createElement('div');
+    statesSection.style.background = '#fff';
+    statesSection.style.padding = '20px';
+    statesSection.style.borderRadius = '8px';
+    statesSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    statesSection.style.marginBottom = '24px';
+    statesSection.style.display = 'none';
+
+    const statesTitle = document.createElement('h3');
+    statesTitle.style.marginTop = '0';
+    statesTitle.style.color = '#1e293b';
+    statesTitle.textContent = currentLanguage === 'zh' ? '服务器状态' : 'Server States';
+    statesSection.appendChild(statesTitle);
+
+    const statesContent = document.createElement('div');
+    statesContent.style.display = 'grid';
+    statesContent.style.gridTemplateColumns = 'repeat(auto-fit, minmax(300px, 1fr))';
+    statesContent.style.gap = '16px';
+    statesSection.appendChild(statesContent);
+
+    sectionsContainer.appendChild(statesSection);
+
+    // 3. Available Tools Section
+    const toolsSection = document.createElement('div');
+    toolsSection.style.background = '#fff';
+    toolsSection.style.padding = '20px';
+    toolsSection.style.borderRadius = '8px';
+    toolsSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    toolsSection.style.marginBottom = '24px';
+    toolsSection.style.display = 'none';
+
+    const toolsTitle = document.createElement('h3');
+    toolsTitle.style.marginTop = '0';
+    toolsTitle.style.color = '#1e293b';
+    toolsTitle.textContent = currentLanguage === 'zh' ? '可用工具' : 'Available Tools';
+    toolsSection.appendChild(toolsTitle);
+
+    const toolsContent = document.createElement('div');
+    toolsSection.appendChild(toolsContent);
+
+    sectionsContainer.appendChild(toolsSection);
+
+    // 4. Tool Call Interface
+    const callSection = document.createElement('div');
+    callSection.style.background = '#fff';
+    callSection.style.padding = '20px';
+    callSection.style.borderRadius = '8px';
+    callSection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    callSection.style.marginBottom = '24px';
+    callSection.style.display = 'none';
+
+    const callTitle = document.createElement('h3');
+    callTitle.style.marginTop = '0';
+    callTitle.style.color = '#1e293b';
+    callTitle.textContent = currentLanguage === 'zh' ? '调用工具' : 'Call Tool';
+    callSection.appendChild(callTitle);
+
+    // Tool selector
+    const toolGroup = document.createElement('div');
+    toolGroup.style.marginBottom = '12px';
+
+    const toolLabel = document.createElement('label');
+    toolLabel.style.display = 'block';
+    toolLabel.style.marginBottom = '4px';
+    toolLabel.style.fontWeight = 'bold';
+    toolLabel.textContent = currentLanguage === 'zh' ? '选择工具:' : 'Select Tool:';
+    toolGroup.appendChild(toolLabel);
+
+    const toolSelect = document.createElement('select');
+    toolSelect.style.width = '100%';
+    toolSelect.style.padding = '8px';
+    toolSelect.style.border = '1px solid #d1d5db';
+    toolSelect.style.borderRadius = '4px';
+    toolGroup.appendChild(toolSelect);
+
+    callSection.appendChild(toolGroup);
+
+    // Arguments input
+    const argsGroup = document.createElement('div');
+    argsGroup.style.marginBottom = '12px';
+
+    const argsLabel = document.createElement('label');
+    argsLabel.style.display = 'block';
+    argsLabel.style.marginBottom = '4px';
+    argsLabel.style.fontWeight = 'bold';
+    argsLabel.textContent = currentLanguage === 'zh' ? '参数 (JSON):' : 'Arguments (JSON):';
+    argsGroup.appendChild(argsLabel);
+
+    const argsTextarea = document.createElement('textarea');
+    argsTextarea.style.width = '100%';
+    argsTextarea.style.minHeight = '100px';
+    argsTextarea.style.padding = '8px';
+    argsTextarea.style.border = '1px solid #d1d5db';
+    argsTextarea.style.borderRadius = '4px';
+    argsTextarea.style.fontFamily = 'monospace';
+    argsTextarea.placeholder = '{\n  "path": "/tmp/test.txt"\n}';
+    argsGroup.appendChild(argsTextarea);
+
+    callSection.appendChild(argsGroup);
+
+    // Call button
+    const callButton = document.createElement('button');
+    callButton.style.padding = '10px 20px';
+    callButton.style.background = '#10b981';
+    callButton.style.color = '#fff';
+    callButton.style.border = 'none';
+    callButton.style.borderRadius = '4px';
+    callButton.style.cursor = 'pointer';
+    callButton.style.fontWeight = 'bold';
+    callButton.textContent = currentLanguage === 'zh' ? '调用工具' : 'Call Tool';
+    callSection.appendChild(callButton);
+
+    // Result display
+    const resultDiv = document.createElement('div');
+    resultDiv.style.marginTop = '16px';
+    resultDiv.style.padding = '12px';
+    resultDiv.style.background = '#f9fafb';
+    resultDiv.style.borderRadius = '4px';
+    resultDiv.style.minHeight = '60px';
+    resultDiv.style.wordWrap = 'break-word';
+    resultDiv.style.overflowWrap = 'break-word';
+    resultDiv.style.overflow = 'auto';
+    callSection.appendChild(resultDiv);
+
+    sectionsContainer.appendChild(callSection);
+
+    // 5. Tool Call History
+    const historySection = document.createElement('div');
+    historySection.style.background = '#fff';
+    historySection.style.padding = '20px';
+    historySection.style.borderRadius = '8px';
+    historySection.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
+    historySection.style.display = 'none';
+
+    const historyTitle = document.createElement('h3');
+    historyTitle.style.marginTop = '0';
+    historyTitle.style.color = '#1e293b';
+    historyTitle.textContent = currentLanguage === 'zh' ? '调用历史' : 'Call History';
+    historySection.appendChild(historyTitle);
+
+    const historyContent = document.createElement('div');
+    historyContent.style.maxHeight = '300px';
+    historyContent.style.overflowY = 'auto';
+    historySection.appendChild(historyContent);
+
+    sectionsContainer.appendChild(historySection);
+
+    demoCard.appendChild(sectionsContainer);
+    mainContent.appendChild(demoCard);
+
+    // Event handlers
+    initButton.onclick = async () => {
+      if (selectedServers.size === 0) {
+        initStatus.textContent = currentLanguage === 'zh' ? '请至少选择一个服务器' : 'Please select at least one server';
+        initStatus.style.color = '#ef4444';
+        return;
+      }
+
+      try {
+        initButton.disabled = true;
+        initStatus.textContent = currentLanguage === 'zh' ? '初始化中...' : 'Initializing...';
+        initStatus.style.color = '#3b82f6';
+
+        const servers = Array.from(selectedServers).map(s => ({
+          serverName: s.name,
+          command: s.command,
+          args: s.args
+        }));
+
+        const resp = await fetch('/api/MCPDemo/initialize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ servers })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          agentId = data.agentId;
+          initStatus.textContent = `✓ ${currentLanguage === 'zh' ? '初始化成功！' : 'Initialized successfully!'}`;
+          initStatus.style.color = '#10b981';
+
+          // Update available tools
+          availableTools = data.availableTools;
+          serverStates = data.serverStates;
+
+          // Show other sections
+          statesSection.style.display = 'block';
+          toolsSection.style.display = 'block';
+          callSection.style.display = 'block';
+          historySection.style.display = 'block';
+
+          // Update server states
+          updateServerStates();
+
+          // Update tools display
+          updateToolsDisplay();
+
+          // Update history
+          updateHistory();
+        } else {
+          initStatus.textContent = `✗ ${data.error}`;
+          initStatus.style.color = '#ef4444';
+        }
+      } catch (error) {
+        initStatus.textContent = `✗ ${error.message}`;
+        initStatus.style.color = '#ef4444';
+      } finally {
+        initButton.disabled = false;
+      }
+    };
+
+    // Update server states display
+    function updateServerStates() {
+      statesContent.innerHTML = '';
+      serverStates.forEach(state => {
+        const stateCard = document.createElement('div');
+        stateCard.style.padding = '12px';
+        stateCard.style.background = '#f3f4f6';
+        stateCard.style.borderRadius = '4px';
+
+        const statusColor = state.isConnected ? '#10b981' : '#ef4444';
+        const statusText = state.isConnected ?
+                (currentLanguage === 'zh' ? '已连接' : 'Connected') :
+                (currentLanguage === 'zh' ? '未连接' : 'Disconnected');
+
+        stateCard.innerHTML = `
+        <div style="font-weight:bold;margin-bottom:4px;">${state.serverName}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <span style="width:8px;height:8px;background:${statusColor};border-radius:50%;display:inline-block;"></span>
+          <span style="color:${statusColor};">${statusText}</span>
+        </div>
+        <div style="font-size:0.85em;color:#6b7280;">
+          ${currentLanguage === 'zh' ? '工具数' : 'Tools'}: ${state.registeredTools?.length || 0}
+        </div>
+      `;
+        statesContent.appendChild(stateCard);
+      });
+    }
+
+    // Update tools display
+    function updateToolsDisplay() {
+      toolsContent.innerHTML = '';
+      toolSelect.innerHTML = '<option value="">-- Select a tool --</option>';
+
+      // Group tools by server
+      const toolsByServer = {};
+      Object.entries(availableTools).forEach(([key, tool]) => {
+        if (!toolsByServer[tool.serverName]) {
+          toolsByServer[tool.serverName] = [];
+        }
+        toolsByServer[tool.serverName].push({ key, ...tool });
+      });
+
+      // Display tools grouped by server
+      Object.entries(toolsByServer).forEach(([serverName, tools]) => {
+        const serverGroup = document.createElement('details');
+        serverGroup.style.marginBottom = '16px';
+        serverGroup.style.border = '1px solid #e5e7eb';
+        serverGroup.style.borderRadius = '4px';
+        serverGroup.style.padding = '12px';
+        serverGroup.open = true;
+
+        const summary = document.createElement('summary');
+        summary.style.cursor = 'pointer';
+        summary.style.fontWeight = 'bold';
+        summary.style.marginBottom = '8px';
+        summary.textContent = `${serverName} (${tools.length} tools)`;
+        serverGroup.appendChild(summary);
+
+        const toolList = document.createElement('div');
+        toolList.style.display = 'grid';
+        toolList.style.gap = '8px';
+
+        tools.forEach(tool => {
+          const toolCard = document.createElement('div');
+          toolCard.style.padding = '8px';
+          toolCard.style.background = '#f9fafb';
+          toolCard.style.borderRadius = '4px';
+          toolCard.style.fontSize = '0.9em';
+
+          toolCard.innerHTML = `
+          <div style="font-weight:bold;color:#1f2937;">${tool.name}</div>
+          <div style="color:#6b7280;margin-top:4px;">${tool.description}</div>
+          ${tool.parameters && Object.keys(tool.parameters).length > 0 ? `
+          <div style="color:#9ca3af;margin-top:4px;font-size:0.85em;">
+            Parameters: ${Object.entries(tool.parameters).map(([name, param]) =>
+                  `${name}${param.required ? '*' : ''}`
+          ).join(', ')}
+          </div>` : ''}
+        `;
+          toolList.appendChild(toolCard);
+
+          // Add to select
+          const option = document.createElement('option');
+          option.value = tool.key;
+          option.textContent = `${serverName}.${tool.name}`;
+          toolSelect.appendChild(option);
+        });
+
+        serverGroup.appendChild(toolList);
+        toolsContent.appendChild(serverGroup);
+      });
+    }
+
+    // Update parameter hints when tool is selected
+    toolSelect.onchange = () => {
+      const selectedTool = availableTools[toolSelect.value];
+      if (selectedTool && selectedTool.parameters && Object.keys(selectedTool.parameters).length > 0) {
+        const exampleArgs = {};
+        Object.entries(selectedTool.parameters).forEach(([name, param]) => {
+          if (param.type === 'string') {
+            exampleArgs[name] = param.description || 'example';
+          } else if (param.type === 'number') {
+            exampleArgs[name] = 0;
+          } else if (param.type === 'boolean') {
+            exampleArgs[name] = false;
+          } else {
+            exampleArgs[name] = null;
+          }
+        });
+        argsTextarea.placeholder = JSON.stringify(exampleArgs, null, 2);
+      } else {
+        argsTextarea.placeholder = '{}';
+      }
+    };
+
+    // Call tool
+    callButton.onclick = async () => {
+      const selectedToolKey = toolSelect.value;
+      if (!selectedToolKey) {
+        resultDiv.innerHTML = `<span style="color:#ef4444;">${currentLanguage === 'zh' ? '请选择一个工具' : 'Please select a tool'}</span>`;
+        return;
+      }
+
+      const selectedTool = availableTools[selectedToolKey];
+      if (!selectedTool) return;
+
+      let args = {};
+      try {
+        const argsText = argsTextarea.value.trim();
+        if (argsText) {
+          args = JSON.parse(argsText);
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span style="color:#ef4444;">${currentLanguage === 'zh' ? 'JSON 格式错误' : 'Invalid JSON format'}: ${error.message}</span>`;
+        return;
+      }
+
+      try {
+        callButton.disabled = true;
+        resultDiv.innerHTML = `<span style="color:#6b7280;">${currentLanguage === 'zh' ? '调用中...' : 'Calling...'}</span>`;
+
+        const resp = await fetch('/api/MCPDemo/tool-call', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            agentId: agentId,
+            serverName: selectedTool.serverName,
+            toolName: selectedTool.name,
+            arguments: args
+          })
+        });
+
+        const data = await resp.json();
+
+        if (data.success) {
+          // CRITICAL: Get the actual result content from the correct path
+          let resultContent = null;
+          if (data.resultDisplay && data.resultDisplay.resultContent !== undefined) {
+            resultContent = data.resultDisplay.resultContent;
+          } else if (data.result !== undefined) {
+            resultContent = data.result;
+          } else {
+            // Fallback to showing the entire response if no result found
+            resultContent = data;
+          }
+
+          // Display full result
+          let resultHtml = `
+          <div style="color:#10b981;font-weight:bold;margin-bottom:8px;">✓ ${currentLanguage === 'zh' ? '成功' : 'Success'}</div>
+          <pre style="background:#fff;padding:8px;border-radius:4px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;">${JSON.stringify(resultContent, null, 2)}</pre>
+        `;
+
+          // Try to extract and display Result field separately
+          let resultFieldValue = null;
+          try {
+            const jsonStr = typeof resultContent === 'string' ? resultContent : JSON.stringify(resultContent);
+            const parsed = JSON.parse(jsonStr);
+            if (parsed.Result !== undefined && parsed.Result !== null) {
+              resultFieldValue = parsed.Result;
+            }
+          } catch (e) {
+            // Not JSON or no Result field
+          }
+
+          // If Result field exists, display it in a separate section
+          if (resultFieldValue !== null) {
+            resultHtml += `
+            <div style="margin-top:16px;padding:12px;background:#f0fff4;border:2px solid #34d399;border-radius:8px;">
+              <div style="font-weight:bold;color:#059669;margin-bottom:8px;">${currentLanguage === 'zh' ? 'Result：' : 'Result:'}</div>
+              <pre style="background:#fff;padding:8px;border-radius:4px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;border:1px solid #bbf7d0;">${escapeHtml(String(resultFieldValue))}</pre>
+            </div>
+          `;
+          }
+
+          resultDiv.innerHTML = resultHtml;
+
+          // Update history
+          updateHistory();
+        } else {
+          resultDiv.innerHTML = `
+          <div style="color:#ef4444;font-weight:bold;margin-bottom:8px;">✗ ${currentLanguage === 'zh' ? '错误' : 'Error'}</div>
+          <div>${data.errorMessage || data.error}</div>
+        `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<span style="color:#ef4444;">Error: ${error.message}</span>`;
+      } finally {
+        callButton.disabled = false;
+      }
+    };
+
+    // Update history
+    async function updateHistory() {
+      if (!agentId) return;
+
+      try {
+        const resp = await fetch(`/api/MCPDemo/history/${agentId}`);
+        const data = await resp.json();
+
+        if (data.success) {
+          historyContent.innerHTML = '';
+
+          if (data.history.length === 0) {
+            historyContent.innerHTML = `<div style="color:#6b7280;padding:12px;">${currentLanguage === 'zh' ? '暂无调用历史' : 'No call history yet'}</div>`;
+          } else {
+            data.history.forEach(call => {
+              const historyItem = document.createElement('div');
+              historyItem.style.marginBottom = '12px';
+              historyItem.style.padding = '12px';
+              historyItem.style.background = call.success ? '#f0fdf4' : '#fef2f2';
+              historyItem.style.borderRadius = '4px';
+              historyItem.style.border = `1px solid ${call.success ? '#bbf7d0' : '#fecaca'}`;
+
+              historyItem.innerHTML = `
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <span style="font-weight:bold;color:${call.success ? '#10b981' : '#ef4444'};">
+                  ${call.serverName}.${call.toolName}
+                </span>
+                <span style="font-size:0.85em;color:#6b7280;">
+                  ${new Date(call.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+              <div style="font-size:0.9em;color:#4b5563;margin-bottom:4px;">
+                <strong>${currentLanguage === 'zh' ? '参数' : 'Arguments'}:</strong> 
+                <code style="background:#f3f4f6;padding:2px 4px;border-radius:2px;word-wrap:break-word;overflow-wrap:break-word;display:inline-block;max-width:100%;">${JSON.stringify(call.arguments)}</code>
+              </div>
+              ${call.success ? `
+              <div style="font-size:0.9em;color:#059669;">
+                <strong>${currentLanguage === 'zh' ? '结果' : 'Result'}:</strong> 
+                <pre style="margin-top:4px;background:#fff;padding:4px;border-radius:2px;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;max-height:100px;overflow-y:auto;">${JSON.stringify(call.result, null, 2)}</pre>
+              </div>` : `
+              <div style="font-size:0.9em;color:#dc2626;">
+                <strong>${currentLanguage === 'zh' ? '错误' : 'Error'}:</strong> ${call.errorMessage}
+              </div>`}
+            `;
+              historyContent.appendChild(historyItem);
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch history:', error);
+      }
+    }
+  }
+
+  // Dynamic AI MCP Demo rendering
+  async function renderDynamicAIMCPDemo(demo) {
+    // Create an iframe to load the standalone demo page
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = '/demos/dynamic-ai-mcp.html';
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+
+    // Demo iframe
+    const iframeContainer = document.createElement('div');
+    iframeContainer.style.marginTop = '20px';
+    iframeContainer.style.height = '900px';
+    iframeContainer.style.border = '1px solid #374151';
+    iframeContainer.style.borderRadius = '8px';
+    iframeContainer.style.overflow = 'hidden';
+    iframeContainer.style.background = '#0e0e0e';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = '/demos/dynamic-ai-mcp.html';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.style.background = '#0e0e0e';
+
+    iframeContainer.appendChild(iframe);
+    demoCard.appendChild(iframeContainer);
+
+    mainContent.appendChild(demoCard);
+  }
+
+  // PsiGAgent Demo rendering
+  async function renderPsiGAgentDemo(demo) {
+    // Create an iframe to load the standalone demo page
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = '/demos/psi-gagent-demo.html';
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+
+    // Demo iframe
+    const iframeContainer = document.createElement('div');
+    iframeContainer.style.marginTop = '20px';
+    iframeContainer.style.height = '900px';
+    iframeContainer.style.border = '1px solid #e2e8f0';
+    iframeContainer.style.borderRadius = '8px';
+    iframeContainer.style.overflow = 'hidden';
+    iframeContainer.style.background = '#f5f5f5';
+
+    const iframe = document.createElement('iframe');
+    iframe.src = '/demos/psi-gagent-demo.html';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.style.background = '#f5f5f5';
+
+    iframeContainer.appendChild(iframe);
+    demoCard.appendChild(iframeContainer);
+
+    mainContent.appendChild(demoCard);
+  }
+
+  async function renderWorkflowDemo(demo) {
+    // Create demo card for workflow
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = '/demos/workflow-demo.html';
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开 Workflow 编辑器' : 'Open Workflow Editor';
+
+    link.addEventListener('mouseover', () => {
+      link.style.backgroundColor = '#0284c7';
+    });
+
+    link.addEventListener('mouseout', () => {
+      link.style.backgroundColor = '#0ea5e9';
+    });
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    mainContent.appendChild(demoCard);
+  }
 </script>
 </body>
 </html>

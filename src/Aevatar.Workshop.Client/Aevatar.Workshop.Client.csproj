@@ -1,35 +1,36 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>$(DefaultTargetFramework)</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
     <ItemGroup>
         <PackageReference Include="Microsoft.Orleans.Client" />
         <PackageReference Include="Microsoft.Extensions.Logging.Console" />
         <PackageReference Include="Microsoft.Extensions.Hosting" />
-        <PackageReference Include="Aevatar.Core.Abstractions" />
-        <PackageReference Include="Aevatar.Core" />
-        <PackageReference Include="Aevatar" />
         <PackageReference Include="Microsoft.AspNetCore.App" />
         <PackageReference Include="Microsoft.AspNetCore" />
         <PackageReference Include="Microsoft.AspNetCore.Hosting" />
         <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
         <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="Aevatar.GAgents.MCP" />
     </ItemGroup>
-
+    <ItemGroup>
+        <PackageReference Include="Aevatar.Core.Abstractions" />
+        <PackageReference Include="Aevatar.Core" />
+        <PackageReference Include="Aevatar" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
+    </ItemGroup>
     <ItemGroup>
         <None Update="appsettings.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Aevatar.Workshop.AIRouterWorkflowGAgent\Aevatar.Workshop.AIRouterWorkflowGAgent.csproj" />
-        <ProjectReference Include="..\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
+        <None Update="appsettings.secrets.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 </Project>

@@ -1,18 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFramework>$(DefaultTargetFramework)</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-
     <ItemGroup>
-        <PackageReference Include="Aevatar.Core.Abstractions"/>
-        <PackageReference Include="Aevatar.Core"/>
-        <PackageReference Include="Aevatar.EventSourcing.Core"/>
         <PackageReference Include="Aevatar.GAgents.AI.Abstractions" />
         <PackageReference Include="Aevatar.GAgents.AIGAgent" />
         <PackageReference Include="Aevatar.GAgents.Basic" />
+        <PackageReference Include="Aevatar.GAgents.Executor" />
+        <PackageReference Include="Aevatar.GAgents.PsiOmni" />
+        <PackageReference Include="Aevatar.GAgents.GroupChat" />
+        <PackageReference Include="Aevatar.Core.Abstractions" />
+        <PackageReference Include="Aevatar.Core" />
+        <PackageReference Include="Aevatar.EventSourcing.Core" />
     </ItemGroup>
-
 </Project>

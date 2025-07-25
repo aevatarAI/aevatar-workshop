@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  aevatar-host:
+    image: aevatar-workshop-host:latest
+    container_name: aevatar-workshop-host
+    ports:
+      - "11111:80"        # Orleans Dashboard
+      - "30000:30000"     # Orleans Silo
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - DOTNET_ENVIRONMENT=Production
+    networks:
+      - aevatar-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  aevatar-client:
+    image: aevatar-workshop-client:latest
+    container_name: aevatar-workshop-client
+    ports:
+      - "5001:80"         # Web Client
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      - DOTNET_ENVIRONMENT=Production
+      - ORLEANS_GATEWAY_HOST=aevatar-host
+      - ORLEANS_GATEWAY_PORT=30000
+    depends_on:
+      aevatar-host:
+        condition: service_healthy
+    networks:
+      - aevatar-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  aevatar-network:
+    driver: bridge
+    name: aevatar-network
+
+volumes:
+  aevatar-logs:
+    driver: local
+    name: aevatar-logs

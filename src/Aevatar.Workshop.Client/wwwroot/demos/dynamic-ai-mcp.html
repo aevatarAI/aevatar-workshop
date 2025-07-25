@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic AI MCP Integration - Cursor Style</title>
+    <!-- Add Marked.js for Markdown parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Theme Variables */
+        :root {
+            /* Dark Theme (Default) */
+            --bg-primary: #0e0e0e;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2a2a2a;
+            --bg-hover: #3a3a3a;
+            --border-color: #3a3a3a;
+            --text-primary: #e0e0e0;
+            --text-secondary: #999;
+            --text-muted: #6b7280;
+            --accent-blue: #2563eb;
+            --accent-blue-hover: #1d4ed8;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --code-bg: #2a2a2a;
+            --code-text: #e06c75;
+            --pre-bg: #1e1e1e;
+            --pre-text: #abb2bf;
+            --link-color: #60a5fa;
+            --link-hover: #93bbfc;
+            --scrollbar-bg: #1a1a1a;
+            --scrollbar-thumb: #4a4a4a;
+            --scrollbar-thumb-hover: #5a5a5a;
+            --tool-call-bg: #1a1a1a;
+            --input-bg: #0e0e0e;
+            --button-disabled: #374151;
+        }
+
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --bg-hover: #e5e7eb;
+            --border-color: #e5e7eb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --accent-blue: #2563eb;
+            --accent-blue-hover: #1d4ed8;
+            --accent-green: #059669;
+            --accent-red: #dc2626;
+            --code-bg: #f3f4f6;
+            --code-text: #c7254e;
+            --pre-bg: #f9fafb;
+            --pre-text: #374151;
+            --link-color: #2563eb;
+            --link-hover: #1d4ed8;
+            --scrollbar-bg: #f3f4f6;
+            --scrollbar-thumb: #d1d5db;
+            --scrollbar-thumb-hover: #9ca3af;
+            --tool-call-bg: #f9fafb;
+            --input-bg: #ffffff;
+            --button-disabled: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--bg-tertiary);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Buttons */
+        .button {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .button:hover {
+            background-color: var(--accent-blue-hover);
+        }
+
+        .button:disabled {
+            background-color: var(--button-disabled);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .button.secondary {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .button.secondary:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* Server Cards */
+        .server-card {
+            background-color: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .server-card:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--scrollbar-thumb);
+        }
+
+        .server-card.selected {
+            background-color: #1e3a8a;
+            border-color: var(--accent-blue);
+        }
+
+        [data-theme="light"] .server-card.selected {
+            background-color: #dbeafe;
+            border-color: var(--accent-blue);
+        }
+
+        .server-card.connected {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .server-card.connected::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #2563eb, transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .server-card.connected::after {
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .server-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .server-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .server-status {
+            margin-top: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #4b5563;
+        }
+
+        .status-dot.connected {
+            background-color: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* GAgent Cards */
+        .gagent-card {
+            background-color: var(--bg-tertiary);
+            border: 2px solid transparent;
+            border-radius: 6px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            height: 100%;
+            min-height: 80px;
+        }
+
+        .gagent-card:hover {
+            background-color: var(--bg-hover);
+            border-color: var(--scrollbar-thumb);
+            transform: translateY(-1px);
+        }
+
+        .gagent-card.selected {
+            background-color: #1e3a8a;
+            border-color: var(--accent-blue);
+        }
+
+        [data-theme="light"] .gagent-card.selected {
+            background-color: #dbeafe;
+            border-color: var(--accent-blue);
+        }
+
+        .gagent-card.connected {
+            border-color: var(--accent-green);
+        }
+
+        .gagent-card-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .gagent-card-description {
+            font-size: 11px;
+            color: var(--text-secondary);
+            flex: 1;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            line-height: 1.3;
+        }
+
+        .gagent-card-info {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+
+        /* Tools Panel */
+        .tools-panel {
+            background-color: var(--pre-bg);
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .tool-group {
+            margin-bottom: 16px;
+        }
+
+        .tool-group-header {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-count {
+            background-color: var(--button-disabled);
+            color: var(--text-muted);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+        }
+
+        .tool-item {
+            font-size: 13px;
+            color: var(--text-primary);
+            padding: 6px 12px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tool-item:hover {
+            background-color: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-primary);
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background-color: var(--bg-secondary);
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--bg-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            scroll-behavior: smooth;
+            max-width: 100%;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            animation: fadeIn 0.3s ease-in;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .message-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .message.user .message-avatar {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message-role {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .message-content {
+            margin-left: 40px;
+            padding: 12px 16px;
+            background-color: var(--bg-secondary);
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            max-width: calc(100% - 40px);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-wrap;
+            overflow: hidden;
+        }
+
+        .message.user .message-content {
+            background-color: #1e3a8a;
+        }
+
+        [data-theme="light"] .message.user .message-content {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+        }
+
+        /* Tool Call Display */
+        .tool-call-container {
+            margin-left: 40px;
+            margin-top: 12px;
+            background-color: var(--tool-call-bg);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            max-width: calc(100% - 40px);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .tool-call-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .tool-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .tool-info {
+            flex: 1;
+        }
+
+        .tool-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .tool-server {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .tool-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tool-status.running {
+            background-color: #fbbf24;
+            color: #78350f;
+            animation: pulse 1.5s infinite;
+        }
+
+        .tool-status.success {
+            background-color: #10b981;
+            color: #064e3b;
+        }
+
+        .tool-status.error {
+            background-color: #ef4444;
+            color: #7f1d1d;
+        }
+
+        .tool-arguments {
+            background-color: var(--input-bg);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            color: var(--text-muted);
+            overflow-x: auto;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .tool-result {
+            background-color: var(--input-bg);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            color: var(--accent-green);
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            overflow-x: auto;
+        }
+
+        .tool-error {
+            color: var(--accent-red);
+        }
+
+        /* Loading animation for tool calls */
+        .tool-loading {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background-color: #1a1a1a;
+            overflow: hidden;
+        }
+
+        .tool-loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 40%;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(250%); }
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            padding: 16px 24px;
+            background-color: var(--bg-secondary);
+            border-top: 1px solid var(--bg-tertiary);
+        }
+
+        .chat-input-wrapper {
+            background-color: var(--input-bg);
+            border: 1px solid var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input-wrapper:focus-within {
+            border-color: var(--accent-blue);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            min-height: 20px;
+            max-height: 120px;
+            line-height: 1.5;
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-button {
+            background-color: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .send-button:hover {
+            background-color: var(--accent-blue-hover);
+        }
+
+        .send-button:disabled {
+            background-color: var(--button-disabled);
+            cursor: not-allowed;
+        }
+
+        /* Status Messages */
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .status-message.success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+        }
+
+        .status-message.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--accent-red);
+            border: 1px solid var(--accent-red);
+        }
+
+        .status-message.info {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: var(--accent-blue);
+            border: 1px solid var(--accent-blue);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--scrollbar-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--scrollbar-thumb);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--scrollbar-thumb-hover);
+        }
+
+        /* Markdown Content Styles */
+        .markdown-content {
+            line-height: 1.6;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+            margin-top: 20px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-content h1 { font-size: 1.5em; }
+        .markdown-content h2 { font-size: 1.3em; }
+        .markdown-content h3 { font-size: 1.1em; }
+        .markdown-content h4 { font-size: 1em; }
+        .markdown-content h5 { font-size: 0.9em; }
+        .markdown-content h6 { font-size: 0.85em; }
+
+        .markdown-content p {
+            margin: 0 0 12px 0;
+        }
+
+        .markdown-content code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-content pre {
+            background-color: var(--pre-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            margin: 12px 0;
+            max-width: 100%;
+        }
+
+        .markdown-content pre code {
+            background-color: transparent;
+            color: var(--pre-text);
+            padding: 0;
+            font-size: 0.875em;
+            line-height: 1.5;
+            white-space: pre;
+            word-wrap: normal;
+            overflow-wrap: normal;
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            margin: 0 0 12px 0;
+            padding-left: 24px;
+        }
+
+        .markdown-content li {
+            margin: 4px 0;
+            color: var(--text-primary);
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid var(--scrollbar-thumb);
+            padding-left: 16px;
+            margin: 12px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .markdown-content a {
+            color: var(--link-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+
+        .markdown-content a:hover {
+            color: var(--link-hover);
+            border-bottom-color: var(--link-color);
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: var(--bg-tertiary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-content table tr:nth-child(even) {
+            background-color: var(--bg-secondary);
+        }
+
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 20px 0;
+        }
+
+        .markdown-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+
+        .markdown-content strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-content em {
+            font-style: italic;
+            color: var(--text-primary);
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-hover);
+        }
+
+        .theme-icon-light {
+            display: block;
+        }
+
+        .theme-icon-dark {
+            display: none;
+        }
+
+        [data-theme="light"] .theme-icon-light {
+            display: none;
+        }
+
+        [data-theme="light"] .theme-icon-dark {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                z-index: 100;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .chat-area {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h1 class="sidebar-title">Dynamic AI MCP</h1>
+
+        <!-- Initialize Section -->
+        <div class="section">
+            <div class="section-header">Initialize Agent</div>
+            <select id="systemLLM" style="width: 100%; padding: 8px; margin-bottom: 12px; background-color: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 6px; color: #e0e0e0;">
+                <!-- Options will be loaded dynamically -->
+            </select>
+            <button class="button" id="initBtn" onclick="initializeAgent()">
+                <span>Initialize AI Agent</span>
+            </button>
+            <div id="initStatus"></div>
+        </div>
+
+        <!-- MCP Servers Section -->
+        <div class="section" id="serversSection" style="display: none;">
+            <div class="section-header">MCP Servers</div>
+            <div id="serversList"></div>
+            <button class="button" id="connectBtn" onclick="connectServers()">
+                Connect Selected Servers
+            </button>
+            <div id="connectStatus"></div>
+        </div>
+
+        <!-- GAgent Tools Section -->
+        <div class="section" id="gagentSection" style="display: none;">
+            <div class="section-header">GAgent Tools</div>
+            <div id="gagentsList"></div>
+            <button class="button" id="configureGAgentsBtn" onclick="configureGAgentTools()" disabled>
+                Configure Selected GAgents
+            </button>
+            <div id="gagentStatus"></div>
+        </div>
+
+        <!-- Available Tools Section -->
+        <div class="section" id="toolsSection" style="display: none;">
+            <div class="section-header">Available Tools</div>
+            <div class="tools-panel" id="toolsPanel"></div>
+        </div>
+    </div>
+
+    <!-- Chat Area -->
+    <div class="chat-area">
+        <div class="chat-header">
+            <div class="chat-title">AI Assistant</div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                    <svg class="theme-icon-light" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="theme-icon-dark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button class="button secondary" onclick="clearHistory()" style="width: auto; padding: 6px 12px; font-size: 13px;">
+                    Clear History
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-header">
+                    <div class="message-avatar">AI</div>
+                    <div class="message-role">Assistant</div>
+                </div>
+                <div class="message-content">
+                    Hello! I'm your AI assistant with dynamic MCP tool capabilities. Initialize me to start chatting. You can optionally connect to MCP servers and configure GAgent tools to enhance my capabilities.
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                    <textarea
+                            class="chat-input"
+                            id="chatInput"
+                            placeholder="Type your message here..."
+                            onkeydown="handleChatKeydown(event)"
+                            oninput="autoResize(this)"
+                            disabled
+                    ></textarea>
+                <button class="send-button" id="sendBtn" onclick="sendMessage()" disabled>
+                    <span>Send</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentAgentId = null;
+    const selectedServers = new Set();
+    const selectedGAgents = new Set();
+    let availableTools = {};
+    let isProcessing = false;
+
+    // MCP servers will be loaded from the API
+    let defaultServers = [];
+
+    // Initialize page
+    async function initializePage() {
+        // Configure marked.js options
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            mangle: false,
+            sanitize: false, // We'll rely on marked's built-in security
+            xhtml: false
+        });
+        
+        // Load theme preference
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Page is initialized with the assistant message
+        
+        // Load MCP servers configuration
+        await loadMCPServers();
+        
+        // Load available LLM configurations
+        loadAvailableLLMs();
+    }
+    
+    // Load MCP servers from API
+    async function loadMCPServers() {
+        try {
+            const response = await fetch('/api/DynamicAIMCP/mcp-servers');
+            const data = await response.json();
+            
+            if (data.success && data.servers) {
+                defaultServers = data.servers.map(server => ({
+                    name: server.name,
+                    command: server.command,
+                    args: server.args || [],
+                    description: server.description,
+                    icon: server.icon || '🛠️',
+                    env: server.env,
+                    url: server.url
+                }));
+                
+                console.log('Loaded MCP servers:', defaultServers);
+            } else {
+                console.error('Failed to load MCP servers:', data.error);
+                // Use empty array as fallback
+                defaultServers = [];
+            }
+        } catch (error) {
+            console.error('Error loading MCP servers:', error);
+            // Use empty array as fallback
+            defaultServers = [];
+        }
+    }
+    
+    // Load available LLM configurations
+    async function loadAvailableLLMs() {
+        try {
+            const response = await fetch('/api/llm-configs/list');
+            const llmKeys = await response.json();
+            
+            const selectElement = document.getElementById('systemLLM');
+            selectElement.innerHTML = ''; // Clear existing options
+            
+            if (llmKeys && llmKeys.length > 0) {
+                llmKeys.forEach(key => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = key;
+                    selectElement.appendChild(option);
+                });
+                
+                // Set DeepSeek as default if it exists
+                if (llmKeys.includes('DeepSeek')) {
+                    selectElement.value = 'DeepSeek';
+                }
+            } else {
+                // Fallback option if no configs found
+                const option = document.createElement('option');
+                option.value = 'DeepSeek';
+                option.textContent = 'DeepSeek (Default)';
+                selectElement.appendChild(option);
+            }
+        } catch (error) {
+            console.error('Failed to load LLM configurations:', error);
+            // Fallback to default
+            const selectElement = document.getElementById('systemLLM');
+            selectElement.innerHTML = '<option value="DeepSeek">DeepSeek (Default)</option>';
+        }
+    }
+
+    // Theme toggle function
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    }
+
+    async function initializeAgent() {
+        const btn = document.getElementById('initBtn');
+        const status = document.getElementById('initStatus');
+        const systemLLM = document.getElementById('systemLLM').value;
+
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Initializing...';
+
+        status.innerHTML = '<div class="status-message info"><div class="spinner"></div> Initializing AI agent...</div>';
+
+        try {
+            const response = await fetch('/api/DynamicAIMCP/initialize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ systemLLM })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                currentAgentId = data.agentId;
+                status.innerHTML = `<div class="status-message success">✓ Agent initialized successfully</div>`;
+
+                // Show servers section
+                document.getElementById('serversSection').style.display = 'block';
+                populateServers();
+
+                // Show GAgent section and load available GAgents
+                document.getElementById('gagentSection').style.display = 'block';
+                loadAvailableGAgents();
+
+                // Enable chat immediately after initialization
+                document.getElementById('chatInput').disabled = false;
+                document.getElementById('sendBtn').disabled = false;
+
+                // Add system message to chat
+                addMessage('system', `AI Agent initialized with ID: ${data.agentId}. You can now start chatting!`);
+            } else {
+                status.innerHTML = `<div class="status-message error">✗ ${data.error}</div>`;
+            }
+        } catch (error) {
+            status.innerHTML = `<div class="status-message error">✗ ${error.message}</div>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<span>Initialize AI Agent</span>';
+        }
+    }
+
+    function populateServers() {
+        const serversList = document.getElementById('serversList');
+        serversList.innerHTML = '';
+
+        // Check if servers are loaded
+        if (!defaultServers || defaultServers.length === 0) {
+            serversList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No MCP servers available. Please check configuration.</div>';
+            return;
+        }
+
+        defaultServers.forEach(server => {
+            const card = document.createElement('div');
+            card.className = 'server-card';
+            card.dataset.server = server.name;
+            card.innerHTML = `
+                    <div style="display: flex; align-items: start; gap: 12px;">
+                        <div style="font-size: 24px;">${server.icon}</div>
+                        <div style="flex: 1;">
+                            <div class="server-name">${server.name}</div>
+                            <div class="server-description">${server.description}</div>
+                            <div class="server-status">
+                                <div class="status-dot"></div>
+                                <span>Not connected</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            card.onclick = () => toggleServer(server, card);
+            serversList.appendChild(card);
+        });
+    }
+
+    function toggleServer(server, element) {
+        if (selectedServers.has(server.name)) {
+            selectedServers.delete(server.name);
+            element.classList.remove('selected');
+        } else {
+            selectedServers.add(server.name);
+            element.classList.add('selected');
+        }
+
+        // Update connect button state
+        document.getElementById('connectBtn').disabled = selectedServers.size === 0;
+    }
+
+    async function loadAvailableGAgents() {
+        try {
+            const response = await fetch('/api/DynamicAIMCP/available-gagents');
+            const data = await response.json();
+
+            if (data.success) {
+                displayGAgents(data.gAgents);
+            } else {
+                document.getElementById('gagentStatus').innerHTML = 
+                    `<div class="status-message error">✗ Failed to load GAgents: ${data.error}</div>`;
+            }
+        } catch (error) {
+            document.getElementById('gagentStatus').innerHTML = 
+                `<div class="status-message error">✗ Error loading GAgents: ${error.message}</div>`;
+        }
+    }
+
+    function displayGAgents(gAgents) {
+        const gagentsList = document.getElementById('gagentsList');
+        gagentsList.innerHTML = '';
+
+        // Filter out only internal/system GAgents
+        const displayableGAgents = gAgents.filter(g => {
+            const alias = g.alias.toLowerCase();
+            const nameSpace = g.nameSpace.toLowerCase();
+            // Exclude only internal agents like dynamictool and mcp-related
+            return !alias.includes('dynamictool') &&
+                   !alias.includes('mcp') &&
+                   !nameSpace.includes('aevatar.gagents.mcp');
+        });
+
+        // Sort by alias for better organization
+        displayableGAgents.sort((a, b) => a.alias.localeCompare(b.alias));
+
+        // Create a compact grid layout container
+        const gridContainer = document.createElement('div');
+        gridContainer.style.cssText = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px;';
+        
+        displayableGAgents.forEach(gagent => {
+            const card = document.createElement('div');
+            card.className = 'gagent-card';
+            card.dataset.gagent = gagent.grainType;
+            
+            // Create a more compact card without icons
+            card.innerHTML = `
+                <div class="gagent-card-title">${gagent.alias}</div>
+                <div class="gagent-card-description">${gagent.description || 'No description'}</div>
+                <div class="gagent-card-info">
+                    ${gagent.eventHandlers.length} handler(s)
+                </div>
+            `;
+            card.onclick = () => toggleGAgent(gagent, card);
+            gridContainer.appendChild(card);
+        });
+
+        gagentsList.appendChild(gridContainer);
+
+        if (displayableGAgents.length === 0) {
+            gagentsList.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">No GAgents available</div>';
+        } else {
+            // Add a summary at the top
+            const summary = document.createElement('div');
+            summary.style.cssText = 'color: var(--text-secondary); font-size: 12px; margin-bottom: 10px;';
+            summary.textContent = `${displayableGAgents.length} GAgents available. Click to select:`;
+            gagentsList.insertBefore(summary, gridContainer);
+        }
+    }
+
+    function toggleGAgent(gagent, element) {
+        if (selectedGAgents.has(gagent.grainType)) {
+            selectedGAgents.delete(gagent.grainType);
+            element.classList.remove('selected');
+        } else {
+            selectedGAgents.add(gagent.grainType);
+            element.classList.add('selected');
+        }
+
+        // Update configure button state
+        document.getElementById('configureGAgentsBtn').disabled = selectedGAgents.size === 0;
+    }
+
+    async function connectServers() {
+        if (selectedServers.size === 0) return;
+
+        const btn = document.getElementById('connectBtn');
+        const status = document.getElementById('connectStatus');
+
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Connecting...';
+
+        status.innerHTML = '<div class="status-message info"><div class="spinner"></div> Connecting to MCP servers...</div>';
+
+        // Update server cards to show connecting state
+        selectedServers.forEach(serverName => {
+            const card = document.querySelector(`[data-server="${serverName}"]`);
+            if (card) {
+                card.classList.add('connected');
+                const statusEl = card.querySelector('.server-status');
+                statusEl.innerHTML = '<div class="status-dot connected"></div><span>Connecting...</span>';
+            }
+        });
+
+        const servers = defaultServers
+            .filter(s => selectedServers.has(s.name))
+            .map(s => ({
+                serverName: s.name,
+                command: s.command,
+                args: s.args,
+                description: s.description,
+                env: s.env,
+                url: s.url
+            }));
+
+        try {
+            const response = await fetch('/api/DynamicAIMCP/configure-servers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agentId: currentAgentId,
+                    servers: servers
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                status.innerHTML = `<div class="status-message success">✓ Connected to ${Object.keys(data.availableTools).length} servers</div>`;
+
+                // Update server status
+                selectedServers.forEach(serverName => {
+                    const card = document.querySelector(`[data-server="${serverName}"]`);
+                    if (card) {
+                        const statusEl = card.querySelector('.server-status');
+                        statusEl.innerHTML = '<div class="status-dot connected"></div><span>Connected</span>';
+                    }
+                });
+
+                // Store and display available tools
+                availableTools = data.availableTools;
+                displayTools();
+
+                // Show tools section (chat is already enabled)
+                document.getElementById('toolsSection').style.display = 'block';
+
+                // Add system message
+                addMessage('system', `Connected to ${servers.length} MCP servers with ${Object.values(data.availableTools).flat().length} total tools available.`);
+            } else {
+                status.innerHTML = `<div class="status-message error">✗ ${data.error}</div>`;
+
+                // Reset server status
+                selectedServers.forEach(serverName => {
+                    const card = document.querySelector(`[data-server="${serverName}"]`);
+                    if (card) {
+                        card.classList.remove('connected');
+                        const statusEl = card.querySelector('.server-status');
+                        statusEl.innerHTML = '<div class="status-dot"></div><span>Connection failed</span>';
+                    }
+                });
+            }
+        } catch (error) {
+            status.innerHTML = `<div class="status-message error">✗ ${error.message}</div>`;
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Connect Selected Servers';
+        }
+    }
+
+    async function configureGAgentTools() {
+        if (selectedGAgents.size === 0 || !currentAgentId) return;
+
+        const btn = document.getElementById('configureGAgentsBtn');
+        const status = document.getElementById('gagentStatus');
+
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Configuring...';
+
+        status.innerHTML = '<div class="status-message info"><div class="spinner"></div> Configuring GAgent tools...</div>';
+
+        try {
+            const response = await fetch('/api/DynamicAIMCP/configure-gagent-tools', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agentId: currentAgentId,
+                    selectedGAgents: Array.from(selectedGAgents)
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                status.innerHTML = `<div class="status-message success">✓ Configured ${data.configuredGAgents.length} GAgent tools</div>`;
+
+                // Mark configured GAgents
+                selectedGAgents.forEach(grainType => {
+                    const card = document.querySelector(`[data-gagent="${grainType}"]`);
+                    if (card) {
+                        card.classList.add('connected');
+                    }
+                });
+
+                // Add GAgent tools to available tools
+                if (!availableTools['GAgentTools']) {
+                    availableTools['GAgentTools'] = [];
+                }
+                
+                data.configuredGAgents.forEach(g => {
+                    // Add basic info about the GAgent as a tool
+                    availableTools['GAgentTools'].push({
+                        name: g.alias,
+                        description: `${g.description} (${g.eventCount} events)`
+                    });
+                });
+
+                // Refresh tools display
+                displayTools();
+
+                // Add system message
+                addMessage('system', `Configured ${data.configuredGAgents.length} GAgent tools. You can now use them in your queries.`);
+            } else {
+                status.innerHTML = `<div class="status-message error">✗ ${data.error}</div>`;
+            }
+        } catch (error) {
+            status.innerHTML = `<div class="status-message error">✗ ${error.message}</div>`;
+        } finally {
+            btn.disabled = selectedGAgents.size === 0;
+            btn.innerHTML = 'Configure Selected GAgents';
+        }
+    }
+
+    function displayTools() {
+        const panel = document.getElementById('toolsPanel');
+        panel.innerHTML = '';
+
+        for (const [serverName, tools] of Object.entries(availableTools)) {
+            const group = document.createElement('div');
+            group.className = 'tool-group';
+
+            const header = document.createElement('div');
+            header.className = 'tool-group-header';
+            header.innerHTML = `
+                    <span>${serverName}</span>
+                    <span class="tool-count">${tools.length}</span>
+                `;
+            group.appendChild(header);
+
+            tools.forEach(tool => {
+                const item = document.createElement('div');
+                item.className = 'tool-item';
+                item.innerHTML = `<strong>${tool.name}</strong> - ${tool.description}`;
+                item.title = tool.description;
+                group.appendChild(item);
+            });
+
+            panel.appendChild(group);
+        }
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const message = input.value.trim();
+
+        if (!message || isProcessing) return;
+
+        isProcessing = true;
+
+        // Add user message
+        addMessage('user', message);
+        input.value = '';
+        autoResize(input);
+
+        // Show typing indicator
+        const typingId = showTypingIndicator();
+
+        try {
+            const response = await fetch('/api/DynamicAIMCP/chat-with-details', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    agentId: currentAgentId,
+                    message: message
+                })
+            });
+
+            // Check if response is ok
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            // Check if response is JSON
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                const text = await response.text();
+                console.error('Non-JSON response:', text);
+                throw new Error("Server returned non-JSON response");
+            }
+
+            const data = await response.json();
+
+            // Remove typing indicator
+            removeTypingIndicator(typingId);
+
+            if (data.success) {
+                // Display tool calls if any
+                if (data.toolCalls && data.toolCalls.length > 0) {
+                    data.toolCalls.forEach(toolCall => {
+                        displayToolCall(toolCall);
+                    });
+                }
+
+                // Display the final response
+                if (data.response) {
+                    addMessage('assistant', data.response);
+                }
+
+                // Add timing info if significant
+                if (data.totalDurationMs > 5000) {
+                    addMessage('system', `Completed in ${(data.totalDurationMs / 1000).toFixed(1)} seconds`);
+                }
+            } else {
+                addMessage('system', `Error: ${data.error}`);
+            }
+        } catch (error) {
+            removeTypingIndicator(typingId);
+            addMessage('system', `Error: ${error.message}`);
+        } finally {
+            isProcessing = false;
+        }
+    }
+
+    function displayToolCall(toolCall) {
+        // Debug log to see the actual toolCall object
+        console.log('Tool call details:', toolCall);
+        console.log('Success field:', toolCall.success, 'Type:', typeof toolCall.success);
+        
+        const messagesDiv = document.getElementById('chatMessages');
+        const toolCallEl = document.createElement('div');
+        toolCallEl.className = 'tool-call-container';
+
+        // Format arguments - check both camelCase and PascalCase
+        const args = toolCall.arguments || toolCall.Arguments;
+        let argsDisplay = '';
+        if (args && Object.keys(args).length > 0) {
+            argsDisplay = JSON.stringify(args, null, 2);
+        }
+
+        // Format result - check both camelCase and PascalCase
+        const result = toolCall.result !== undefined ? toolCall.result : toolCall.Result;
+        let resultDisplay = result || 'No result';
+        try {
+            // Try to parse and format JSON result
+            const parsed = JSON.parse(resultDisplay);
+            resultDisplay = JSON.stringify(parsed, null, 2);
+        } catch (e) {
+            // Keep as is if not JSON
+        }
+
+        // Determine status class - check both camelCase and PascalCase
+        const isSuccess = toolCall.success !== undefined ? toolCall.success : toolCall.Success;
+        const statusClass = isSuccess ? 'success' : 'error';
+        const statusText = isSuccess ? 'Success' : 'Error';
+
+        toolCallEl.innerHTML = `
+            <div class="tool-call-header">
+                <div class="tool-icon">🔧</div>
+                <div class="tool-info">
+                    <div class="tool-name">${escapeHtml(toolCall.toolName || toolCall.ToolName || '')}</div>
+                    <div class="tool-server">${escapeHtml(toolCall.serverName || toolCall.ServerName || '')}</div>
+                </div>
+                <div class="tool-status ${statusClass}">${statusText}</div>
+            </div>
+            ${argsDisplay ? `<div class="tool-arguments"><strong>Arguments:</strong>\n${escapeHtml(argsDisplay)}</div>` : ''}
+            <div class="tool-result ${isSuccess ? '' : 'tool-error'}">
+                <strong>Result:</strong>\n${escapeHtml(resultDisplay)}
+            </div>
+            <div style="margin-top: 8px; font-size: 11px; color: #666;">
+                ${toolCall.timestamp || toolCall.Timestamp || 'N/A'} • ${toolCall.durationMs || toolCall.DurationMs || 0}ms
+            </div>
+        `;
+
+        messagesDiv.appendChild(toolCallEl);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function addMessage(role, content) {
+        const messagesDiv = document.getElementById('chatMessages');
+        const message = document.createElement('div');
+        message.className = `message ${role}`;
+
+        const avatarText = role === 'user' ? 'U' : role === 'assistant' ? 'AI' : 'S';
+        const roleText = role.charAt(0).toUpperCase() + role.slice(1);
+
+        // Process content based on role
+        let processedContent;
+        if (role === 'assistant') {
+            // Parse Markdown for assistant messages
+            processedContent = marked.parse(content, {
+                breaks: true, // Convert line breaks to <br>
+                gfm: true,    // GitHub Flavored Markdown
+                headerIds: false,
+                mangle: false
+            });
+        } else {
+            // For user and system messages, just escape HTML but preserve line breaks
+            processedContent = escapeHtml(content).replace(/\n/g, '<br>');
+        }
+
+        message.innerHTML = `
+                <div class="message-header">
+                    <div class="message-avatar">${avatarText}</div>
+                    <div class="message-role">${roleText}</div>
+                </div>
+                <div class="message-content markdown-content">${processedContent}</div>
+            `;
+
+        messagesDiv.appendChild(message);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+
+
+    function showTypingIndicator() {
+        const messagesDiv = document.getElementById('chatMessages');
+        const indicator = document.createElement('div');
+        indicator.className = 'message assistant typing';
+        indicator.id = `typing-${Date.now()}`;
+
+        indicator.innerHTML = `
+                <div class="message-header">
+                    <div class="message-avatar">AI</div>
+                    <div class="message-role">Assistant</div>
+                </div>
+                <div class="message-content">
+                    <span class="typing-dots">
+                        <span>.</span><span>.</span><span>.</span>
+                    </span>
+                </div>
+            `;
+
+        messagesDiv.appendChild(indicator);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        return indicator.id;
+    }
+
+    function removeTypingIndicator(id) {
+        const indicator = document.getElementById(id);
+        if (indicator) indicator.remove();
+    }
+
+    async function clearHistory() {
+        if (!confirm('Clear conversation history?')) return;
+
+        try {
+            await fetch('/api/DynamicAIMCP/clear-history', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agentId: currentAgentId })
+            });
+
+            // Clear messages except the initial one
+            const messagesDiv = document.getElementById('chatMessages');
+            const messages = messagesDiv.querySelectorAll('.message');
+            messages.forEach((msg, index) => {
+                if (index > 0) msg.remove();
+            });
+
+            addMessage('system', 'Conversation history cleared');
+        } catch (error) {
+            addMessage('system', `Error clearing history: ${error.message}`);
+        }
+    }
+
+    function handleChatKeydown(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    }
+
+    function autoResize(textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Add typing animation CSS
+    const style = document.createElement('style');
+    style.textContent = `
+            .typing-dots span {
+                opacity: 0;
+                animation: typingDot 1.4s infinite;
+            }
+            .typing-dots span:nth-child(1) { animation-delay: 0s; }
+            .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+            .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+            
+            @keyframes typingDot {
+                0%, 60%, 100% { opacity: 0; }
+                30% { opacity: 1; }
+            }
+        `;
+    document.head.appendChild(style);
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', initializePage);
+</script>
+</body>
+</html> 
