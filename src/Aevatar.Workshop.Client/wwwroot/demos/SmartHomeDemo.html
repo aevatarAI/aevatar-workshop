@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Control - Aevatar Multi-Agent Demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 现代化的智能家居界面样式 */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f4f6fa;
+        }
+
+        /* 演示标题区域 */
+        .demo-header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            color: white;
+            padding: 40px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .demo-header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .demo-header h1 {
+            font-size: 2.5rem;
+            margin: 0 0 15px 0;
+            font-weight: 700;
+        }
+
+        .demo-header h1 i {
+            margin-right: 15px;
+            color: #60a5fa;
+        }
+
+        .demo-header p {
+            font-size: 1.2rem;
+            margin: 0 0 25px 0;
+            opacity: 0.9;
+        }
+
+        .demo-features {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .feature-tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-tag i {
+            font-size: 0.9rem;
+        }
+
+        .smart-home-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 控制面板样式 */
+        .control-panel {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .control-panel h2 {
+            margin: 0 0 20px 0;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 自然语言输入区域 */
+        .natural-language-control {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        #commandInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        #commandInput::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        #commandInput:focus {
+            outline: none;
+            border-color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .send-btn {
+            padding: 15px 30px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 快捷场景按钮 */
+        .scene-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .scene-btn {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .scene-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+            transform: translateY(-2px);
+        }
+
+        /* 设备状态网格 */
+        .devices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .device-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .device-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .device-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .device-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .device-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+
+        .device-location {
+            font-size: 14px;
+            color: #666;
+            margin: 5px 0 0 0;
+        }
+
+        .device-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #e0e0e0;
+        }
+
+        .status-indicator.on {
+            background: #4caf50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .device-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .device-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .device-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .device-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        /* 滑块控制 */
+        .slider-control {
+            margin-top: 15px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+
+        /* 事件日志 */
+        .event-log {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .event-log h3 {
+            margin: 0 0 20px 0;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .event-list {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .event-item {
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .event-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .event-item > div[onclick] {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .event-details {
+            margin-top: 10px;
+            padding: 12px;
+            background: #e9ecef;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #495057;
+        }
+
+        .event-time {
+            color: #666;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .event-message {
+            color: #333;
+        }
+
+        .event-type {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+
+        /* AI 响应显示 */
+        .ai-response {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 50px;
+            display: none;
+        }
+
+        .ai-response.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .demo-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .demo-header p {
+                font-size: 1rem;
+            }
+            
+            .feature-tag {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+            
+            .devices-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .scene-buttons {
+                justify-content: center;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            #commandInput {
+                width: 100%;
+            }
+        }
+
+        /* 自定义滚动条 */
+        .event-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .event-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .event-list::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .event-list::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- 演示标题区域 -->
+    <div class="demo-header">
+        <div class="demo-header-content">
+            <h1><i class="fas fa-home"></i> Aevatar 智能家居多智能体演示</h1>
+            <p>体验多个自主智能体如何通过事件驱动通信协作，创建智能家居自动化系统</p>
+            <div class="demo-features">
+                <span class="feature-tag"><i class="fas fa-brain"></i> AI 自然语言控制</span>
+                <span class="feature-tag"><i class="fas fa-network-wired"></i> 多智能体协作</span>
+                <span class="feature-tag"><i class="fas fa-bolt"></i> 实时事件流</span>
+                <span class="feature-tag"><i class="fas fa-shield-alt"></i> Orleans 框架</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="smart-home-container">
+        <!-- AI 控制面板 -->
+        <div class="control-panel">
+            <h2>🏠 智能家居控制中心</h2>
+            
+            <div class="natural-language-control">
+                <h3 style="margin: 0 0 15px 0; font-size: 18px;">💬 自然语言控制</h3>
+                
+                <div class="llm-selector" style="margin-bottom: 15px;">
+                    <label for="systemLLM" style="display: inline-block; margin-right: 10px; font-weight: 500;">AI 模型：</label>
+                    <select id="systemLLM" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: white; font-size: 14px; min-width: 150px;">
+                        <option value="">加载中...</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <input type="text" id="commandInput" placeholder="说出您的指令，例如：打开客厅的灯..." />
+                    <button class="send-btn" onclick="sendCommand()">发送</button>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <span>AI 正在处理您的请求...</span>
+                </div>
+                
+                <div class="ai-response" id="aiResponse"></div>
+                
+                <h4 style="margin: 20px 0 10px 0; font-size: 16px;">快捷场景</h4>
+                <div class="scene-buttons">
+                    <button class="scene-btn" onclick="executeScene('goodmorning')">
+                        🌅 早安模式
+                    </button>
+                    <button class="scene-btn" onclick="executeScene('goodnight')">
+                        🌙 晚安模式
+                    </button>
+                    <button class="scene-btn" onclick="executeScene('away')">
+                        🚪 外出模式
+                    </button>
+                    <button class="scene-btn" onclick="executeScene('movie')">
+                        🎬 观影模式
+                    </button>
+                    <button class="scene-btn" onclick="executeScene('party')">
+                        🎉 派对模式
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设备状态显示 -->
+        <div class="devices-grid">
+            <!-- 灯光控制 -->
+            <div class="device-card" id="light-card">
+                <div class="device-header">
+                    <div>
+                        <div class="device-icon">💡</div>
+                        <h3 class="device-name">智能灯光</h3>
+                        <p class="device-location">客厅</p>
+                    </div>
+                </div>
+                
+                <div class="device-status">
+                    <span class="status-indicator" id="light-status"></span>
+                    <span id="light-status-text">关闭</span>
+                </div>
+                
+                <div class="device-controls">
+                    <button class="device-btn" id="light-on-btn" onclick="controlLight('on')">开启</button>
+                    <button class="device-btn" id="light-off-btn" onclick="controlLight('off')">关闭</button>
+                </div>
+                
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>亮度</span>
+                        <span id="brightness-value">100%</span>
+                    </div>
+                    <input type="range" class="slider" id="brightness-slider" 
+                           min="0" max="100" value="100" 
+                           oninput="adjustBrightness(this.value)">
+                </div>
+            </div>
+
+            <!-- 温度控制 -->
+            <div class="device-card" id="thermostat-card">
+                <div class="device-header">
+                    <div>
+                        <div class="device-icon">🌡️</div>
+                        <h3 class="device-name">智能恒温器</h3>
+                        <p class="device-location">全屋</p>
+                    </div>
+                </div>
+                
+                <div class="device-status">
+                    <span class="status-indicator on"></span>
+                    <span id="thermostat-status-text">当前温度: 22°C</span>
+                </div>
+                
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>目标温度</span>
+                        <span id="temperature-value">22°C</span>
+                    </div>
+                    <input type="range" class="slider" id="temperature-slider" 
+                           min="16" max="30" value="22" 
+                           oninput="adjustTemperature(this.value)">
+                </div>
+                
+                <div class="device-controls" style="margin-top: 15px;">
+                    <button class="device-btn active" onclick="setThermostatMode('auto')">自动</button>
+                    <button class="device-btn" onclick="setThermostatMode('heat')">制热</button>
+                    <button class="device-btn" onclick="setThermostatMode('cool')">制冷</button>
+                </div>
+            </div>
+
+            <!-- 安防系统 -->
+            <div class="device-card" id="security-card">
+                <div class="device-header">
+                    <div>
+                        <div class="device-icon">🔒</div>
+                        <h3 class="device-name">安防系统</h3>
+                        <p class="device-location">全屋</p>
+                    </div>
+                </div>
+                
+                <div class="device-status">
+                    <span class="status-indicator" id="security-status"></span>
+                    <span id="security-status-text">撤防</span>
+                </div>
+                
+                <div class="device-controls">
+                    <button class="device-btn" id="security-arm-btn" onclick="controlSecurity('arm')">布防</button>
+                    <button class="device-btn" id="security-disarm-btn" onclick="controlSecurity('disarm')">撤防</button>
+                </div>
+                
+                <div style="margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                    <p style="margin: 0; font-size: 14px; color: #666;">
+                        <span style="font-weight: bold;">最后活动:</span>
+                        <span id="security-last-activity">无</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- 智能窗帘 -->
+            <div class="device-card" id="curtain-card">
+                <div class="device-header">
+                    <div>
+                        <div class="device-icon">🪟</div>
+                        <h3 class="device-name">智能窗帘</h3>
+                        <p class="device-location">主卧</p>
+                    </div>
+                </div>
+                
+                <div class="device-status">
+                    <span class="status-indicator on"></span>
+                    <span id="curtain-status-text">打开 100%</span>
+                </div>
+                
+                <div class="slider-control">
+                    <div class="slider-label">
+                        <span>开合度</span>
+                        <span id="curtain-value">100%</span>
+                    </div>
+                    <input type="range" class="slider" id="curtain-slider" 
+                           min="0" max="100" value="100" 
+                           oninput="adjustCurtain(this.value)">
+                </div>
+                
+                <div class="device-controls" style="margin-top: 15px;">
+                    <button class="device-btn" onclick="setCurtain(100)">全开</button>
+                    <button class="device-btn" onclick="setCurtain(50)">半开</button>
+                    <button class="device-btn" onclick="setCurtain(0)">关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 事件日志 -->
+        <div class="event-log">
+            <h3>📊 实时事件流</h3>
+            <div class="event-list" id="eventList">
+                <div class="event-item">
+                    <span class="event-time">--:--:--</span>
+                    <span class="event-message">欢迎使用智能家居系统！试试说："打开客厅的灯" 或点击场景按钮</span>
+                    <span class="event-type">提示</span>
+                </div>
+                <div class="event-item">
+                    <span class="event-time">--:--:--</span>
+                    <span class="event-message">系统已就绪，正在连接到 Aevatar 多智能体框架...</span>
+                    <span class="event-type">系统</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- GAgent 活动历史 -->
+        <div class="gagent-activities" style="margin-top: 20px;">
+            <h3>🤖 GAgent 活动状态</h3>
+            <div id="gagentActivities" style="background: #f9f9f9; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto;">
+                <div style="color: #666; text-align: center;">正在加载 GAgent 状态...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 设备状态
+        const deviceStates = {
+            light: { isOn: false, brightness: 100 },
+            thermostat: { temperature: 22, targetTemperature: 22, mode: 'auto' },
+            security: { isArmed: false, lastActivity: '无' },
+            curtain: { openLevel: 100 }
+        };
+
+        // WebSocket 连接（如果需要实时更新）
+        let ws = null;
+
+        // 加载可用的 LLM 配置
+        async function loadAvailableLLMs() {
+            try {
+                const response = await fetch('/api/llm-configs/list');
+                const llmKeys = await response.json();
+                
+                const selectElement = document.getElementById('systemLLM');
+                selectElement.innerHTML = ''; // 清空现有选项
+                
+                if (llmKeys && llmKeys.length > 0) {
+                    llmKeys.forEach(key => {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = key;
+                        selectElement.appendChild(option);
+                    });
+                    
+                    // 如果有 DeepSeek，设为默认
+                    if (llmKeys.includes('DeepSeek')) {
+                        selectElement.value = 'DeepSeek';
+                    }
+                } else {
+                    // 如果没有找到配置，使用默认选项
+                    const option = document.createElement('option');
+                    option.value = 'DeepSeek';
+                    option.textContent = 'DeepSeek (默认)';
+                    selectElement.appendChild(option);
+                }
+            } catch (error) {
+                console.error('加载 LLM 配置失败:', error);
+                // 使用默认选项
+                const selectElement = document.getElementById('systemLLM');
+                selectElement.innerHTML = '<option value="DeepSeek">DeepSeek (默认)</option>';
+            }
+        }
+
+        // 获取并显示 GAgent 活动
+        async function loadGAgentActivities() {
+            try {
+                const response = await fetch('/api/smarthome/gagent-activities');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const container = document.getElementById('gagentActivities');
+                    container.innerHTML = '';
+                    
+                    result.activities.forEach(activity => {
+                        const activityDiv = document.createElement('div');
+                        activityDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
+                        
+                        if (activity.gagent === 'HomeAIGAgent') {
+                            // 显示 AI 聊天历史
+                            activityDiv.innerHTML = `
+                                <h4 style="margin: 0 0 10px 0; color: #4CAF50;">🧠 ${activity.gagent}</h4>
+                                <div style="font-size: 14px; color: #666;">
+                                    <strong>最近对话：</strong>
+                                    <div style="max-height: 100px; overflow-y: auto; margin-top: 5px;">
+                                        ${activity.chatHistory ? activity.chatHistory.map(msg => `<div style="margin: 2px 0;">${msg}</div>`).join('') : '暂无对话记录'}
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // 显示其他 GAgent 的状态描述
+                            const iconMap = {
+                                'LightGAgent': '💡',
+                                'ThermostatGAgent': '🌡️',
+                                'SecurityGAgent': '🔒',
+                                'CurtainGAgent': '🪟'
+                            };
+                            activityDiv.innerHTML = `
+                                <h4 style="margin: 0 0 5px 0; color: #2196F3;">${iconMap[activity.gagent] || '🔧'} ${activity.gagent}</h4>
+                                <div style="font-size: 14px; color: #666;">${activity.description}</div>
+                            `;
+                        }
+                        
+                        container.appendChild(activityDiv);
+                    });
+                }
+            } catch (error) {
+                console.error('加载 GAgent 活动失败:', error);
+            }
+        }
+        
+        // 定期刷新 GAgent 活动
+        setInterval(loadGAgentActivities, 5000);
+        
+        // 定期刷新设备状态
+        setInterval(refreshDeviceStates, 3000);
+        
+        // 初始化
+        async function init() {
+            updateAllDeviceUI();
+            
+            // 确保加载状态初始为隐藏
+            showLoading(false);
+            
+            // 先加载可用的 LLM 配置
+            await loadAvailableLLMs();
+            
+            // 自动初始化智能家居系统
+            try {
+                const systemLLM = document.getElementById('systemLLM').value;
+                const response = await fetch('/api/smarthome/initialize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ systemLLM })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    addEvent('系统', `智能家居系统初始化成功 (AI: ${systemLLM})`, '系统');
+                    // 获取初始状态
+                    await refreshDeviceStates();
+                    await loadGAgentActivities();
+                } else {
+                    addEvent('系统', '智能家居系统初始化失败', '错误');
+                }
+            } catch (error) {
+                console.error('初始化失败:', error);
+                addEvent('系统', '无法连接到智能家居系统', '错误');
+            }
+        }
+        
+        // 刷新所有设备状态
+        async function refreshDeviceStates() {
+            try {
+                const response = await fetch('/api/smarthome/status');
+                const result = await response.json();
+                
+                if (result.success && result.devices) {
+                    updateDeviceStates(result.devices);
+                }
+            } catch (error) {
+                console.error('获取设备状态失败:', error);
+            }
+        }
+
+        // 发送自然语言命令
+        async function sendCommand() {
+            const input = document.getElementById('commandInput');
+            const command = input.value.trim();
+            
+            if (!command) return;
+            
+            // 显示加载状态
+            console.log('开始发送命令:', command);
+            showLoading(true);
+            addEvent('用户', `"${command}"`, '命令');
+            
+            try {
+                // 设置超时控制
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+                
+                // 调用后端 API
+                const response = await fetch('/api/smarthome/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('收到响应:', result);
+                
+                // 检查后端返回的成功状态
+                if (!result.success) {
+                    console.log('命令执行失败:', result);
+                    showAIResponse(result.response || result.error || '命令执行失败');
+                    // 注意：即使这里 return，finally 块仍会执行
+                    return;
+                }
+                
+                // 显示 AI 响应
+                console.log('显示 AI 响应:', result.response);
+                showAIResponse(result.response || '命令已执行');
+                
+                // 显示工具调用信息
+                if (result.toolCalls && result.toolCalls.length > 0) {
+                    console.log('显示工具调用:', result.toolCalls);
+                    showToolCallDetails(result.toolCalls);
+                }
+                
+                // 更新设备状态
+                if (result.deviceUpdates) {
+                    console.log('更新设备状态:', result.deviceUpdates);
+                    updateDeviceStates(result.deviceUpdates);
+                }
+                
+                // 清空输入
+                input.value = '';
+                
+            } catch (error) {
+                console.error('命令执行出错:', error);
+                if (error.name === 'AbortError') {
+                    showAIResponse('请求超时，请稍后重试。AI处理可能需要较长时间。');
+                } else {
+                    showAIResponse('抱歉，处理您的请求时出现了错误。');
+                }
+                console.error('Command error:', error);
+            } finally {
+                console.log('隐藏加载状态');
+                showLoading(false);
+            }
+        }
+
+        // 获取场景动作
+        function getSceneActions(sceneName) {
+            const sceneConfigs = {
+                'goodmorning': {
+                    lights: 'on',
+                    temperature: 22.0,
+                    security: 'disarm',
+                    curtain: 100  // 打开窗帘
+                },
+                'goodnight': {
+                    lights: 'off',
+                    temperature: 20.0,
+                    security: 'arm',
+                    curtain: 0  // 关闭窗帘
+                },
+                'away': {
+                    lights: 'off',
+                    temperature: 18.0,
+                    security: 'arm',
+                    curtain: 0  // 关闭窗帘（外出模式）
+                },
+                'movie': {
+                    lights: 'dim',
+                    brightness: 20,
+                    temperature: 21.0,
+                    security: 'disarm',
+                    curtain: 0  // 关闭窗帘（观影模式）
+                },
+                'party': {
+                    lights: 'on',
+                    brightness: 100,
+                    temperature: 23.0,
+                    security: 'disarm'
+                    // 派对模式保持窗帘现有状态
+                }
+            };
+            
+            return sceneConfigs[sceneName];
+        }
+        
+        // 执行场景
+        async function executeScene(sceneName) {
+            showLoading(true);
+            const sceneNames = {
+                'goodmorning': '早安模式',
+                'goodnight': '晚安模式',
+                'away': '外出模式',
+                'movie': '观影模式',
+                'party': '派对模式'
+            };
+            
+            addEvent('用户', `激活场景: ${sceneNames[sceneName]}`, '场景');
+            
+            // 根据场景生成自然语言命令
+            const sceneCommands = {
+                'goodmorning': '早安模式：打开灯光，设置温度到22度，关闭安防，打开窗帘',
+                'goodnight': '晚安模式：关闭所有灯光，设置温度到20度，启动安防，关闭窗帘',
+                'away': '外出模式：关闭所有灯光，降低温度到18度，启动安防系统，关闭窗帘',
+                'movie': '观影模式：将灯光调暗到20%，设置温度到21度，关闭安防，关闭窗帘',
+                'party': '派对模式：打开所有灯光，设置温度到23度，关闭安防'
+            };
+            
+            try {
+                const response = await fetch('/api/smarthome/command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: sceneCommands[sceneName] })
+                });
+                
+                const result = await response.json();
+                showAIResponse(result.response || `${sceneNames[sceneName]}已激活`);
+                
+                // 更新设备状态
+                if (result.deviceUpdates) {
+                    updateDeviceStates(result.deviceUpdates);
+                }
+                
+                // 在事件流中显示场景执行的详细信息
+                if (result.success) {
+                    addEvent('场景', `${sceneNames[sceneName]}执行成功`, '成功');
+                    
+                    // 显示场景动作的详细信息（可折叠）
+                    const sceneActions = getSceneActions(sceneName);
+                    if (sceneActions) {
+                        const details = Object.entries(sceneActions).map(([action, value]) => {
+                            const actionNames = {
+                                'lights': '灯光',
+                                'brightness': '亮度',
+                                'temperature': '温度',
+                                'security': '安防',
+                                'curtain': '窗帘'
+                            };
+                            return `${actionNames[action] || action}: ${value}`;
+                        }).join(', ');
+                        
+                        addEvent('场景详情', details, '信息', true); // true 表示可折叠
+                    }
+                    
+                    // 再次刷新设备状态以确保同步
+                    setTimeout(() => refreshDeviceStates(), 500);
+                }
+                
+            } catch (error) {
+                showAIResponse('场景激活失败，请稍后重试。');
+                console.error('Scene error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 控制灯光
+        function controlLight(action) {
+            const isOn = action === 'on';
+            deviceStates.light.isOn = isOn;
+            updateLightUI();
+            addEvent('灯光', isOn ? '已开启' : '已关闭', '设备');
+            
+            // 调用后端 API
+            fetch('/api/smarthome/device/light', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, deviceId: 'living-room' })
+            });
+        }
+
+        // 调整亮度
+        function adjustBrightness(value) {
+            deviceStates.light.brightness = value;
+            document.getElementById('brightness-value').textContent = value + '%';
+            
+            // 防抖处理
+            clearTimeout(this.brightnessTimeout);
+            this.brightnessTimeout = setTimeout(() => {
+                addEvent('灯光', `亮度调整至 ${value}%`, '设备');
+                
+                // 调用后端 API
+                fetch('/api/smarthome/device/light/brightness', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ brightness: value, deviceId: 'living-room' })
+                });
+            }, 500);
+        }
+
+        // 调整温度
+        function adjustTemperature(value) {
+            deviceStates.thermostat.targetTemperature = value;
+            document.getElementById('temperature-value').textContent = value + '°C';
+            
+            // 防抖处理
+            clearTimeout(this.temperatureTimeout);
+            this.temperatureTimeout = setTimeout(() => {
+                addEvent('恒温器', `目标温度设置为 ${value}°C`, '设备');
+                
+                // 调用后端 API
+                fetch('/api/smarthome/device/thermostat/temperature', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ temperature: value })
+                });
+            }, 500);
+        }
+
+        // 设置恒温器模式
+        function setThermostatMode(mode) {
+            deviceStates.thermostat.mode = mode;
+            
+            // 更新按钮状态
+            document.querySelectorAll('#thermostat-card .device-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const modeNames = { 'auto': '自动', 'heat': '制热', 'cool': '制冷' };
+            addEvent('恒温器', `模式切换为${modeNames[mode]}`, '设备');
+            
+            // 调用后端 API
+            fetch('/api/smarthome/device/thermostat/mode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mode })
+            });
+        }
+
+        // 控制安防
+        function controlSecurity(action) {
+            const isArmed = action === 'arm';
+            deviceStates.security.isArmed = isArmed;
+            updateSecurityUI();
+            addEvent('安防系统', isArmed ? '已布防' : '已撤防', '安防');
+            
+            // 调用后端 API
+            fetch('/api/smarthome/device/security', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action })
+            });
+        }
+
+        // 调整窗帘
+        function adjustCurtain(value) {
+            deviceStates.curtain.openLevel = value;
+            document.getElementById('curtain-value').textContent = value + '%';
+            document.getElementById('curtain-status-text').textContent = 
+                value === 0 ? '关闭' : `打开 ${value}%`;
+            
+            // 防抖处理
+            clearTimeout(this.curtainTimeout);
+            this.curtainTimeout = setTimeout(() => {
+                addEvent('窗帘', `开合度调整至 ${value}%`, '设备');
+                
+                // 调用后端 API
+                fetch('/api/smarthome/device/curtain', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ level: value })
+                });
+            }, 500);
+        }
+
+        // 设置窗帘位置
+        function setCurtain(level) {
+            document.getElementById('curtain-slider').value = level;
+            adjustCurtain(level);
+        }
+
+        // 更新所有设备 UI
+        function updateAllDeviceUI() {
+            updateLightUI();
+            updateSecurityUI();
+            updateThermostatUI();
+            updateCurtainUI();
+        }
+
+        // 更新灯光 UI
+        function updateLightUI() {
+            const { isOn, brightness } = deviceStates.light;
+            const statusIndicator = document.getElementById('light-status');
+            const statusText = document.getElementById('light-status-text');
+            const onBtn = document.getElementById('light-on-btn');
+            const offBtn = document.getElementById('light-off-btn');
+            const brightnessValue = document.getElementById('brightness-value');
+            const brightnessSlider = document.getElementById('brightness-slider');
+            
+            statusIndicator.classList.toggle('on', isOn);
+            statusText.textContent = isOn ? '开启' : '关闭';
+            onBtn.classList.toggle('active', isOn);
+            offBtn.classList.toggle('active', !isOn);
+            
+            // 更新亮度显示
+            if (brightnessValue) {
+                brightnessValue.textContent = brightness + '%';
+            }
+            if (brightnessSlider) {
+                brightnessSlider.value = brightness;
+            }
+        }
+
+        // 更新安防 UI
+        function updateSecurityUI() {
+            const { isArmed } = deviceStates.security;
+            const statusIndicator = document.getElementById('security-status');
+            const statusText = document.getElementById('security-status-text');
+            const armBtn = document.getElementById('security-arm-btn');
+            const disarmBtn = document.getElementById('security-disarm-btn');
+            
+            statusIndicator.classList.toggle('on', isArmed);
+            statusText.textContent = isArmed ? '布防' : '撤防';
+            armBtn.classList.toggle('active', isArmed);
+            disarmBtn.classList.toggle('active', !isArmed);
+        }
+
+        // 更新温控器 UI
+        function updateThermostatUI() {
+            const { temperature, targetTemperature, mode } = deviceStates.thermostat;
+            const statusText = document.getElementById('thermostat-status-text');
+            const tempValue = document.getElementById('temperature-value');
+            const tempSlider = document.getElementById('temperature-slider');
+            
+            statusText.textContent = `当前温度: ${temperature}°C`;
+            tempValue.textContent = `${targetTemperature}°C`;
+            tempSlider.value = targetTemperature;
+        }
+
+        // 更新窗帘 UI
+        function updateCurtainUI() {
+            const { openLevel } = deviceStates.curtain;
+            const statusText = document.getElementById('curtain-status-text');
+            const curtainValue = document.getElementById('curtain-value');
+            const curtainSlider = document.getElementById('curtain-slider');
+            
+            statusText.textContent = `打开 ${openLevel}%`;
+            curtainValue.textContent = `${openLevel}%`;
+            curtainSlider.value = openLevel;
+        }
+
+        // 更新设备状态（从服务器响应）
+        function updateDeviceStates(updates) {
+            Object.entries(updates).forEach(([device, state]) => {
+                if (deviceStates[device]) {
+                    Object.assign(deviceStates[device], state);
+                }
+            });
+            updateAllDeviceUI();
+        }
+
+        // 显示 AI 响应
+        function showAIResponse(message) {
+            const responseDiv = document.getElementById('aiResponse');
+            responseDiv.textContent = message;
+            responseDiv.classList.add('show');
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                responseDiv.classList.remove('show');
+            }, 3000);
+        }
+
+        // 显示/隐藏加载状态
+        function showLoading(show) {
+            const loadingEl = document.getElementById('loading');
+            if (loadingEl) {
+                loadingEl.classList.toggle('show', show);
+                console.log('Loading 状态:', show ? '显示' : '隐藏');
+            } else {
+                console.error('找不到 loading 元素');
+            }
+        }
+
+        // 添加事件到日志
+        function addEvent(source, message, type, collapsible = false) {
+            const eventList = document.getElementById('eventList');
+            const time = new Date().toLocaleTimeString('zh-CN');
+            
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            
+            if (collapsible) {
+                eventItem.innerHTML = `
+                    <div style="cursor: pointer;" onclick="toggleEventDetails(this)">
+                        <span class="event-time">${time}</span>
+                        <span class="event-message">
+                            <span style="margin-right: 5px;">▶</span>${source}
+                        </span>
+                        <span class="event-type">${type}</span>
+                    </div>
+                    <div class="event-details" style="display: none; margin-top: 5px; padding-left: 80px; font-size: 0.9em; color: #666; border-left: 2px solid #ddd; padding-left: 10px;">
+                        ${message}
+                    </div>
+                `;
+            } else {
+                eventItem.innerHTML = `
+                    <span class="event-time">${time}</span>
+                    <span class="event-message">${source}: ${message}</span>
+                    <span class="event-type">${type}</span>
+                `;
+            }
+            
+            eventList.insertBefore(eventItem, eventList.firstChild);
+            
+            // 保持最多30条记录
+            while (eventList.children.length > 30) {
+                eventList.removeChild(eventList.lastChild);
+            }
+        }
+        
+        // 切换事件详情显示
+        function toggleEventDetails(element) {
+            const details = element.nextElementSibling;
+            const arrow = element.querySelector('span');
+            if (details.style.display === 'none') {
+                details.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                details.style.display = 'none';
+                arrow.textContent = '▶';
+            }
+        }
+        
+        // 显示工具调用详情
+        function showToolCallDetails(toolCalls) {
+            let detailsHtml = '<div style="margin-top: 10px;">';
+            detailsHtml += '<strong>🛠️ AI 调用的工具：</strong><br/>';
+            
+            toolCalls.forEach((call, index) => {
+                // 解析函数名，提取设备类型和操作
+                const functionName = call.functionName || '未知功能';
+                let readableName = functionName;
+                
+                // 解析常见的智能家居操作
+                if (functionName.includes('TurnOnLight')) {
+                    readableName = '💡 开灯';
+                } else if (functionName.includes('TurnOffLight')) {
+                    readableName = '💡 关灯';
+                } else if (functionName.includes('SetBrightness')) {
+                    readableName = '💡 调节亮度';
+                } else if (functionName.includes('SetTemperature')) {
+                    readableName = '🌡️ 设置温度';
+                } else if (functionName.includes('ChangeMode')) {
+                    readableName = '🌡️ 切换模式';
+                } else if (functionName.includes('ArmSecurity')) {
+                    readableName = '🔒 布防';
+                } else if (functionName.includes('DisarmSecurity')) {
+                    readableName = '🔓 撤防';
+                } else if (functionName.includes('SetCurtainPosition')) {
+                    readableName = '🪟 设置窗帘位置';
+                } else if (functionName.includes('OpenCurtain')) {
+                    readableName = '🪟 打开窗帘';
+                } else if (functionName.includes('CloseCurtain')) {
+                    readableName = '🪟 关闭窗帘';
+                }
+                
+                detailsHtml += `
+                    <div style="margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 4px;">
+                        <div><strong>${index + 1}. ${readableName}</strong> (耗时: ${call.durationMs || 0}ms)</div>
+                        <div style="margin-left: 20px; font-size: 0.9em;">
+                            <div>参数: ${JSON.stringify(call.parameters || {})}</div>
+                            <div>结果: ${call.result || '执行成功'}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            detailsHtml += '</div>';
+            
+            // 添加到事件日志
+            addEvent('AI执行', detailsHtml, 'AI工具', true);
+        }
+
+        // 监听回车键
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendCommand();
+            }
+        });
+        
+        // 全局错误恢复机制 - 如果加载状态持续超过60秒，自动隐藏
+        let loadingTimeout = null;
+        const originalShowLoading = showLoading;
+        showLoading = function(show) {
+            if (loadingTimeout) {
+                clearTimeout(loadingTimeout);
+                loadingTimeout = null;
+            }
+            
+            if (show) {
+                // 设置60秒超时自动隐藏
+                loadingTimeout = setTimeout(() => {
+                    console.warn('加载状态超时，自动隐藏');
+                    originalShowLoading(false);
+                    showAIResponse('请求处理时间过长，请重试');
+                }, 60000);
+            }
+            
+            originalShowLoading(show);
+        };
+
+        // LLM 选择器变更事件
+        document.getElementById('systemLLM').addEventListener('change', async function() {
+            const systemLLM = this.value;
+            if (systemLLM) {
+                addEvent('系统', `正在切换到 ${systemLLM} 模型...`, '信息');
+                
+                // 重新初始化系统
+                try {
+                    const response = await fetch('/api/smarthome/initialize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ systemLLM })
+                    });
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        addEvent('系统', `已切换到 ${systemLLM} 模型`, '系统');
+                        await refreshDeviceStates();
+                    } else {
+                        addEvent('系统', '切换模型失败', '错误');
+                    }
+                } catch (error) {
+                    console.error('切换模型失败:', error);
+                    addEvent('系统', '切换模型时发生错误', '错误');
+                }
+            }
+        });
+
+        // 初始化页面
+        init();
+    </script>
+</body>
+</html> 
