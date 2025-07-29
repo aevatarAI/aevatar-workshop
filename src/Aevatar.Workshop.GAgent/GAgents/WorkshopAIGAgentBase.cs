@@ -10,9 +10,6 @@ using Newtonsoft.Json;
 
 namespace Aevatar.Workshop.GAgent.GAgents;
 
-/// <summary>
-/// Workshop AI GAgent 基类，提供统一的 LLM 配置管理
-/// </summary>
 public abstract class WorkshopAIGAgentBase<TState, TStateLogEvent> : AIGAgentBase<TState, TStateLogEvent>
     where TState : AIGAgentStateBase, new()
     where TStateLogEvent : StateLogEventBase<TStateLogEvent>, new()

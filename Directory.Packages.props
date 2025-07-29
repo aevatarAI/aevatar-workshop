@@ -5,7 +5,7 @@
         <OrleansVersion>9.0.1</OrleansVersion>
         <SkVersion>1.57.0-alpha</SkVersion>
         <AevatarCoreVersion>1.5.2-tool.2</AevatarCoreVersion>
-        <AevatarGAgentsVersion>1.5.2-toolworkflow.2</AevatarGAgentsVersion>
+        <AevatarGAgentsVersion>1.5.3-toolworkflow.1</AevatarGAgentsVersion>
     </PropertyGroup>
     <ItemGroup>
         <!-- aevatar-framework package versions -->
@@ -13,10 +13,8 @@
         <PackageVersion Include="Aevatar.Core" Version="$(AevatarCoreVersion)" />
         <PackageVersion Include="Aevatar.Core.Abstractions" Version="$(AevatarCoreVersion)" />
         <PackageVersion Include="Aevatar.EventSourcing.Core" Version="$(AevatarCoreVersion)" />
-
         <!-- aevatar-signalR package versions -->
         <PackageVersion Include="Aevatar.SignalR" Version="$(AevatarCoreVersion)" />
-
         <!-- aevatar-gagents package versions -->
         <PackageVersion Include="Aevatar.GAgents.AI.Abstractions" Version="$(AevatarGAgentsVersion)" />
         <PackageVersion Include="Aevatar.GAgents.AIGAgent" Version="$(AevatarGAgentsVersion)" />
@@ -27,7 +25,6 @@
         <PackageVersion Include="Aevatar.GAgents.MCP" Version="$(AevatarGAgentsVersion)" />
         <PackageVersion Include="Aevatar.GAgents.PsiOmni.Plugins" Version="$(AevatarGAgentsVersion)" />
         <PackageVersion Include="Aevatar.GAgents.Router" Version="$(AevatarGAgentsVersion)" />
-
         <PackageVersion Include="HtmlAgilityPack" Version="1.11.71" />
         <PackageVersion Include="Microsoft.Orleans.Server" Version="$(OrleansVersion)" />
         <PackageVersion Include="Microsoft.Orleans.Client" Version="$(OrleansVersion)" />

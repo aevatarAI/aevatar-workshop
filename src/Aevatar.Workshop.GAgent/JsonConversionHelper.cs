@@ -7,7 +7,7 @@ namespace Aevatar.Workshop.GAgent;
 /// Helper class for converting JSON objects to basic .NET types that can be serialized by Orleans and other systems.
 /// Handles both Newtonsoft.Json.Linq types (JObject, JArray, etc.) and System.Text.Json types (JsonElement).
 /// </summary>
-public static class JsonConversionHelper
+public static class WorkshopJsonConversionHelper
 {
     /// <summary>
     /// Converts a dictionary that may contain JSON objects to a dictionary with only basic .NET types.

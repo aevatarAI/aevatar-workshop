@@ -473,10 +473,10 @@
   // --- Demo definitions ---
   const basicDemos = [
     {
-      key: 'EventHandlerDemo',
-      name: { en: 'Event Handler Demo', zh: '事件处理器演示' },
-      desc: { en: 'demodesc/EventHandlerDemo.md', zh: 'demodesc/EventHandlerDemo.zh.md' },
-      isCustom: true // Custom rendering for event handler demo
+      key: 'SmartHomeDemo',
+      name: { en: 'Smart Home Multi-Agent Demo', zh: '智能家居多智能体演示' },
+      desc: { en: 'demodesc/SmartHomeDemo.md', zh: 'demodesc/SmartHomeDemo.zh.md' },
+      isCustom: true // Custom rendering for smart home demo
     },
     {
       key: 'GAgentServiceDemo',
@@ -499,12 +499,6 @@
   ];
 
   const advancedDemos = [
-    {
-      key: 'SmartHomeDemo',
-      name: { en: 'Smart Home Multi-Agent Demo', zh: '智能家居多智能体演示' },
-      desc: { en: 'demodesc/SmartHomeDemo.md', zh: 'demodesc/SmartHomeDemo.zh.md' },
-      isCustom: true // Custom rendering for smart home demo
-    },
     {
       key: 'DynamicAIMCPDemo',
       name: { en: 'Dynamic AI MCP Integration', zh: '动态 AI MCP 集成' },
@@ -2582,7 +2576,7 @@
     linkContainer.style.textAlign = 'center';
 
     const link = document.createElement('a');
-    link.href = '/demos/SmartHomeDemo.html';
+    link.href = '/demos/smart-home-demo.html';
     link.target = '_blank';
     link.style.display = 'inline-block';
     link.style.padding = '12px 24px';
@@ -2624,7 +2618,7 @@
     iframeContainer.style.height = '900px';
 
     const iframe = document.createElement('iframe');
-    iframe.src = '/demos/SmartHomeDemo.html';
+    iframe.src = '/demos/smart-home-demo.html';
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';

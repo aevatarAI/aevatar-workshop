@@ -145,33 +145,6 @@
             box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
         }
 
-        /* 快捷场景按钮 */
-        .scene-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .scene-btn {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            color: white;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .scene-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: white;
-            transform: translateY(-2px);
-        }
-
         /* 设备状态网格 */
         .devices-grid {
             display: grid;
@@ -538,25 +511,6 @@
                 </div>
                 
                 <div class="ai-response" id="aiResponse"></div>
-                
-                <h4 style="margin: 20px 0 10px 0; font-size: 16px;">快捷场景</h4>
-                <div class="scene-buttons">
-                    <button class="scene-btn" onclick="executeScene('goodmorning')">
-                        🌅 早安模式
-                    </button>
-                    <button class="scene-btn" onclick="executeScene('goodnight')">
-                        🌙 晚安模式
-                    </button>
-                    <button class="scene-btn" onclick="executeScene('away')">
-                        🚪 外出模式
-                    </button>
-                    <button class="scene-btn" onclick="executeScene('movie')">
-                        🎬 观影模式
-                    </button>
-                    <button class="scene-btn" onclick="executeScene('party')">
-                        🎉 派对模式
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -974,76 +928,6 @@
             };
             
             return sceneConfigs[sceneName];
-        }
-        
-        // 执行场景
-        async function executeScene(sceneName) {
-            showLoading(true);
-            const sceneNames = {
-                'goodmorning': '早安模式',
-                'goodnight': '晚安模式',
-                'away': '外出模式',
-                'movie': '观影模式',
-                'party': '派对模式'
-            };
-            
-            addEvent('用户', `激活场景: ${sceneNames[sceneName]}`, '场景');
-            
-            // 根据场景生成自然语言命令
-            const sceneCommands = {
-                'goodmorning': '早安模式：打开灯光，设置温度到22度，关闭安防，打开窗帘',
-                'goodnight': '晚安模式：关闭所有灯光，设置温度到20度，启动安防，关闭窗帘',
-                'away': '外出模式：关闭所有灯光，降低温度到18度，启动安防系统，关闭窗帘',
-                'movie': '观影模式：将灯光调暗到20%，设置温度到21度，关闭安防，关闭窗帘',
-                'party': '派对模式：打开所有灯光，设置温度到23度，关闭安防'
-            };
-            
-            try {
-                const response = await fetch('/api/smarthome/command', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command: sceneCommands[sceneName] })
-                });
-                
-                const result = await response.json();
-                showAIResponse(result.response || `${sceneNames[sceneName]}已激活`);
-                
-                // 更新设备状态
-                if (result.deviceUpdates) {
-                    updateDeviceStates(result.deviceUpdates);
-                }
-                
-                // 在事件流中显示场景执行的详细信息
-                if (result.success) {
-                    addEvent('场景', `${sceneNames[sceneName]}执行成功`, '成功');
-                    
-                    // 显示场景动作的详细信息（可折叠）
-                    const sceneActions = getSceneActions(sceneName);
-                    if (sceneActions) {
-                        const details = Object.entries(sceneActions).map(([action, value]) => {
-                            const actionNames = {
-                                'lights': '灯光',
-                                'brightness': '亮度',
-                                'temperature': '温度',
-                                'security': '安防',
-                                'curtain': '窗帘'
-                            };
-                            return `${actionNames[action] || action}: ${value}`;
-                        }).join(', ');
-                        
-                        addEvent('场景详情', details, '信息', true); // true 表示可折叠
-                    }
-                    
-                    // 再次刷新设备状态以确保同步
-                    setTimeout(() => refreshDeviceStates(), 500);
-                }
-                
-            } catch (error) {
-                showAIResponse('场景激活失败，请稍后重试。');
-                console.error('Scene error:', error);
-            } finally {
-                showLoading(false);
-            }
         }
 
         // 控制灯光

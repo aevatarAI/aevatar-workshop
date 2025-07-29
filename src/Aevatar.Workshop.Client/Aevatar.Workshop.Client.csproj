@@ -15,7 +15,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
         <PackageReference Include="Newtonsoft.Json" />
-        <ProjectReference Include="../../../aevatar-gagents/src/Aevatar.GAgents.MCP/Aevatar.GAgents.MCP.csproj" />
+        <PackageReference Include="Aevatar.GAgents.MCP" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Aevatar.Core.Abstractions" />

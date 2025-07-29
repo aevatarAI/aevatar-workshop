@@ -1015,7 +1015,7 @@
 <script>
     let currentAgentId = null;
     const selectedServers = new Set();
-    const selectedGAgents = new Set();
+    const toolGAgents = new Set();
     let availableTools = {};
     let isProcessing = false;
 
@@ -1284,16 +1284,16 @@
     }
 
     function toggleGAgent(gagent, element) {
-        if (selectedGAgents.has(gagent.grainType)) {
-            selectedGAgents.delete(gagent.grainType);
+        if (toolGAgents.has(gagent.grainType)) {
+            toolGAgents.delete(gagent.grainType);
             element.classList.remove('selected');
         } else {
-            selectedGAgents.add(gagent.grainType);
+            toolGAgents.add(gagent.grainType);
             element.classList.add('selected');
         }
 
         // Update configure button state
-        document.getElementById('configureGAgentsBtn').disabled = selectedGAgents.size === 0;
+        document.getElementById('configureGAgentsBtn').disabled = toolGAgents.size === 0;
     }
 
     async function connectServers() {
@@ -1383,7 +1383,7 @@
     }
 
     async function configureGAgentTools() {
-        if (selectedGAgents.size === 0 || !currentAgentId) return;
+        if (toolGAgents.size === 0 || !currentAgentId) return;
 
         const btn = document.getElementById('configureGAgentsBtn');
         const status = document.getElementById('gagentStatus');
@@ -1399,7 +1399,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     agentId: currentAgentId,
-                    selectedGAgents: Array.from(selectedGAgents)
+                    toolGAgents: Array.from(toolGAgents)
                 })
             });
 
@@ -1409,7 +1409,7 @@
                 status.innerHTML = `<div class="status-message success">✓ Configured ${data.configuredGAgents.length} GAgent tools</div>`;
 
                 // Mark configured GAgents
-                selectedGAgents.forEach(grainType => {
+                toolGAgents.forEach(grainType => {
                     const card = document.querySelector(`[data-gagent="${grainType}"]`);
                     if (card) {
                         card.classList.add('connected');
@@ -1440,7 +1440,7 @@
         } catch (error) {
             status.innerHTML = `<div class="status-message error">✗ ${error.message}</div>`;
         } finally {
-            btn.disabled = selectedGAgents.size === 0;
+            btn.disabled = toolGAgents.size === 0;
             btn.innerHTML = 'Configure Selected GAgents';
         }
     }

@@ -424,7 +424,7 @@ When using tools, be clear about the results and how they help answer the user's
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
 
             // Convert string grain types to GrainType objects
-            var grainTypes = request.ToolGAgents.Select(g => GrainType.Create(g)).ToList();
+            var grainTypes = request.ToolGAgents.Select(GrainType.Create).ToList();
 
             var success = await agent.ConfigureGAgentToolsAsync(grainTypes);
 

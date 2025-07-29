@@ -54,7 +54,7 @@ public class MCPDemoController : ControllerBase
                     ServerName = s.ServerName ?? string.Empty,
                     Command = s.Command ?? string.Empty,
                     Args = s.Args?.Select(arg => arg?.ToString() ?? string.Empty).ToList() ?? new List<string>(),
-                    Env = JsonConversionHelper.ConvertEnvironmentDictionary(s.Environment)
+                    Env = WorkshopJsonConversionHelper.ConvertEnvironmentDictionary(s.Environment)
                 }).First()
             };
 
@@ -125,8 +125,8 @@ public class MCPDemoController : ControllerBase
             {
                 ServerName = request.ServerName,
                 ToolName = request.ToolName,
-                Arguments = JsonConversionHelper.ConvertToBasicTypes(request.Arguments ??
-                                                                     new Dictionary<string, object>())
+                Arguments = WorkshopJsonConversionHelper.ConvertToBasicTypes(request.Arguments ??
+                                                                             new Dictionary<string, object>())
             };
 
             try
@@ -197,24 +197,22 @@ public class MCPDemoController : ControllerBase
                             hasResult = true,
                             resultType = response.Result?.GetType().Name ?? "Unknown",
                             resultContent = response.Result,
-                            formattedResult = JsonConversionHelper.FormatResultForDisplay(response.Result)
+                            formattedResult = WorkshopJsonConversionHelper.FormatResultForDisplay(response.Result)
                         }
                     });
                 }
-                else
+
+                return Ok(new
                 {
-                    return Ok(new
+                    success = false,
+                    errorMessage = response?.ErrorMessage ?? "Unknown error",
+                    toolInfo = formattedResponse.toolInfo,
+                    resultDisplay = new
                     {
-                        success = false,
-                        errorMessage = response?.ErrorMessage ?? "Unknown error",
-                        toolInfo = formattedResponse.toolInfo,
-                        resultDisplay = new
-                        {
-                            hasResult = false,
-                            errorDetails = response?.ErrorMessage
-                        }
-                    });
-                }
+                        hasResult = false,
+                        errorDetails = response?.ErrorMessage
+                    }
+                });
             }
             catch (TimeoutException tex)
             {
