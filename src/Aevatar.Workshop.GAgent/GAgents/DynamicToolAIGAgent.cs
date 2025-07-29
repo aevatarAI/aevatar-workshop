@@ -129,23 +129,23 @@ When using tools, be clear about the results and how they help answer the user's
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to get available GAgents");
-            return new List<GAgentDetailInfo>();
+            return [];
         }
     }
 
     // Override the base class method to add logging
-    public override async Task<bool> ConfigureGAgentToolsAsync(List<GrainType> selectedGAgents)
+    public override async Task<bool> ConfigureGAgentToolsAsync(List<GrainType> toolGAgentTypes)
     {
         try
         {
-            Logger.LogInformation("Configuring GAgent tools with {Count} selected agents", selectedGAgents.Count);
+            Logger.LogInformation("Configuring GAgent tools with {Count} selected agents", toolGAgentTypes.Count);
 
             // Use base class implementation which handles everything
-            var result = await base.ConfigureGAgentToolsAsync(selectedGAgents);
+            var result = await base.ConfigureGAgentToolsAsync(toolGAgentTypes);
 
             if (result)
             {
-                Logger.LogInformation("Successfully configured {Count} GAgent tools", selectedGAgents.Count);
+                Logger.LogInformation("Successfully configured {Count} GAgent tools", toolGAgentTypes.Count);
             }
 
             return result;

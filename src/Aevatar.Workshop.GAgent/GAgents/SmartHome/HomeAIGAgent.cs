@@ -167,12 +167,12 @@ public class HomeAIGAgent : WorkshopAIGAgentBase<HomeAIGAgentState, HomeAIStateL
 2. 温度范围是 16-30°C
 3. 设备ID必须完全匹配，否则命令会被忽略
 4. 请根据用户的自然语言灵活理解意图，不要机械匹配关键词",
-                SelectedGAgents =
+                ToolGAgents =
                 [
-                    GrainType.Create("smarthome.light"),
-                    GrainType.Create("smarthome.thermostat"),
-                    GrainType.Create("smarthome.security"),
-                    GrainType.Create("smarthome.curtain")
+                    GrainId.Create("smarthome.light", LIGHT_ID.ToString("N")),
+                    GrainId.Create("smarthome.thermostat", THERMOSTAT_ID.ToString("N")),
+                    GrainId.Create("smarthome.security", SECURITY_ID.ToString("N")),
+                    GrainId.Create("smarthome.curtain", CURTAIN_ID.ToString("N"))
                 ]
             };
 

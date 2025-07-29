@@ -48,9 +48,8 @@ public class MCPDemoController : ControllerBase
             // Create MCP configuration
             var config = new MCPGAgentConfig
             {
-                EnableToolDiscovery = true,
                 RequestTimeout = TimeSpan.FromSeconds(request.TimeoutSeconds ?? 30),
-                Server = request.Servers.Select(s => new MCPServerConfig
+                ServerConfig = request.Servers.Select(s => new MCPServerConfig
                 {
                     ServerName = s.ServerName ?? string.Empty,
                     Command = s.Command ?? string.Empty,
@@ -70,10 +69,10 @@ public class MCPDemoController : ControllerBase
 
             // Get available tools after initialization
             var availableTools = await mcpAgent.GetAvailableToolsAsync();
-            var serverStates = await mcpAgent.GetServerStatesAsync();
+            var state = await mcpAgent.GetStateAsync();
 
-            _logger.LogInformation("MCP GAgent initialized with {ToolCount} tools from {ServerCount} servers",
-                availableTools.Count, serverStates.Count);
+            _logger.LogInformation("MCP GAgent initialized with {ToolCount} tools from server {ServerName}",
+                availableTools.Count, state.MCPServerConfig.ServerName);
 
             return Ok(new
             {
@@ -81,23 +80,16 @@ public class MCPDemoController : ControllerBase
                 agentId = agentId,
                 availableTools = availableTools.Select(t => new
                 {
-                    name = t.Key,
-                    description = t.Value.Description,
-                    serverName = t.Value.ServerName,
-                    parameters = t.Value.Parameters.Select(p => new
+                    name = t.Name,
+                    description = t.Description,
+                    serverName = t.ServerName,
+                    parameters = t.Parameters.Select(p => new
                     {
                         name = p.Key,
                         type = p.Value.Type,
                         description = p.Value.Description,
                         required = p.Value.Required
                     })
-                }),
-                serverStates = serverStates.Select(s => new
-                {
-                    serverName = s.ServerName,
-                    isConnected = s.IsConnected,
-                    lastConnectedTime = s.LastConnectedTime,
-                    registeredTools = s.RegisteredTools
                 })
             });
         }
@@ -287,10 +279,7 @@ public class MCPDemoController : ControllerBase
             _logger.LogInformation("Discovering tools from server {Server}", request.ServerName);
 
             // Create discover tools event
-            var discoverEvent = new MCPDiscoverToolsEvent
-            {
-                ServerName = request.ServerName
-            };
+            var discoverEvent = new MCPDiscoverToolsEvent();
 
             try
             {
@@ -355,18 +344,12 @@ public class MCPDemoController : ControllerBase
             return NotFound(new { success = false, error = "MCP agent not found" });
         }
 
-        var serverStates = await agentInfo.agent.GetServerStatesAsync();
+        var serverState = await agentInfo.agent.GetStateAsync();
 
         return Ok(new
         {
             success = true,
-            serverStates = serverStates.Select(s => new
-            {
-                serverName = s.ServerName,
-                isConnected = s.IsConnected,
-                lastConnectedTime = s.LastConnectedTime,
-                registeredTools = s.RegisteredTools
-            })
+            serverState = serverState.MCPServerConfig
         });
     }
 

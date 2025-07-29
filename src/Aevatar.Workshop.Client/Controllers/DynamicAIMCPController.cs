@@ -141,7 +141,7 @@ When using tools, be clear about the results and how they help answer the user's
             // Configure MCP servers
             var servers = request.Servers.Select(s =>
             {
-                var config = new MCPServerConfig
+                return new MCPServerConfig
                 {
                     ServerName = s.ServerName,
                     Command = s.Command,
@@ -149,47 +149,7 @@ When using tools, be clear about the results and how they help answer the user's
                     Env = s.Env?.ToDictionary(kv => kv.Key, kv => kv.Value) ??
                           new Dictionary<string, string>(),
                     Description = s.Description ?? string.Empty,
-                    InitialDelayMs = s.InitialDelayMs,
-                    MaxRetries = s.MaxRetries
                 };
-
-                // Handle URL for SSE/HTTP servers
-                if (!string.IsNullOrEmpty(s.Url))
-                {
-                    config.Url = s.Url;
-
-                    // Auto-detect transport type based on URL
-                    if (s.Url.Contains("/sse") || s.Url.EndsWith("/events"))
-                    {
-                        config.TransportType = "sse";
-                    }
-                    else if (s.Url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                             s.Url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-                    {
-                        config.TransportType = "http";
-                    }
-                }
-
-                // Also check if command is a URL (for backward compatibility)
-                if (string.IsNullOrEmpty(config.TransportType) &&
-                    (s.Command.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                     s.Command.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))
-                {
-                    config.TransportType = "http";
-                    // If command is a URL and no separate URL is provided, use command as URL
-                    if (string.IsNullOrEmpty(config.Url))
-                    {
-                        config.Url = s.Command;
-                    }
-                }
-
-                // Default to stdio if no transport type is detected
-                if (string.IsNullOrEmpty(config.TransportType))
-                {
-                    config.TransportType = "stdio";
-                }
-
-                return config;
             }).ToList();
 
             var success = await agent.ConfigureMCPServersAsync(servers);
@@ -464,7 +424,7 @@ When using tools, be clear about the results and how they help answer the user's
             var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(Guid.Parse(request.AgentId));
 
             // Convert string grain types to GrainType objects
-            var grainTypes = request.SelectedGAgents.Select(g => GrainType.Create(g)).ToList();
+            var grainTypes = request.ToolGAgents.Select(g => GrainType.Create(g)).ToList();
 
             var success = await agent.ConfigureGAgentToolsAsync(grainTypes);
 
@@ -479,7 +439,7 @@ When using tools, be clear about the results and how they help answer the user's
             // Get configured GAgent info for response
             var allGAgents = await agent.GetAvailableGAgentsAsync();
             var configuredGAgents = allGAgents
-                .Where(g => request.SelectedGAgents.Contains(g.GrainType.ToString()))
+                .Where(g => request.ToolGAgents.Contains(g.GrainType.ToString()))
                 .Select(g =>
                 {
                     // Parse alias from GrainType
@@ -500,7 +460,7 @@ When using tools, be clear about the results and how they help answer the user's
             return Ok(new
             {
                 success = true,
-                message = $"Configured {request.SelectedGAgents.Count} GAgent tools",
+                message = $"Configured {request.ToolGAgents.Count} GAgent tools",
                 configuredGAgents = configuredGAgents,
                 totalAvailableTools = mcpTools.Count
             });
@@ -535,8 +495,8 @@ When using tools, be clear about the results and how they help answer the user's
                 systemLLM = state.SystemLLM,
                 enableMCPTools = state.EnableMCPTools,
                 enableGAgentTools = state.EnableGAgentTools,
-                selectedGAgents = state.SelectedGAgents?.Select(g => g.ToString()).ToList() ?? new List<string>(),
-                registeredGAgentFunctions = state.RegisteredGAgentFunctions ?? new List<string>(),
+                toolGAents = state.ToolGAgents.Select(g => g.ToString()).ToList(),
+                registeredGAgentFunctions = state.RegisteredGAgentFunctions,
                 mcpTools = mcpTools.Select(t => new
                 {
                     serverName = t.ServerName,
@@ -597,7 +557,7 @@ public class ClearHistoryRequest
 public class ConfigureGAgentToolsRequest
 {
     public string AgentId { get; set; }
-    public List<string> SelectedGAgents { get; set; } = new();
+    public List<string> ToolGAgents { get; set; } = new();
 }
 
 public class MCPServerUIConfig
