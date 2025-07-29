@@ -1,0 +1,46 @@
+<Solution>
+  <Folder Name="/.cursor/">
+  </Folder>
+  <Folder Name="/.cursor/rules/">
+    <File Path=".cursor\rules\code-practices.mdc" />
+    <File Path=".cursor\rules\flow.mdc" />
+    <File Path=".cursor\rules\gagent-implementation-v1.mdc" />
+    <File Path=".cursor\rules\test-practices.mdc" />
+  </Folder>
+  <Folder Name="/docker/">
+    <File Path="docker\README.md" />
+    <File Path="docker\README.zh.md" />
+    <File Path="docker\.dockerignore" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="docs\config-sync-architecture.md" />
+    <File Path="docs\gagent_executor.md" />
+    <File Path="docs\config-sync-index.md" />
+    <File Path="docs\HowToUseGAgentRules.md" />
+    <File Path="docs\config-sync-quickstart.md" />
+    <File Path="docs\SmartHomeDemo-Proposal.md" />
+    <File Path="docs\gagent-implementation-v1.md" />
+    <File Path="docs\GAgentImplementationRules.md" />
+    <File Path="docs\GAgentImplementationRules.zh.md" />
+    <File Path="docs\config-sync-component-diagram.md" />
+  </Folder>
+  <Folder Name="/solution-item/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="host.log" />
+    <File Path="client.log" />
+  </Folder>
+  <Folder Name="/scripts/">
+    <File Path="quickstart.sh" />
+    <File Path="shutdown.sh" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Aevatar.Workshop.Client/Aevatar.Workshop.Client.csproj" />
+    <Project Path="src/Aevatar.Workshop.GAgent/Aevatar.Workshop.GAgent.csproj" />
+    <Project Path="src/Aevatar.Workshop.Host/Aevatar.Workshop.Host.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Aevatar.Workshop.TestBase/Aevatar.Workshop.TestBase.csproj" />
+    <Project Path="test/Aevatar.Workshop.Tests/Aevatar.Workshop.Tests.csproj" />
+  </Folder>
+</Solution>
