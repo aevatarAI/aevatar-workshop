@@ -17,7 +17,7 @@ public interface INotificationGAgent : IStateGAgent<NotificationState>
 }
 
 /// <summary>
-/// 通知状态
+/// Notification state
 /// </summary>
 [GenerateSerializer]
 public class NotificationState : StateBase
@@ -32,13 +32,13 @@ public class NotificationState : StateBase
 }
 
 /// <summary>
-/// 通知状态日志事件基类
+/// Notification state log event base class
 /// </summary>
 [GenerateSerializer]
 public abstract class NotificationStateLogEvent : StateLogEventBase<NotificationStateLogEvent> { }
 
 /// <summary>
-/// 通知发送日志事件
+/// Notification sent log event
 /// </summary>
 [GenerateSerializer]
 public class NotificationSentLogEvent : NotificationStateLogEvent
@@ -47,7 +47,7 @@ public class NotificationSentLogEvent : NotificationStateLogEvent
 }
 
 /// <summary>
-/// 通知偏好更新日志事件
+/// Notification preference update log event
 /// </summary>
 [GenerateSerializer]
 public class PreferencesUpdatedLogEvent : NotificationStateLogEvent
@@ -58,7 +58,7 @@ public class PreferencesUpdatedLogEvent : NotificationStateLogEvent
 }
 
 /// <summary>
-/// 通知服务 GAgent 实现
+/// Notification service GAgent implementation
 /// </summary>
 [GAgent("notification", "ecommerce")]
 public class NotificationGAgent : GAgentBase<NotificationState, NotificationStateLogEvent>, INotificationGAgent
@@ -72,17 +72,17 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
             throw new ArgumentNullException(nameof(request));
 
         if (string.IsNullOrEmpty(request.CustomerId))
-            throw new ArgumentException("客户ID不能为空", nameof(request.CustomerId));
+            throw new ArgumentException("Customer ID cannot be empty", nameof(request.CustomerId));
 
-        Logger.LogInformation("开始发送通知：客户 {CustomerId}，类型 {Type}，主题 {Subject}", 
+        Logger.LogInformation("Starting to send notification: Customer {CustomerId}, Type {Type}, Subject {Subject}", 
             request.CustomerId, request.Type, request.Subject);
 
-        // 检查客户通知偏好
+        // Check customer notification preferences
         var preferences = State.CustomerPreferences.GetValueOrDefault(request.CustomerId, new NotificationPreferences());
         
         if (!ShouldSendNotification(request.Type, preferences))
         {
-            Logger.LogInformation("根据客户偏好跳过通知：客户 {CustomerId}，类型 {Type}", 
+            Logger.LogInformation("Skipping notification based on customer preferences: Customer {CustomerId}, Type {Type}", 
                 request.CustomerId, request.Type);
             return;
         }
@@ -101,20 +101,20 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
             Status = NotificationStatus.Sent
         };
 
-        // 模拟发送通知
+        // Simulate sending notification
         var success = await SimulateSendNotificationAsync(record);
         if (!success)
         {
             record.Status = NotificationStatus.Failed;
-            record.ErrorMessage = "通知发送失败，请稍后重试";
-            Logger.LogWarning("通知发送失败：{NotificationId}", notificationId);
+            record.ErrorMessage = "Notification sending failed, please try again later";
+            Logger.LogWarning("Notification sending failed: {NotificationId}", notificationId);
         }
 
-        // 更新状态
+        // Update state
         RaiseEvent(new NotificationSentLogEvent { Record = record });
         await ConfirmEvents();
 
-        Logger.LogInformation("通知处理完成：{NotificationId}，结果 {Status}", 
+        Logger.LogInformation("Notification processing completed: {NotificationId}, Result {Status}", 
             notificationId, record.Status);
     }
 
@@ -149,12 +149,12 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
     public async Task UpdateNotificationPreferencesAsync(string customerId, NotificationPreferences preferences)
     {
         if (string.IsNullOrEmpty(customerId))
-            throw new ArgumentException("客户ID不能为空", nameof(customerId));
+            throw new ArgumentException("Customer ID cannot be empty", nameof(customerId));
 
         if (preferences == null)
             throw new ArgumentNullException(nameof(preferences));
 
-        Logger.LogInformation("更新客户 {CustomerId} 的通知偏好", customerId);
+        Logger.LogInformation("Updating notification preferences for customer {CustomerId}", customerId);
 
         RaiseEvent(new PreferencesUpdatedLogEvent
         {
@@ -164,15 +164,15 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
         });
         await ConfirmEvents();
 
-        Logger.LogInformation("客户 {CustomerId} 的通知偏好已更新", customerId);
+        Logger.LogInformation("Notification preferences for customer {CustomerId} have been updated", customerId);
     }
 
-    #region 事件处理器
+    #region Event Handlers
 
     [EventHandler]
     public async Task HandleOrderNotificationAsync(OrderNotificationEvent @event)
     {
-        Logger.LogInformation("收到订单通知事件：{OrderId}，类型 {Type}", @event.OrderId, @event.Type);
+        Logger.LogInformation("Received order notification event: {OrderId}, Type {Type}", @event.OrderId, @event.Type);
 
         var request = new NotificationRequest
         {
@@ -188,7 +188,7 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
 
     #endregion
 
-    #region 私有方法
+    #region Private Methods
 
     private bool ShouldSendNotification(NotificationType type, NotificationPreferences preferences)
     {
@@ -207,15 +207,15 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
 
     private NotificationChannel DetermineChannel(NotificationType type, NotificationPreferences preferences)
     {
-        // 基于通知类型和用户偏好确定发送渠道
+        // Determine sending channel based on notification type and user preferences
         return type switch
         {
             NotificationType.OrderConfirmation => preferences.PreferredChannel,
             NotificationType.PaymentConfirmation => preferences.PreferredChannel,
             NotificationType.OrderShipped => preferences.PreferredChannel,
             NotificationType.OrderDelivered => preferences.PreferredChannel,
-            NotificationType.OrderCancelled => NotificationChannel.Email, // 重要通知使用邮件
-            NotificationType.PaymentFailed => NotificationChannel.Email, // 重要通知使用邮件
+            NotificationType.OrderCancelled => NotificationChannel.Email, // Important notifications use email
+            NotificationType.PaymentFailed => NotificationChannel.Email, // Important notifications use email
             NotificationType.InventoryUnavailable => preferences.PreferredChannel,
             _ => NotificationChannel.Email
         };
@@ -223,10 +223,10 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
 
     private async Task<bool> SimulateSendNotificationAsync(NotificationRecord record)
     {
-        // 模拟发送延迟
+        // Simulate sending delay
         await Task.Delay(new Random().Next(50, 200));
 
-        // 模拟发送成功率（95%）
+        // Simulate sending success rate (95%)
         return new Random().NextDouble() > 0.05;
     }
 
@@ -237,13 +237,13 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
         switch (@event)
         {
             case NotificationSentLogEvent e:
-                // 添加到客户通知历史
+                // Add to customer notification history
                 if (!state.CustomerNotifications.ContainsKey(e.Record.CustomerId))
                     state.CustomerNotifications[e.Record.CustomerId] = new List<NotificationRecord>();
                 
                 state.CustomerNotifications[e.Record.CustomerId].Add(e.Record);
 
-                // 更新统计信息
+                // Update statistics
                 state.TotalNotificationsSent++;
                 
                 switch (e.Record.Channel)
@@ -270,7 +270,7 @@ public class NotificationGAgent : GAgentBase<NotificationState, NotificationStat
 }
 
 /// <summary>
-/// 通知请求
+/// Notification request
 /// </summary>
 [GenerateSerializer]
 public class NotificationRequest
@@ -283,7 +283,7 @@ public class NotificationRequest
 }
 
 /// <summary>
-/// 通知记录
+/// Notification record
 /// </summary>
 [GenerateSerializer]
 public class NotificationRecord
@@ -301,7 +301,7 @@ public class NotificationRecord
 }
 
 /// <summary>
-/// 通知偏好设置
+/// Notification preferences
 /// </summary>
 [GenerateSerializer]
 public class NotificationPreferences
@@ -319,7 +319,7 @@ public class NotificationPreferences
 }
 
 /// <summary>
-/// 通知统计信息
+/// Notification statistics
 /// </summary>
 [GenerateSerializer]
 public class NotificationStats
@@ -333,7 +333,7 @@ public class NotificationStats
 }
 
 /// <summary>
-/// 通知渠道
+/// Notification channel
 /// </summary>
 public enum NotificationChannel
 {
@@ -344,7 +344,7 @@ public enum NotificationChannel
 }
 
 /// <summary>
-/// 通知状态
+/// Notification state
 /// </summary>
 public enum NotificationStatus
 {

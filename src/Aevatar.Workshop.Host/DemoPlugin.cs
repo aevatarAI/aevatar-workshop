@@ -13,7 +13,7 @@ public static class DemoPlugin
             { "NY", 2200000.0 }, // New York
             { "CA", 4100000.0 }, // California
             { "TX", 2700000.0 }, // Texas
-            // 可扩展更多州
+            // Extensible to more states
         }.ToImmutableDictionary();
 
     [KernelFunction("AddNumbers")]
@@ -22,15 +22,15 @@ public static class DemoPlugin
 
     [KernelFunction("GetUSGDP2024")]
     public static Task<double> GetUSGDP2024Async()
-        => Task.FromResult(28500000.0); // 单位：百万美元（示例数据）
+        => Task.FromResult(28500000.0); // Unit: millions of dollars (sample data)
 
     [KernelFunction("GetNYGDP2024")]
     public static Task<double> GetNYGDP2024Async()
-        => Task.FromResult(2200000.0); // 单位：百万美元（示例数据）
+        => Task.FromResult(2200000.0); // Unit: millions of dollars (sample data)
 
     [KernelFunction("GetCAGDP2024")]
     public static Task<double> GetCAGDP2024Async()
-        => Task.FromResult(4100000.0); // 单位：百万美元（示例数据）
+        => Task.FromResult(4100000.0); // Unit: millions of dollars (sample data)
 
     [KernelFunction("CalculatePercentage")]
     public static Task<double> CalculatePercentageAsync(double part, double whole)
@@ -44,6 +44,6 @@ public static class DemoPlugin
             return Task.FromResult(gdp);
         }
 
-        return Task.FromResult(0.0); // 未知州返回0
+        return Task.FromResult(0.0); // Unknown state returns 0
     }
 }

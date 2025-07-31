@@ -2,6 +2,7 @@ using Aevatar.Core.Abstractions;
 using Aevatar.Workshop.GuideGAgents.GAgents;
 using Aevatar.Workshop.GuideGAgents.Events;
 using Aevatar.Workshop.TestBase;
+using Shouldly;
 using Xunit.Abstractions;
 
 namespace Aevatar.Workshop.Tests;
@@ -40,8 +41,8 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
         await coordinator.InitializeSystemAsync();
         var health = await coordinator.GetSystemHealthAsync();
 
-        Assert.True(health.IsHealthy);
-        Assert.Equal(4, health.ComponentStatuses.Count);
+        health.IsHealthy.ShouldBeTrue();
+        health.ComponentStatuses.Count.ShouldBe(4);
     }
 
     [Fact]
@@ -79,16 +80,16 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
         var orderId = await orderAgent.SubmitOrderAsync(orderRequest);
 
         // Assert
-        Assert.NotNull(orderId);
-        Assert.NotEmpty(orderId);
+        orderId.ShouldNotBeNull();
+        orderId.ShouldNotBeEmpty();
         
         var orderStatus = await orderAgent.GetOrderStatusAsync(orderId);
-        Assert.Equal(OrderStatus.Submitted, orderStatus);
+        orderStatus.ShouldBe(OrderStatus.Submitted);
         
         var order = await orderAgent.GetOrderAsync(orderId);
-        Assert.NotNull(order);
-        Assert.Equal("customer-001", order.CustomerId);
-        Assert.Equal(199.98m, order.TotalAmount); // 2 * 99.99
+        order.ShouldNotBeNull();
+        order.CustomerId.ShouldBe("customer-001");
+        order.TotalAmount.ShouldBe(199.98m); // 2 * 99.99
     }
 
     [Fact]
@@ -106,8 +107,8 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
         var customerOrders = await orderAgent.GetOrdersByCustomerAsync(customerId);
 
         // Assert
-        Assert.Equal(2, customerOrders.Count);
-        Assert.All(customerOrders, order => Assert.Equal(customerId, order.CustomerId));
+        customerOrders.Count.ShouldBe(2);
+        Assert.All(customerOrders, order => order.CustomerId.ShouldBe(customerId));
         Assert.Contains(customerOrders, o => o.Id == order1Id);
         Assert.Contains(customerOrders, o => o.Id == order2Id);
     }
@@ -124,7 +125,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
 
         // Assert
         var orderStatus = await orderAgent.GetOrderStatusAsync(orderId);
-        Assert.Equal(OrderStatus.Cancelled, orderStatus);
+        orderStatus.ShouldBe(OrderStatus.Cancelled);
     }
 
     [Fact]
@@ -153,9 +154,9 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
 
         // Assert
         var retrievedProduct = await inventoryAgent.GetProductAsync("test-product-001");
-        Assert.NotNull(retrievedProduct);
-        Assert.Equal("Test Product", retrievedProduct.Name);
-        Assert.Equal(100, retrievedProduct.StockQuantity);
+        retrievedProduct.ShouldNotBeNull();
+        retrievedProduct.Name.ShouldBe("Test Product");
+        retrievedProduct.StockQuantity.ShouldBe(100);
     }
 
     [Fact]
@@ -174,15 +175,15 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
 
         // Act & Assert - Available
         var isAvailable = await inventoryAgent.CheckAvailabilityAsync("available-product", 10);
-        Assert.True(isAvailable);
+        isAvailable.ShouldBeTrue();
 
         // Act & Assert - Not enough stock
         var isNotAvailable = await inventoryAgent.CheckAvailabilityAsync("available-product", 100);
-        Assert.False(isNotAvailable);
+        isNotAvailable.ShouldBeFalse();
 
         // Act & Assert - Non-existent product
         var nonExistent = await inventoryAgent.CheckAvailabilityAsync("non-existent", 1);
-        Assert.False(nonExistent);
+        nonExistent.ShouldBeFalse();
     }
 
     [Fact]
@@ -204,10 +205,10 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
 
         // Assert
         var isAvailable = await inventoryAgent.CheckAvailabilityAsync("stock-update-test", 70);
-        Assert.True(isAvailable);
+        isAvailable.ShouldBeTrue();
         
         var isNotAvailable = await inventoryAgent.CheckAvailabilityAsync("stock-update-test", 80);
-        Assert.False(isNotAvailable);
+        isNotAvailable.ShouldBeFalse();
     }
 
     [Fact]
@@ -236,10 +237,10 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
         var result = await paymentAgent.ProcessPaymentAsync(paymentRequest);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.NotEmpty(result.TransactionId);
+        result.ShouldNotBeNull();
+        result.TransactionId.ShouldNotBeEmpty();
         // Note: Result may be successful or failed due to simulation
-        Assert.True(result.IsSuccessful || !string.IsNullOrEmpty(result.ErrorMessage));
+        (result.IsSuccessful || !string.IsNullOrEmpty(result.ErrorMessage)).ShouldBeTrue();
     }
 
     [Fact]
@@ -275,9 +276,9 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
         };
 
         // Act & Assert
-        Assert.True(await paymentAgent.ValidatePaymentMethodAsync(validCreditCard));
-        Assert.False(await paymentAgent.ValidatePaymentMethodAsync(invalidCreditCard));
-        Assert.True(await paymentAgent.ValidatePaymentMethodAsync(validPayPal));
+        (await paymentAgent.ValidatePaymentMethodAsync(validCreditCard)).ShouldBeTrue();
+        (await paymentAgent.ValidatePaymentMethodAsync(invalidCreditCard)).ShouldBeFalse();
+        (await paymentAgent.ValidatePaymentMethodAsync(validPayPal)).ShouldBeTrue();
     }
 
     [Fact]
@@ -304,7 +305,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
 
         // Assert
         var history = await notificationAgent.GetNotificationHistoryAsync("customer-notify-001");
-        Assert.NotEmpty(history);
+        history.ShouldNotBeEmpty();
         Assert.Contains(history, n => n.Subject == "Order Confirmed");
         Assert.Contains(history, n => n.Type == NotificationType.OrderConfirmation);
     }
@@ -343,7 +344,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
 
         var history = await notificationAgent.GetNotificationHistoryAsync(customerId);
         // Should be empty because shipping updates are disabled
-        Assert.Empty(history.Where(n => n.Type == NotificationType.OrderShipped));
+        history.Where(n => n.Type == NotificationType.OrderShipped).ShouldBeEmpty();
     }
 
     [Fact]
@@ -419,21 +420,21 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
         await Task.Delay(1000);
 
         // Assert - Verify the complete workflow
-        Assert.NotNull(orderId);
-        Assert.NotEmpty(orderId);
+        orderId.ShouldNotBeNull();
+        orderId.ShouldNotBeEmpty();
 
         var finalOrderStatus = await coordinator.GetOrderStatusAsync(orderId);
-        Assert.True(finalOrderStatus == OrderStatus.PaymentCompleted || 
-                   finalOrderStatus == OrderStatus.PaymentFailed ||
-                   finalOrderStatus == OrderStatus.Validated ||
-                   finalOrderStatus == OrderStatus.ValidationFailed);
+        (finalOrderStatus == OrderStatus.PaymentCompleted || 
+         finalOrderStatus == OrderStatus.PaymentFailed ||
+         finalOrderStatus == OrderStatus.Validated ||
+         finalOrderStatus == OrderStatus.ValidationFailed).ShouldBeTrue();
 
         var systemHealth = await coordinator.GetSystemHealthAsync();
-        Assert.True(systemHealth.IsHealthy);
+        systemHealth.IsHealthy.ShouldBeTrue();
 
         // Check notification history
         var notifications = await notificationAgent.GetNotificationHistoryAsync("customer-e2e-001");
-        Assert.NotEmpty(notifications);
+        notifications.ShouldNotBeEmpty();
 
         _testOutputHelper.WriteLine($"Order {orderId} processed with final status: {finalOrderStatus}");
         _testOutputHelper.WriteLine($"Payment result: {paymentResult.IsSuccessful}");

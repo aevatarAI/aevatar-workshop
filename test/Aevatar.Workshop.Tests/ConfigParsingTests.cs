@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
+using Shouldly;
 using Xunit.Abstractions;
 
 namespace Aevatar.Workshop.Tests;
@@ -42,15 +43,15 @@ public class ConfigParsingTests
         var jsonDoc = JsonDocument.Parse(json);
         var root = jsonDoc.RootElement;
         
-        Assert.True(root.TryGetProperty("server1", out var server1));
-        Assert.Equal("npx", server1.GetProperty("Command").GetString());
+        root.TryGetProperty("server1", out var server1).ShouldBeTrue();
+        server1.GetProperty("Command").GetString().ShouldBe("npx");
         
         // Check Args array
-        Assert.True(server1.TryGetProperty("Args", out var args));
-        Assert.Equal(JsonValueKind.Array, args.ValueKind);
-        Assert.Equal(2, args.GetArrayLength());
-        Assert.Equal("-y", args[0].GetString());
-        Assert.Equal("@modelcontextprotocol/server-filesystem", args[1].GetString());
+        server1.TryGetProperty("Args", out var args).ShouldBeTrue();
+        args.ValueKind.ShouldBe(JsonValueKind.Array);
+        args.GetArrayLength().ShouldBe(2);
+        args[0].GetString().ShouldBe("-y");
+        args[1].GetString().ShouldBe("@modelcontextprotocol/server-filesystem");
     }
 
     [Fact]
@@ -83,12 +84,12 @@ public class ConfigParsingTests
         var jsonDoc = JsonDocument.Parse(json);
         var root = jsonDoc.RootElement;
         
-        Assert.True(root.TryGetProperty("OpenAI", out var openAi));
-        Assert.Equal("OpenAI", openAi.GetProperty("ProviderEnum").GetString());
-        Assert.Equal("gpt-4", openAi.GetProperty("ModelName").GetString());
+        root.TryGetProperty("OpenAI", out var openAi).ShouldBeTrue();
+        openAi.GetProperty("ProviderEnum").GetString().ShouldBe("OpenAI");
+        openAi.GetProperty("ModelName").GetString().ShouldBe("gpt-4");
         
-        Assert.True(root.TryGetProperty("DeepSeek", out var deepSeek));
-        Assert.Equal("DeepSeek", deepSeek.GetProperty("ProviderEnum").GetString());
+        root.TryGetProperty("DeepSeek", out var deepSeek).ShouldBeTrue();
+        deepSeek.GetProperty("ProviderEnum").GetString().ShouldBe("DeepSeek");
     }
 
     // Copy the configuration parsing logic from ConfigSyncService

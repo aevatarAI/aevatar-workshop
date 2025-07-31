@@ -79,7 +79,7 @@ namespace Aevatar.Workshop.Client.Controllers
             var languages = new[]
             {
                 new { code = "en", name = "English" },
-                new { code = "zh", name = "中文" }
+                new { code = "zh", name = "Chinese" }
             };
 
             return Ok(new { languages });

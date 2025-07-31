@@ -33,13 +33,13 @@ public class InventoryState : StateBase
 }
 
 /// <summary>
-/// 库存状态日志事件基类
+/// Inventory state log event base class
 /// </summary>
 [GenerateSerializer]
 public abstract class InventoryStateLogEvent : StateLogEventBase<InventoryStateLogEvent> { }
 
 /// <summary>
-/// 产品添加日志事件
+/// Product added log event
 /// </summary>
 [GenerateSerializer]
 public class ProductAddedLogEvent : InventoryStateLogEvent
@@ -48,7 +48,7 @@ public class ProductAddedLogEvent : InventoryStateLogEvent
 }
 
 /// <summary>
-/// 库存更新日志事件
+/// Inventory update log event
 /// </summary>
 [GenerateSerializer]
 public class StockUpdatedLogEvent : InventoryStateLogEvent
@@ -60,7 +60,7 @@ public class StockUpdatedLogEvent : InventoryStateLogEvent
 }
 
 /// <summary>
-/// 库存预留日志事件
+/// Inventory reservation log event
 /// </summary>
 [GenerateSerializer]
 public class InventoryReservedLogEvent : InventoryStateLogEvent
@@ -71,7 +71,7 @@ public class InventoryReservedLogEvent : InventoryStateLogEvent
 }
 
 /// <summary>
-/// 库存预留释放日志事件
+/// Inventory reservation release log event
 /// </summary>
 [GenerateSerializer]
 public class ReservationReleasedLogEvent : InventoryStateLogEvent
@@ -81,7 +81,7 @@ public class ReservationReleasedLogEvent : InventoryStateLogEvent
 }
 
 /// <summary>
-/// 库存管理 GAgent 实现
+/// Inventory management GAgent implementation
 /// </summary>
 [GAgent("inventory", "ecommerce")]
 public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent>, IInventoryGAgent
@@ -92,24 +92,24 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
     public async Task AddProductAsync(Product product)
     {
         if (string.IsNullOrEmpty(product.Id))
-            throw new ArgumentException("产品ID不能为空", nameof(product.Id));
+            throw new ArgumentException("Product ID cannot be empty", nameof(product.Id));
 
-        Logger.LogInformation("添加产品：{ProductId} - {ProductName}", product.Id, product.Name);
+        Logger.LogInformation("Adding product: {ProductId} - {ProductName}", product.Id, product.Name);
 
         RaiseEvent(new ProductAddedLogEvent { Product = product });
         await ConfirmEvents();
 
-        Logger.LogInformation("产品 {ProductId} 已成功添加到库存", product.Id);
+        Logger.LogInformation("Product {ProductId} successfully added to inventory", product.Id);
     }
 
     public async Task UpdateStockAsync(string productId, int quantity)
     {
         if (!State.Products.ContainsKey(productId))
-            throw new InvalidOperationException($"产品 {productId} 不存在");
+            throw new InvalidOperationException($"Product {productId} does not exist");
 
         var currentQuantity = State.StockLevels.GetValueOrDefault(productId, 0);
         
-        Logger.LogInformation("更新产品 {ProductId} 库存：{CurrentQuantity} -> {NewQuantity}", 
+        Logger.LogInformation("Updating product {ProductId} inventory: {CurrentQuantity} -> {NewQuantity}", 
             productId, currentQuantity, quantity);
 
         RaiseEvent(new StockUpdatedLogEvent
@@ -121,7 +121,7 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
         });
         await ConfirmEvents();
 
-        Logger.LogInformation("产品 {ProductId} 库存已更新为 {Quantity}", productId, quantity);
+        Logger.LogInformation("Product {ProductId} inventory updated to {Quantity}", productId, quantity);
     }
 
     public Task<Product?> GetProductAsync(string productId)
@@ -154,12 +154,12 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
 
     public async Task ReserveInventoryAsync(string orderId, List<OrderItem> items)
     {
-        Logger.LogInformation("开始为订单 {OrderId} 预留库存", orderId);
+        Logger.LogInformation("Starting to reserve inventory for order {OrderId}", orderId);
 
         var reservations = new List<InventoryReservation>();
         var unavailableItems = new List<string>();
 
-        // 检查所有商品的可用性
+        // Check availability of all items
         foreach (var item in items)
         {
             var availableQuantity = State.StockLevels.GetValueOrDefault(item.ProductId, 0) - 
@@ -167,8 +167,8 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
 
             if (availableQuantity < item.Quantity)
             {
-                unavailableItems.Add($"{item.ProductName} (需要: {item.Quantity}, 可用: {availableQuantity})");
-                Logger.LogWarning("产品 {ProductId} 库存不足，需要: {Required}, 可用: {Available}", 
+                unavailableItems.Add($"{item.ProductName} (Required: {item.Quantity}, Available: {availableQuantity})");
+                Logger.LogWarning("Product {ProductId} insufficient inventory, Required: {Required}, Available: {Available}", 
                     item.ProductId, item.Quantity, availableQuantity);
             }
             else
@@ -179,38 +179,38 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
                     SKU = item.SKU,
                     ReservedQuantity = item.Quantity,
                     ReservedAt = DateTime.UtcNow,
-                    ExpiresAt = DateTime.UtcNow.AddHours(2) // 2小时后过期
+                    ExpiresAt = DateTime.UtcNow.AddHours(2) // Expires after 2 hours
                 });
             }
         }
 
         if (unavailableItems.Count > 0)
         {
-            // 发布库存预留失败事件
+            // Publish inventory reservation failed event
             await PublishAsync(new InventoryReservationFailedEvent
             {
                 OrderId = orderId,
                 UnavailableItems = unavailableItems,
-                Reason = "库存不足",
+                Reason = "Insufficient inventory",
                 FailedAt = DateTime.UtcNow
             });
 
-            // 发布订单验证失败事件
+            // Publish order validation failed event
             await PublishAsync(new OrderValidatedEvent
             {
                 OrderId = orderId,
                 IsValid = false,
-                ValidationMessage = "库存不足",
+                ValidationMessage = "Insufficient inventory",
                 ValidationErrors = unavailableItems,
                 ValidatedAt = DateTime.UtcNow
             });
 
-            Logger.LogWarning("订单 {OrderId} 库存预留失败：{UnavailableItems}", 
+            Logger.LogWarning("Order {OrderId} inventory reservation failed: {UnavailableItems}", 
                 orderId, string.Join(", ", unavailableItems));
             return;
         }
 
-        // 预留库存
+        // Reserve inventory
         RaiseEvent(new InventoryReservedLogEvent
         {
             OrderId = orderId,
@@ -219,7 +219,7 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
         });
         await ConfirmEvents();
 
-        // 发布库存预留成功事件
+        // Publish inventory reservation success event
         await PublishAsync(new InventoryReservedEvent
         {
             OrderId = orderId,
@@ -227,28 +227,28 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
             ReservedAt = DateTime.UtcNow
         });
 
-        // 发布订单验证成功事件
+        // Publish order validation success event
         await PublishAsync(new OrderValidatedEvent
         {
             OrderId = orderId,
             IsValid = true,
-            ValidationMessage = "库存验证通过",
+            ValidationMessage = "Inventory validation passed",
             ValidationErrors = new List<string>(),
             ValidatedAt = DateTime.UtcNow
         });
 
-        Logger.LogInformation("订单 {OrderId} 库存预留成功，预留 {Count} 个商品", orderId, reservations.Count);
+        Logger.LogInformation("Order {OrderId} inventory reservation successful, reserved {Count} items", orderId, reservations.Count);
     }
 
     public async Task ReleaseReservationAsync(string orderId)
     {
         if (!State.Reservations.ContainsKey(orderId))
         {
-            Logger.LogWarning("尝试释放不存在的预留：{OrderId}", orderId);
+            Logger.LogWarning("Attempting to release non-existent reservation: {OrderId}", orderId);
             return;
         }
 
-        Logger.LogInformation("释放订单 {OrderId} 的库存预留", orderId);
+        Logger.LogInformation("Releasing inventory reservation for order {OrderId}", orderId);
 
         RaiseEvent(new ReservationReleasedLogEvent
         {
@@ -257,15 +257,15 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
         });
         await ConfirmEvents();
 
-        Logger.LogInformation("订单 {OrderId} 的库存预留已释放", orderId);
+        Logger.LogInformation("Inventory reservation for order {OrderId} has been released", orderId);
     }
 
-    #region 事件处理器
+    #region Event Handlers
 
     [EventHandler]
     public async Task HandleOrderSubmittedAsync(OrderSubmittedEvent @event)
     {
-        Logger.LogInformation("收到订单提交事件，开始验证库存：{OrderId}", @event.OrderId);
+        Logger.LogInformation("Received order submission event, starting inventory validation: {OrderId}", @event.OrderId);
 
         await ReserveInventoryAsync(@event.OrderId, @event.Items);
     }
@@ -275,7 +275,7 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
     {
         if (@event.IsSuccessful)
         {
-            // 支付成功，将预留转为实际扣减
+            // Payment successful, convert reservation to actual deduction
             if (State.Reservations.TryGetValue(@event.OrderId, out var reservations))
             {
                 foreach (var reservation in reservations)
@@ -292,7 +292,7 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
                     });
                 }
 
-                // 移除预留
+                // Remove reservation
                 RaiseEvent(new ReservationReleasedLogEvent
                 {
                     OrderId = @event.OrderId,
@@ -301,14 +301,14 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
 
                 await ConfirmEvents();
 
-                Logger.LogInformation("订单 {OrderId} 支付成功，已扣减库存", @event.OrderId);
+                Logger.LogInformation("Order {OrderId} payment successful, inventory deducted", @event.OrderId);
             }
         }
         else
         {
-            // 支付失败，释放预留
+            // Payment failed, release reservation
             await ReleaseReservationAsync(@event.OrderId);
-            Logger.LogInformation("订单 {OrderId} 支付失败，已释放库存预留", @event.OrderId);
+            Logger.LogInformation("Order {OrderId} payment failed, inventory reservation released", @event.OrderId);
         }
     }
 
@@ -333,7 +333,7 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
             case InventoryReservedLogEvent e:
                 state.Reservations[e.OrderId] = e.Reservations;
                 
-                // 更新预留数量
+                // Update reserved quantity
                 foreach (var reservation in e.Reservations)
                 {
                     var currentReserved = state.ReservedQuantities.GetValueOrDefault(reservation.ProductId, 0);
@@ -345,14 +345,14 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
             case ReservationReleasedLogEvent e:
                 if (state.Reservations.TryGetValue(e.OrderId, out var reservations))
                 {
-                    // 减少预留数量
+                    // Reduce reserved quantity
                     foreach (var reservation in reservations)
                     {
                         var currentReserved = state.ReservedQuantities.GetValueOrDefault(reservation.ProductId, 0);
                         state.ReservedQuantities[reservation.ProductId] = Math.Max(0, currentReserved - reservation.ReservedQuantity);
                     }
                     
-                    // 移除预留记录
+                    // Remove reservation record
                     state.Reservations.Remove(e.OrderId);
                 }
                 state.LastUpdated = e.ReleasedAt;
@@ -362,7 +362,7 @@ public class InventoryGAgent : GAgentBase<InventoryState, InventoryStateLogEvent
 }
 
 /// <summary>
-/// 产品实体
+/// Product entity
 /// </summary>
 [GenerateSerializer]
 public class Product

@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Aevatar.Core.Abstractions;
-using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.AI.Options;
 using Aevatar.Workshop.GAgent;
 using Aevatar.Workshop.GAgent.Options;
@@ -8,9 +7,8 @@ using Aevatar.Workshop.Client.Services;
 using Aevatar.Workshop.GAgent.Extensions;
 using Aevatar.Workshop.TestBase;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Xunit;
+using Shouldly;
 using Xunit.Abstractions;
 
 namespace Aevatar.Workshop.Tests;
@@ -68,14 +66,14 @@ public sealed class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWork
             ConfigType = typeof(SystemLLMConfigOptions).FullName!
         });
 
-        Assert.True(response.Success, $"Config sync failed: {response.ErrorMessage}");
-        Assert.NotEmpty(response.ConfigJson);
+        response.Success.ShouldBeTrue($"Config sync failed: {response.ErrorMessage}");
+        response.ConfigJson.ShouldNotBeEmpty();
 
         var configs = JsonSerializer.Deserialize<Dictionary<string, LLMConfig>>(response.ConfigJson);
-        Assert.NotNull(configs);
-        Assert.Equal(2, configs.Count);
-        Assert.True(configs.ContainsKey("OpenAI"));
-        Assert.True(configs.ContainsKey("DeepSeek"));
+        configs.ShouldNotBeNull();
+        configs.Count.ShouldBe(2);
+        configs.ContainsKey("OpenAI").ShouldBeTrue();
+        configs.ContainsKey("DeepSeek").ShouldBeTrue();
 
         _testOutputHelper.WriteLine($"Successfully synced {configs.Count} LLM configs");
     }
@@ -117,28 +115,28 @@ public sealed class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWork
             ConfigType = typeof(MCPServerOptions).FullName!
         });
 
-        Assert.True(response.Success);
-        Assert.NotEmpty(response.ConfigJson);
+        response.Success.ShouldBeTrue();
+        response.ConfigJson.ShouldNotBeEmpty();
 
         // Deserialize as Dictionary<string, MCPServerConfig>
         var servers = JsonSerializer.Deserialize<Dictionary<string, MCPServerConfig>>(response.ConfigJson);
-        Assert.NotNull(servers);
-        Assert.Equal(2, servers.Count);
+        servers.ShouldNotBeNull();
+        servers.Count.ShouldBe(2);
 
-        Assert.True(servers.ContainsKey("FileSystemServer"));
-        Assert.True(servers.ContainsKey("WebSearchServer"));
+        servers.ContainsKey("FileSystemServer").ShouldBeTrue();
+        servers.ContainsKey("WebSearchServer").ShouldBeTrue();
 
         var fileSystemServer = servers["FileSystemServer"];
-        Assert.Equal("npx", fileSystemServer.Command);
-        Assert.Equal("File system MCP server", fileSystemServer.Description);
-        Assert.True(fileSystemServer.Enabled);
+        fileSystemServer.Command.ShouldBe("npx");
+        fileSystemServer.Description.ShouldBe("File system MCP server");
+        fileSystemServer.Enabled.ShouldBeTrue();
 
         var webSearchServer = servers["WebSearchServer"];
-        Assert.Equal("npx", webSearchServer.Command);
-        Assert.Equal("Web search MCP server", webSearchServer.Description);
-        Assert.True(webSearchServer.Enabled);
-        Assert.NotNull(webSearchServer.Env);
-        Assert.True(webSearchServer.Env.ContainsKey("BRAVE_API_KEY"));
+        webSearchServer.Command.ShouldBe("npx");
+        webSearchServer.Description.ShouldBe("Web search MCP server");
+        webSearchServer.Enabled.ShouldBeTrue();
+        webSearchServer.Env.ShouldNotBeNull();
+        webSearchServer.Env.ContainsKey("BRAVE_API_KEY").ShouldBeTrue();
 
         _testOutputHelper.WriteLine($"Successfully synced {servers.Count} MCP servers");
     }

@@ -18,7 +18,7 @@ public interface IECommerceCoordinatorGAgent : IStateGAgent<ECommerceCoordinator
 }
 
 /// <summary>
-/// 电商协调器状态
+/// E-commerce coordinator state
 /// </summary>
 [GenerateSerializer]
 public class ECommerceCoordinatorState : StateBase
@@ -32,13 +32,13 @@ public class ECommerceCoordinatorState : StateBase
 }
 
 /// <summary>
-/// 电商协调器状态日志事件基类
+/// E-commerce coordinator state log event base class
 /// </summary>
 [GenerateSerializer]
 public abstract class ECommerceCoordinatorStateLogEvent : StateLogEventBase<ECommerceCoordinatorStateLogEvent> { }
 
 /// <summary>
-/// 系统初始化日志事件
+/// System initialization log event
 /// </summary>
 [GenerateSerializer]
 public class SystemInitializedLogEvent : ECommerceCoordinatorStateLogEvent
@@ -48,7 +48,7 @@ public class SystemInitializedLogEvent : ECommerceCoordinatorStateLogEvent
 }
 
 /// <summary>
-/// 订单处理日志事件
+/// Order processing log event
 /// </summary>
 [GenerateSerializer]
 public class OrderProcessedLogEvent : ECommerceCoordinatorStateLogEvent
@@ -58,12 +58,12 @@ public class OrderProcessedLogEvent : ECommerceCoordinatorStateLogEvent
 }
 
 /// <summary>
-/// 电商协调器 GAgent 实现
+/// E-commerce coordinator GAgent implementation
 /// </summary>
 [GAgent("ecommerce-coordinator", "ecommerce")]
 public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, ECommerceCoordinatorStateLogEvent>, IECommerceCoordinatorGAgent
 {
-    // 固定的 GAgent ID，确保一致性
+    // Fixed GAgent IDs to ensure consistency
     private static readonly Guid ORDER_AGENT_ID = "order-agent".ToGuid();
     private static readonly Guid INVENTORY_AGENT_ID = "inventory-agent".ToGuid();
     private static readonly Guid PAYMENT_AGENT_ID = "payment-agent".ToGuid();
@@ -79,21 +79,21 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
     {
         if (State.IsInitialized)
         {
-            Logger.LogInformation("电商系统已经初始化");
+            Logger.LogInformation("E-commerce system already initialized");
             return;
         }
 
-        Logger.LogInformation("开始初始化电商系统");
+        Logger.LogInformation("Starting e-commerce system initialization");
 
         try
         {
-            // 创建并注册所有 GAgent
+            // Create and register all GAgents
             var orderAgent = await GAgentFactory.GetGAgentAsync<IOrderGAgent>(ORDER_AGENT_ID);
             var inventoryAgent = await GAgentFactory.GetGAgentAsync<IInventoryGAgent>(INVENTORY_AGENT_ID);
             var paymentAgent = await GAgentFactory.GetGAgentAsync<IPaymentGAgent>(PAYMENT_AGENT_ID);
             var notificationAgent = await GAgentFactory.GetGAgentAsync<INotificationGAgent>(NOTIFICATION_AGENT_ID);
 
-            // 注册所有代理进行事件通信
+            // Register all agents for event communication
             await RegisterAsync(orderAgent);
             await RegisterAsync(inventoryAgent);
             await RegisterAsync(paymentAgent);
@@ -107,7 +107,7 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
                 ["notification"] = NOTIFICATION_AGENT_ID
             };
 
-            // 更新状态
+            // Update state
             RaiseEvent(new SystemInitializedLogEvent
             {
                 InitializedAt = DateTime.UtcNow,
@@ -115,11 +115,11 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
             });
             await ConfirmEvents();
 
-            Logger.LogInformation("电商系统初始化完成，注册了 {AgentCount} 个 GAgent", registeredAgents.Count);
+            Logger.LogInformation("E-commerce system initialization completed, registered {AgentCount} GAgents", registeredAgents.Count);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "电商系统初始化失败");
+            Logger.LogError(ex, "E-commerce system initialization failed");
             throw;
         }
     }
@@ -131,7 +131,7 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
             await InitializeSystemAsync();
         }
 
-        Logger.LogInformation("开始处理订单：客户 {CustomerId}，商品数量 {ItemCount}", 
+        Logger.LogInformation("Starting order processing: Customer {CustomerId}, Item count {ItemCount}", 
             request.CustomerId, request.Items.Count);
 
         try
@@ -139,7 +139,7 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
             var orderAgent = await GAgentFactory.GetGAgentAsync<IOrderGAgent>(ORDER_AGENT_ID);
             var orderId = await orderAgent.SubmitOrderAsync(request);
 
-            // 记录订单处理
+            // Record order processing
             RaiseEvent(new OrderProcessedLogEvent
             {
                 OrderId = orderId,
@@ -147,12 +147,12 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
             });
             await ConfirmEvents();
 
-            Logger.LogInformation("订单处理完成：{OrderId}", orderId);
+            Logger.LogInformation("Order processing completed: {OrderId}", orderId);
             return orderId;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "订单处理失败：客户 {CustomerId}", request.CustomerId);
+            Logger.LogError(ex, "Order processing failed: Customer {CustomerId}", request.CustomerId);
             throw;
         }
     }
@@ -172,7 +172,7 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
             ComponentStatuses = new Dictionary<string, ComponentHealth>()
         };
 
-        // 检查每个组件的健康状态
+        // Check health status of each component
         try
         {
             var orderAgent = await GAgentFactory.GetGAgentAsync<IOrderGAgent>(ORDER_AGENT_ID);
@@ -266,20 +266,20 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
 
     public async Task SeedTestDataAsync()
     {
-        Logger.LogInformation("开始填充测试数据");
+        Logger.LogInformation("Starting to populate test data");
 
         try
         {
             var inventoryAgent = await GAgentFactory.GetGAgentAsync<IInventoryGAgent>(INVENTORY_AGENT_ID);
 
-            // 添加测试产品
+            // Add test products
             var products = new[]
             {
                 new Product
                 {
                     Id = "prod-001",
                     Name = "iPhone 15 Pro",
-                    Description = "苹果最新旗舰手机",
+                    Description = "Apple's latest flagship phone",
                     Price = 8999.00m,
                     SKU = "IPH15PRO-256GB",
                     Category = "Electronics",
@@ -293,7 +293,7 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
                 {
                     Id = "prod-002",
                     Name = "MacBook Pro M3",
-                    Description = "苹果最新专业笔记本电脑",
+                    Description = "Apple's latest professional laptop",
                     Price = 15999.00m,
                     SKU = "MBP-M3-14",
                     Category = "Electronics",
@@ -307,7 +307,7 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
                 {
                     Id = "prod-003",
                     Name = "AirPods Pro",
-                    Description = "苹果无线降噪耳机",
+                    Description = "Apple wireless noise-cancelling headphones",
                     Price = 1999.00m,
                     SKU = "APP-GEN2",
                     Category = "Electronics",
@@ -322,14 +322,14 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
             foreach (var product in products)
             {
                 await inventoryAgent.AddProductAsync(product);
-                Logger.LogInformation("添加测试产品：{ProductName}", product.Name);
+                Logger.LogInformation("Added test product: {ProductName}", product.Name);
             }
 
-            Logger.LogInformation("测试数据填充完成，添加了 {ProductCount} 个产品", products.Length);
+            Logger.LogInformation("Test data population completed, added {ProductCount} products", products.Length);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "测试数据填充失败");
+            Logger.LogError(ex, "Test data population failed");
             throw;
         }
     }
@@ -353,14 +353,14 @@ public class ECommerceCoordinatorGAgent : GAgentBase<ECommerceCoordinatorState, 
 }
 
 /// <summary>
-/// 电商服务类
+/// E-commerce service class
 /// </summary>
 public class ECommerceService
 {
     private readonly IGAgentFactory _gAgentFactory;
     private readonly ILogger<ECommerceService> _logger;
 
-    // 协调器 ID
+    // Coordinator ID
     private static readonly Guid COORDINATOR_ID = "ecommerce-coordinator".ToGuid();
 
     public ECommerceService(IGAgentFactory gAgentFactory, ILogger<ECommerceService> logger)
@@ -370,21 +370,21 @@ public class ECommerceService
     }
 
     /// <summary>
-    /// 初始化电商系统
+    /// Initialize e-commerce system
     /// </summary>
     public async Task InitializeAsync()
     {
-        _logger.LogInformation("初始化电商服务");
+        _logger.LogInformation("Initializing e-commerce service");
 
         var coordinator = await _gAgentFactory.GetGAgentAsync<IECommerceCoordinatorGAgent>(COORDINATOR_ID);
         await coordinator.InitializeSystemAsync();
         await coordinator.SeedTestDataAsync();
 
-        _logger.LogInformation("电商服务初始化完成");
+        _logger.LogInformation("E-commerce service initialization completed");
     }
 
     /// <summary>
-    /// 处理订单
+    /// Process order
     /// </summary>
     public async Task<string> ProcessOrderAsync(SubmitOrderRequest request)
     {
@@ -393,7 +393,7 @@ public class ECommerceService
     }
 
     /// <summary>
-    /// 获取订单状态
+    /// Get order status
     /// </summary>
     public async Task<OrderStatus> GetOrderStatusAsync(string orderId)
     {
@@ -402,7 +402,7 @@ public class ECommerceService
     }
 
     /// <summary>
-    /// 获取系统健康状态
+    /// Get system health status
     /// </summary>
     public async Task<SystemHealthStatus> GetSystemHealthAsync()
     {
@@ -411,7 +411,7 @@ public class ECommerceService
     }
 
     /// <summary>
-    /// 模拟支付处理
+    /// Simulate payment processing
     /// </summary>
     public async Task<PaymentResult> ProcessPaymentAsync(string orderId, PaymentRequest paymentRequest)
     {
@@ -421,7 +421,7 @@ public class ECommerceService
 }
 
 /// <summary>
-/// 系统健康状态
+/// System health status
 /// </summary>
 [GenerateSerializer]
 public class SystemHealthStatus
@@ -432,7 +432,7 @@ public class SystemHealthStatus
 }
 
 /// <summary>
-/// 组件健康状态
+/// Component health status
 /// </summary>
 [GenerateSerializer]
 public class ComponentHealth
@@ -443,7 +443,7 @@ public class ComponentHealth
 }
 
 /// <summary>
-/// GUID 扩展方法
+/// GUID extension methods
 /// </summary>
 public static class StringExtensions
 {

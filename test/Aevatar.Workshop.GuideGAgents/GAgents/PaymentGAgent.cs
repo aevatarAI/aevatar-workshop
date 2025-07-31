@@ -18,7 +18,7 @@ public interface IPaymentGAgent : IStateGAgent<PaymentState>
 }
 
 /// <summary>
-/// 支付状态
+/// Payment state
 /// </summary>
 [GenerateSerializer]
 public class PaymentState : StateBase
@@ -33,13 +33,13 @@ public class PaymentState : StateBase
 }
 
 /// <summary>
-/// 支付状态日志事件基类
+/// Payment state log event base class
 /// </summary>
 [GenerateSerializer]
 public abstract class PaymentStateLogEvent : StateLogEventBase<PaymentStateLogEvent> { }
 
 /// <summary>
-/// 支付处理日志事件
+/// Payment processing log event
 /// </summary>
 [GenerateSerializer]
 public class PaymentProcessedLogEvent : PaymentStateLogEvent
@@ -48,7 +48,7 @@ public class PaymentProcessedLogEvent : PaymentStateLogEvent
 }
 
 /// <summary>
-/// 退款处理日志事件
+/// Refund processing log event
 /// </summary>
 [GenerateSerializer]
 public class RefundProcessedLogEvent : PaymentStateLogEvent
@@ -58,7 +58,7 @@ public class RefundProcessedLogEvent : PaymentStateLogEvent
 }
 
 /// <summary>
-/// 支付处理 GAgent 实现
+/// Payment processing GAgent implementation
 /// </summary>
 [GAgent("payment", "ecommerce")]
 public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPaymentGAgent
@@ -74,14 +74,14 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             throw new ArgumentNullException(nameof(request));
 
         if (string.IsNullOrEmpty(request.OrderId))
-            throw new ArgumentException("订单ID不能为空", nameof(request.OrderId));
+            throw new ArgumentException("Order ID cannot be empty", nameof(request.OrderId));
 
         if (request.Amount <= 0)
-            throw new ArgumentException("支付金额必须大于0", nameof(request.Amount));
+            throw new ArgumentException("Payment amount must be greater than 0", nameof(request.Amount));
 
-        Logger.LogInformation("开始处理支付：订单 {OrderId}，金额 {Amount:C}", request.OrderId, request.Amount);
+        Logger.LogInformation("Starting payment processing: Order {OrderId}, Amount {Amount:C}", request.OrderId, request.Amount);
 
-        // 验证支付方式
+        // Validate payment method
         var isValidPaymentMethod = await ValidatePaymentMethodAsync(request.PaymentMethod);
         if (!isValidPaymentMethod)
         {
@@ -89,15 +89,15 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             {
                 IsSuccessful = false,
                 TransactionId = string.Empty,
-                ErrorMessage = "无效的支付方式",
+                ErrorMessage = "Invalid payment method",
                 ProcessedAt = DateTime.UtcNow
             };
 
-            Logger.LogWarning("支付失败 - 无效的支付方式：订单 {OrderId}", request.OrderId);
+            Logger.LogWarning("Payment failed - Invalid payment method: Order {OrderId}", request.OrderId);
             return failureResult;
         }
 
-        // 模拟支付处理
+        // Simulate payment processing
         var isSuccessful = await SimulatePaymentProcessingAsync(request);
         var transactionId = Guid.NewGuid().ToString("N");
 
@@ -109,16 +109,16 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             PaymentMethod = request.PaymentMethod,
             Status = isSuccessful ? PaymentStatus.Completed : PaymentStatus.Failed,
             ProcessedAt = DateTime.UtcNow,
-            ErrorMessage = isSuccessful ? string.Empty : "支付处理失败，请检查支付信息",
+            ErrorMessage = isSuccessful ? string.Empty : "Payment processing failed, please check payment information",
             Currency = request.Currency,
-            Description = $"订单 {request.OrderId} 的支付"
+            Description = $"Payment for order {request.OrderId}"
         };
 
-        // 更新状态
+        // Update state
         RaiseEvent(new PaymentProcessedLogEvent { Transaction = transaction });
         await ConfirmEvents();
 
-        // 发布支付处理完成事件
+        // Publish payment processing completed event
         await PublishAsync(new PaymentProcessedEvent
         {
             OrderId = request.OrderId,
@@ -138,8 +138,8 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             ProcessedAt = DateTime.UtcNow
         };
 
-        Logger.LogInformation("支付处理完成：订单 {OrderId}，结果 {Result}，交易ID {TransactionId}", 
-            request.OrderId, isSuccessful ? "成功" : "失败", transactionId);
+        Logger.LogInformation("Payment processing completed: Order {OrderId}, Result {Result}, Transaction ID {TransactionId}", 
+            request.OrderId, isSuccessful ? "Success" : "Failure", transactionId);
 
         return result;
     }
@@ -147,12 +147,12 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
     public async Task<PaymentResult> RefundPaymentAsync(string transactionId, decimal amount, string reason)
     {
         if (string.IsNullOrEmpty(transactionId))
-            throw new ArgumentException("交易ID不能为空", nameof(transactionId));
+            throw new ArgumentException("Transaction ID cannot be empty", nameof(transactionId));
 
         if (amount <= 0)
-            throw new ArgumentException("退款金额必须大于0", nameof(amount));
+            throw new ArgumentException("Refund amount must be greater than 0", nameof(amount));
 
-        Logger.LogInformation("开始处理退款：交易 {TransactionId}，金额 {Amount:C}", transactionId, amount);
+        Logger.LogInformation("Starting refund processing: Transaction {TransactionId}, Amount {Amount:C}", transactionId, amount);
 
         if (!State.Transactions.TryGetValue(transactionId, out var originalTransaction))
         {
@@ -160,11 +160,11 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             {
                 IsSuccessful = false,
                 TransactionId = string.Empty,
-                ErrorMessage = "原始交易不存在",
+                ErrorMessage = "Original transaction does not exist",
                 ProcessedAt = DateTime.UtcNow
             };
 
-            Logger.LogWarning("退款失败 - 原始交易不存在：{TransactionId}", transactionId);
+            Logger.LogWarning("Refund failed - Original transaction does not exist: {TransactionId}", transactionId);
             return notFoundResult;
         }
 
@@ -174,11 +174,11 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             {
                 IsSuccessful = false,
                 TransactionId = string.Empty,
-                ErrorMessage = "原始交易状态不允许退款",
+                ErrorMessage = "Original transaction status does not allow refund",
                 ProcessedAt = DateTime.UtcNow
             };
 
-            Logger.LogWarning("退款失败 - 原始交易状态无效：{TransactionId}，状态：{Status}", 
+            Logger.LogWarning("Refund failed - Original transaction status invalid: {TransactionId}, Status: {Status}", 
                 transactionId, originalTransaction.Status);
             return invalidStatusResult;
         }
@@ -189,33 +189,33 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             {
                 IsSuccessful = false,
                 TransactionId = string.Empty,
-                ErrorMessage = "退款金额超过原始交易金额",
+                ErrorMessage = "Refund amount exceeds original transaction amount",
                 ProcessedAt = DateTime.UtcNow
             };
 
-            Logger.LogWarning("退款失败 - 金额超限：{RefundAmount:C} > {OriginalAmount:C}", 
+            Logger.LogWarning("Refund failed - Amount limit exceeded: {RefundAmount:C} > {OriginalAmount:C}", 
                 amount, originalTransaction.Amount);
             return exceedsAmountResult;
         }
 
-        // 模拟退款处理（通常成功率较高）
-        var isSuccessful = _random.NextDouble() > 0.05; // 95% 成功率
+        // Simulate refund processing (usually higher success rate)
+        var isSuccessful = _random.NextDouble() > 0.05; // 95% success rate
         var refundTransactionId = Guid.NewGuid().ToString("N");
 
         var refundTransaction = new PaymentTransaction
         {
             Id = refundTransactionId,
             OrderId = originalTransaction.OrderId,
-            Amount = -amount, // 负数表示退款
+            Amount = -amount, // Negative number indicates refund
             PaymentMethod = originalTransaction.PaymentMethod,
             Status = isSuccessful ? PaymentStatus.Refunded : PaymentStatus.Failed,
             ProcessedAt = DateTime.UtcNow,
-            ErrorMessage = isSuccessful ? string.Empty : "退款处理失败，请联系客服",
+            ErrorMessage = isSuccessful ? string.Empty : "Refund processing failed, please contact customer service",
             Currency = originalTransaction.Currency,
-            Description = $"订单 {originalTransaction.OrderId} 的退款 - {reason}"
+            Description = $"Refund for order {originalTransaction.OrderId} - {reason}"
         };
 
-        // 更新状态
+        // Update state
         RaiseEvent(new RefundProcessedLogEvent 
         { 
             RefundTransaction = refundTransaction,
@@ -231,8 +231,8 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             ProcessedAt = DateTime.UtcNow
         };
 
-        Logger.LogInformation("退款处理完成：原交易 {OriginalTransactionId}，退款交易 {RefundTransactionId}，结果 {Result}", 
-            transactionId, refundTransactionId, isSuccessful ? "成功" : "失败");
+        Logger.LogInformation("Refund processing completed: Original transaction {OriginalTransactionId}, Refund transaction {RefundTransactionId}, Result {Result}", 
+            transactionId, refundTransactionId, isSuccessful ? "Success" : "Failure");
 
         return result;
     }
@@ -263,7 +263,7 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
         if (paymentMethod == null)
             return Task.FromResult(false);
 
-        // 简单的支付方式验证逻辑
+        // Simple payment method validation logic
         switch (paymentMethod.Type)
         {
             case PaymentMethodType.CreditCard:
@@ -281,37 +281,37 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
         }
     }
 
-    #region 事件处理器
+    #region Event Handlers
 
     [EventHandler]
     public async Task HandleOrderValidatedAsync(OrderValidatedEvent @event)
     {
-        // 只有当订单验证成功时才开始支付处理
+        // Only start payment processing when order validation is successful
         if (!@event.IsValid)
         {
-            Logger.LogInformation("订单 {OrderId} 验证失败，跳过支付处理", @event.OrderId);
+            Logger.LogInformation("Order {OrderId} validation failed, skipping payment processing", @event.OrderId);
             return;
         }
 
-        Logger.LogInformation("收到订单验证成功事件，准备处理支付：{OrderId}", @event.OrderId);
+        Logger.LogInformation("Received order validation success event, preparing to process payment: {OrderId}", @event.OrderId);
 
-        // 这里可以自动触发支付处理，或者等待外部调用
-        // 在实际系统中，可能需要等待用户确认支付信息
+        // Can automatically trigger payment processing here, or wait for external call
+        // In actual systems, may need to wait for user to confirm payment information
     }
 
     #endregion
 
-    #region 私有方法
+    #region Private Methods
 
     private async Task<bool> SimulatePaymentProcessingAsync(PaymentRequest request)
     {
-        // 模拟支付处理延迟
+        // Simulate payment processing delay
         await Task.Delay(_random.Next(100, 500));
 
-        // 模拟支付成功率（85%）
+        // Simulate payment success rate (85%)
         var successRate = 0.85;
         
-        // 基于支付方式调整成功率
+        // Adjust success rate based on payment method
         switch (request.PaymentMethod.Type)
         {
             case PaymentMethodType.CreditCard:
@@ -336,7 +336,7 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
 
     private bool ValidateCreditCard(PaymentMethod paymentMethod)
     {
-        // 简单的信用卡验证逻辑
+        // Simple credit card validation logic
         return !string.IsNullOrEmpty(paymentMethod.CardNumber) &&
                paymentMethod.CardNumber.Length >= 13 &&
                !string.IsNullOrEmpty(paymentMethod.ExpiryDate) &&
@@ -345,27 +345,27 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
 
     private bool ValidateDebitCard(PaymentMethod paymentMethod)
     {
-        // 借记卡验证逻辑与信用卡类似
+        // Debit card validation logic similar to credit card
         return ValidateCreditCard(paymentMethod);
     }
 
     private bool ValidatePayPal(PaymentMethod paymentMethod)
     {
-        // PayPal 验证逻辑
+        // PayPal validation logic
         return !string.IsNullOrEmpty(paymentMethod.PayPalEmail) &&
                paymentMethod.PayPalEmail.Contains("@");
     }
 
     private bool ValidateBankTransfer(PaymentMethod paymentMethod)
     {
-        // 银行转账验证逻辑
+        // Bank transfer validation logic
         return !string.IsNullOrEmpty(paymentMethod.BankAccount) &&
                !string.IsNullOrEmpty(paymentMethod.RoutingNumber);
     }
 
     private bool ValidateDigitalWallet(PaymentMethod paymentMethod)
     {
-        // 数字钱包验证逻辑
+        // Digital wallet validation logic
         return !string.IsNullOrEmpty(paymentMethod.WalletId);
     }
 
@@ -378,12 +378,12 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             case PaymentProcessedLogEvent e:
                 state.Transactions[e.Transaction.Id] = e.Transaction;
                 
-                // 更新订单交易索引
+                // Update order transaction index
                 if (!state.OrderTransactions.ContainsKey(e.Transaction.OrderId))
                     state.OrderTransactions[e.Transaction.OrderId] = new List<string>();
                 state.OrderTransactions[e.Transaction.OrderId].Add(e.Transaction.Id);
                 
-                // 更新统计信息
+                // Update statistics
                 if (e.Transaction.Status == PaymentStatus.Completed)
                 {
                     state.TotalProcessed += e.Transaction.Amount;
@@ -400,12 +400,12 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
             case RefundProcessedLogEvent e:
                 state.Transactions[e.RefundTransaction.Id] = e.RefundTransaction;
                 
-                // 更新订单交易索引
+                // Update order transaction index
                 if (!state.OrderTransactions.ContainsKey(e.RefundTransaction.OrderId))
                     state.OrderTransactions[e.RefundTransaction.OrderId] = new List<string>();
                 state.OrderTransactions[e.RefundTransaction.OrderId].Add(e.RefundTransaction.Id);
                 
-                // 更新统计信息
+                // Update statistics
                 if (e.RefundTransaction.Status == PaymentStatus.Refunded)
                 {
                     state.TotalRefunded += Math.Abs(e.RefundTransaction.Amount);
@@ -418,7 +418,7 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
 }
 
 /// <summary>
-/// 支付请求
+/// Payment request
 /// </summary>
 [GenerateSerializer]
 public class PaymentRequest
@@ -431,7 +431,7 @@ public class PaymentRequest
 }
 
 /// <summary>
-/// 支付方式
+/// Payment method
 /// </summary>
 [GenerateSerializer]
 public class PaymentMethod
@@ -448,7 +448,7 @@ public class PaymentMethod
 }
 
 /// <summary>
-/// 支付结果
+/// Payment result
 /// </summary>
 [GenerateSerializer]
 public class PaymentResult
@@ -460,7 +460,7 @@ public class PaymentResult
 }
 
 /// <summary>
-/// 支付交易
+/// Payment transaction
 /// </summary>
 [GenerateSerializer]
 public class PaymentTransaction
@@ -477,7 +477,7 @@ public class PaymentTransaction
 }
 
 /// <summary>
-/// 支付方式类型
+/// Payment method type
 /// </summary>
 public enum PaymentMethodType
 {
@@ -489,7 +489,7 @@ public enum PaymentMethodType
 }
 
 /// <summary>
-/// 支付状态
+/// Payment state
 /// </summary>
 public enum PaymentStatus
 {

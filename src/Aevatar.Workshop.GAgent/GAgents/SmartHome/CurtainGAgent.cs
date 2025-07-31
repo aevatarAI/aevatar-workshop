@@ -6,28 +6,28 @@ namespace Aevatar.Workshop.GAgent.GAgents.SmartHome;
 
 #region Interface
 /// <summary>
-/// 智能窗帘控制接口
+/// Smart curtain control interface
 /// </summary>
 public interface ICurtainGAgent : IStateGAgent<CurtainState>
 {
     /// <summary>
-    /// 设置窗帘开合度
+    /// Set curtain opening position
     /// </summary>
-    /// <param name="position">开合度 (0-100)</param>
+    /// <param name="position">Opening position (0-100)</param>
     Task SetPositionAsync(int position);
     
     /// <summary>
-    /// 完全打开窗帘
+    /// Fully open curtain
     /// </summary>
     Task OpenAsync();
     
     /// <summary>
-    /// 完全关闭窗帘
+    /// Fully close curtain
     /// </summary>
     Task CloseAsync();
     
     /// <summary>
-    /// 停止窗帘移动
+    /// Stop curtain movement
     /// </summary>
     Task StopAsync();
 }
@@ -35,33 +35,33 @@ public interface ICurtainGAgent : IStateGAgent<CurtainState>
 
 #region State
 /// <summary>
-/// 窗帘状态
+/// Curtain state
 /// </summary>
 [GenerateSerializer]
 public class CurtainState : StateBase
 {
     /// <summary>
-    /// 窗帘ID
+    /// Curtain ID
     /// </summary>
     [Id(0)] public string CurtainId { get; set; } = string.Empty;
     
     /// <summary>
-    /// 当前开合度 (0-100, 0=完全关闭, 100=完全打开)
+    /// Current opening position (0-100, 0=fully closed, 100=fully open)
     /// </summary>
     [Id(1)] public int CurrentPosition { get; set; } = 100;
     
     /// <summary>
-    /// 目标开合度
+    /// Target opening position
     /// </summary>
     [Id(2)] public int TargetPosition { get; set; } = 100;
     
     /// <summary>
-    /// 是否正在移动
+    /// Is currently moving
     /// </summary>
     [Id(3)] public bool IsMoving { get; set; } = false;
     
     /// <summary>
-    /// 最后操作时间
+    /// Last operation time
     /// </summary>
     [Id(4)] public DateTime LastOperationTime { get; set; } = DateTime.UtcNow;
 }
@@ -69,13 +69,13 @@ public class CurtainState : StateBase
 
 #region State Log Events
 /// <summary>
-/// 窗帘状态日志事件基类
+/// Curtain state log event base class
 /// </summary>
 [GenerateSerializer]
 public abstract class CurtainStateLogEvent : StateLogEventBase<CurtainStateLogEvent> { }
 
 /// <summary>
-/// 窗帘位置变更事件
+/// Curtain position change event
 /// </summary>
 [GenerateSerializer]
 public class CurtainPositionChangedLogEvent : CurtainStateLogEvent
@@ -86,7 +86,7 @@ public class CurtainPositionChangedLogEvent : CurtainStateLogEvent
 }
 
 /// <summary>
-/// 窗帘移动状态变更事件
+/// Curtain movement status change event
 /// </summary>
 [GenerateSerializer]
 public class CurtainMovementChangedLogEvent : CurtainStateLogEvent
@@ -96,7 +96,7 @@ public class CurtainMovementChangedLogEvent : CurtainStateLogEvent
 }
 
 /// <summary>
-/// 窗帘停止事件
+/// Curtain stop event
 /// </summary>
 [GenerateSerializer]
 public class CurtainStoppedLogEvent : CurtainStateLogEvent
@@ -107,22 +107,22 @@ public class CurtainStoppedLogEvent : CurtainStateLogEvent
 
 #region Events
 /// <summary>
-/// 设置窗帘位置命令
+/// Set curtain position command
 /// </summary>
 [GenerateSerializer]
 public class SetCurtainPositionCommand : EventBase
 {
     [Id(0)] 
-    [System.ComponentModel.Description("窗帘设备的唯一标识符")]
+    [System.ComponentModel.Description("Unique identifier for curtain device")]
     public string CurtainId { get; set; } = string.Empty;
     
     [Id(1)] 
-    [System.ComponentModel.Description("目标开合度，范围 0-100，0 表示完全关闭，100 表示完全打开")]
+    [System.ComponentModel.Description("Target opening position, range 0-100, 0 means fully closed, 100 means fully open")]
     public int Position { get; set; }
 }
 
 /// <summary>
-/// 打开窗帘命令
+/// Open curtain command
 /// </summary>
 [GenerateSerializer]
 public class OpenCurtainCommand : EventBase
@@ -131,7 +131,7 @@ public class OpenCurtainCommand : EventBase
 }
 
 /// <summary>
-/// 关闭窗帘命令
+/// Close curtain command
 /// </summary>
 [GenerateSerializer]
 public class CloseCurtainCommand : EventBase
@@ -140,7 +140,7 @@ public class CloseCurtainCommand : EventBase
 }
 
 /// <summary>
-/// 停止窗帘命令
+/// Stop curtain command
 /// </summary>
 [GenerateSerializer]
 public class StopCurtainCommand : EventBase
@@ -149,7 +149,7 @@ public class StopCurtainCommand : EventBase
 }
 
 /// <summary>
-/// 窗帘状态变更事件
+/// Curtain state change event
 /// </summary>
 [GenerateSerializer]
 public class CurtainStateChangedEvent : EventBase
@@ -162,33 +162,33 @@ public class CurtainStateChangedEvent : EventBase
 
 #region Implementation
 /// <summary>
-/// 智能窗帘 GAgent 实现
+/// Smart curtain GAgent implementation
 /// </summary>
 [GAgent("curtain", "smarthome")]
 public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICurtainGAgent
 {
     private IGrainTimer? _movementTimer;
-    private const int MovementSpeed = 10; // 每秒移动的百分比
+    private const int MovementSpeed = 10; // Percentage movement per second
     
     public override Task<string> GetDescriptionAsync()
     {
-        var status = State.IsMoving ? "移动中" : "静止";
+        var status = State.IsMoving ? "Moving" : "Stationary";
         return Task.FromResult(
-            $"【智能窗帘控制器】控制主卧的窗帘设备。\n" +
-            $"当前状态：开合度 {State.CurrentPosition}%，{status}\n\n" +
-            $"可用命令：\n" +
-            $"• OpenCurtainCommand - 完全打开窗帘\n" +
-            $"  参数：CurtainId (string) - 设备ID\n" +
-            $"• CloseCurtainCommand - 完全关闭窗帘\n" +
-            $"  参数：CurtainId (string) - 设备ID\n" +
-            $"• SetCurtainPositionCommand - 设置窗帘开合度\n" +
-            $"  参数：CurtainId (string) - 设备ID, Position (int) - 开合度(0-100)\n" +
-            $"• StopCurtainCommand - 停止窗帘移动\n" +
-            $"  参数：CurtainId (string) - 设备ID\n\n" +
-            $"使用示例：\n" +
-            $"- 用户说'打开窗帘' → 使用OpenCurtainCommand\n" +
-            $"- 用户说'把窗帘调到50%' → 使用SetCurtainPositionCommand，Position=50\n" +
-            $"- 用户说'关闭窗帘' → 使用CloseCurtainCommand");
+            $"[Smart Curtain Controller] Controls curtain devices in the master bedroom.\n" +
+            $"Current status: Opening position {State.CurrentPosition}%, {status}\n\n" +
+            $"Available commands:\n" +
+            $"• OpenCurtainCommand - Fully open curtain\n" +
+            $"  Parameters: CurtainId (string) - Device ID\n" +
+            $"• CloseCurtainCommand - Fully close curtain\n" +
+            $"  Parameters: CurtainId (string) - Device ID\n" +
+            $"• SetCurtainPositionCommand - Set curtain opening position\n" +
+            $"  Parameters: CurtainId (string) - Device ID, Position (int) - Opening position (0-100)\n" +
+            $"• StopCurtainCommand - Stop curtain movement\n" +
+            $"  Parameters: CurtainId (string) - Device ID\n\n" +
+            $"Usage examples:\n" +
+            $"- User says 'open curtain' → Use OpenCurtainCommand\n" +
+            $"- User says 'set curtain to 50%' → Use SetCurtainPositionCommand, Position=50\n" +
+            $"- User says 'close curtain' → Use CloseCurtainCommand");
     }
     
     protected override Task OnGAgentActivateAsync(CancellationToken cancellationToken)
@@ -213,11 +213,11 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
         
         if (State.CurrentPosition == position)
         {
-            Logger.LogInformation("窗帘已在目标位置 {Position}%", position);
+            Logger.LogInformation("Curtain already at target position {Position}%", position);
             return;
         }
         
-        // 记录目标位置和开始移动
+        // Record target position and start movement
         RaiseEvent(new CurtainMovementChangedLogEvent
         {
             IsMoving = true,
@@ -226,10 +226,10 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
         
         await ConfirmEvents();
         
-        // 启动移动模拟
+        // Start movement simulation
         StartMovementSimulation();
         
-        // 发布状态变更事件
+        // Publish state change event
         await PublishAsync(new CurtainStateChangedEvent
         {
             CurtainId = State.CurtainId,
@@ -237,7 +237,7 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
             IsMoving = true
         });
         
-        Logger.LogInformation("窗帘开始移动到 {Position}%", position);
+        Logger.LogInformation("Curtain started moving to {Position}%", position);
     }
     
     public Task OpenAsync()
@@ -254,7 +254,7 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
     {
         if (!State.IsMoving)
         {
-            Logger.LogInformation("窗帘当前未在移动");
+            Logger.LogInformation("Curtain is not currently moving");
             return;
         }
         
@@ -274,7 +274,7 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
             IsMoving = false
         });
         
-        Logger.LogInformation("窗帘已停止在 {Position}%", State.CurrentPosition);
+        Logger.LogInformation("Curtain stopped at {Position}%", State.CurrentPosition);
     }
     
     protected override void GAgentTransitionState(CurtainState state, StateLogEventBase<CurtainStateLogEvent> @event)
@@ -299,7 +299,7 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
         }
     }
     
-    // 事件处理器
+    // Event handlers
     [EventHandler]
     public Task HandleSetPositionCommand(SetCurtainPositionCommand command)
     {
@@ -372,12 +372,12 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
         
         if (State.CurrentPosition < State.TargetPosition)
         {
-            // 向上移动
+            // Move upward
             newPosition = Math.Min(State.CurrentPosition + MovementSpeed, State.TargetPosition);
         }
         else if (State.CurrentPosition > State.TargetPosition)
         {
-            // 向下移动
+            // Move downward
             newPosition = Math.Max(State.CurrentPosition - MovementSpeed, State.TargetPosition);
         }
         
@@ -388,7 +388,7 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
             OperationTime = DateTime.UtcNow
         });
         
-        // 检查是否到达目标位置
+        // Check if target position reached
         if (newPosition == State.TargetPosition)
         {
             RaiseEvent(new CurtainMovementChangedLogEvent
@@ -402,7 +402,7 @@ public class CurtainGAgent : GAgentBase<CurtainState, CurtainStateLogEvent>, ICu
         
         await ConfirmEvents();
         
-        // 发布状态更新事件
+        // Publish state update event
         await PublishAsync(new CurtainStateChangedEvent
         {
             CurtainId = State.CurtainId,

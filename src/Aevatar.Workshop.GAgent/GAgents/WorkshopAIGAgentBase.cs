@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Aevatar.Core.Abstractions;
 using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.AI.Options;
@@ -7,7 +8,6 @@ using Aevatar.GAgents.AIGAgent.State;
 using Aevatar.Workshop.GAgent.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace Aevatar.Workshop.GAgent.GAgents;
 
@@ -73,18 +73,16 @@ public abstract class WorkshopAIGAgentBase<TState, TStateLogEvent> : AIGAgentBas
             if (response.Success && !string.IsNullOrEmpty(response.ConfigJson))
             {
                 // Deserialize as dictionary of LLMConfig
-                var configDict = JsonConvert.DeserializeObject<Dictionary<string, LLMConfig>>(response.ConfigJson);
-                
+                var configDict = JsonSerializer.Deserialize<Dictionary<string, LLMConfig>>(response.ConfigJson);
+
                 if (configDict != null && configDict.TryGetValue(key, out var config))
                 {
                     Logger.LogInformation("Successfully resolved config for key: {Key}", key);
                     return config;
                 }
-                else
-                {
-                    Logger.LogWarning("Config dictionary does not contain key: {Key}. Available keys: {Keys}", 
-                        key, configDict?.Keys != null ? string.Join(", ", configDict.Keys) : "none");
-                }
+
+                Logger.LogWarning("Config dictionary does not contain key: {Key}. Available keys: {Keys}", 
+                    key, configDict?.Keys != null ? string.Join(", ", configDict.Keys) : "none");
             }
             else
             {

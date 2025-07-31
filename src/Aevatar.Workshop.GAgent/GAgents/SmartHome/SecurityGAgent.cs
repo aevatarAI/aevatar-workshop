@@ -10,7 +10,7 @@ namespace Aevatar.Workshop.GAgent.GAgents.SmartHome;
 #region State and Events
 
 /// <summary>
-/// 安防系统状态
+/// Security system state
 /// </summary>
 [GenerateSerializer]
 public class SecurityState : StateBase
@@ -25,13 +25,13 @@ public class SecurityState : StateBase
 }
 
 /// <summary>
-/// 状态日志事件基类
+/// State log event base class
 /// </summary>
 [GenerateSerializer]
 public class SecurityStateLogEvent : StateLogEventBase<SecurityStateLogEvent>;
 
 /// <summary>
-/// 系统布防事件
+/// System armed event
 /// </summary>
 [GenerateSerializer]
 public class SystemArmedLogEvent : SecurityStateLogEvent
@@ -40,7 +40,7 @@ public class SystemArmedLogEvent : SecurityStateLogEvent
 }
 
 /// <summary>
-/// 系统撤防事件
+/// System disarmed event
 /// </summary>
 [GenerateSerializer]
 public class SystemDisarmedLogEvent : SecurityStateLogEvent
@@ -49,7 +49,7 @@ public class SystemDisarmedLogEvent : SecurityStateLogEvent
 }
 
 /// <summary>
-/// 检测到移动日志事件
+/// Motion detected log event
 /// </summary>
 [GenerateSerializer]
 public class MotionDetectedLogEvent : SecurityStateLogEvent
@@ -63,7 +63,7 @@ public class MotionDetectedLogEvent : SecurityStateLogEvent
 #region Interface
 
 /// <summary>
-/// 安防系统控制接口
+/// Security system control interface
 /// </summary>
 public interface ISecurityGAgent : IStateGAgent<SecurityState>
 {
@@ -72,7 +72,7 @@ public interface ISecurityGAgent : IStateGAgent<SecurityState>
     Task<bool> IsArmedAsync();
     Task<DateTime> GetLastMotionTimeAsync();
     Task<string> GetLastMotionLocationAsync();
-    Task SimulateMotionAsync(string location); // 模拟移动检测
+    Task SimulateMotionAsync(string location); // Simulate motion detection
 }
 
 #endregion
@@ -80,7 +80,7 @@ public interface ISecurityGAgent : IStateGAgent<SecurityState>
 #region Implementation
 
 /// <summary>
-/// 安防系统控制智能体
+/// Security system control GAgent
 /// </summary>
 [GAgent("security", "smarthome")]
 public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, ISecurityGAgent
@@ -88,16 +88,16 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
     private IDisposable? _motionSimulationTimer;
     private readonly Random _random = new Random();
     private readonly string[] _locations = { "Front Door", "Living Room", "Kitchen", "Bedroom", "Backyard" };
-    
+
     protected override Task OnGAgentActivateAsync(CancellationToken cancellationToken)
     {
-        // 初始化安防系统ID
+        // Initialize security system ID
         if (string.IsNullOrEmpty(State.SecuritySystemId))
         {
             State.SecuritySystemId = this.GetGrainId().Key.ToString() ?? "default-security";
         }
-        
-        // 启动移动检测模拟定时器（仅在布防时检测）
+
+        // Start motion detection simulation timer (only detect when armed)
         _motionSimulationTimer = this.RegisterGrainTimer(
             async (token) => await SimulateRandomMotionAsync(),
             new GrainTimerCreationOptions
@@ -107,7 +107,7 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
                 Interleave = true
             }
         );
-        
+
         return base.OnGAgentActivateAsync(cancellationToken);
     }
 
@@ -119,23 +119,23 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
 
     public override Task<string> GetDescriptionAsync()
     {
-        var status = State.IsArmed ? "已布防" : "已撤防";
-        var lastMotion = State.LastMotionDetected == DateTime.MinValue 
-            ? "未检测到移动" 
-            : $"最后移动：{State.LastMotionDetected:HH:mm:ss} 在 {State.LastMotionLocation}";
-        
+        var status = State.IsArmed ? "Armed" : "Disarmed";
+        var lastMotion = State.LastMotionDetected == DateTime.MinValue
+            ? "No motion detected"
+            : $"Last motion: {State.LastMotionDetected:HH:mm:ss} at {State.LastMotionLocation}";
+
         return Task.FromResult(
-            $"【智能安防系统】监控{State.Location}的安全设备。\n" +
-            $"当前状态：{status}，{lastMotion}\n\n" +
-            $"可用命令：\n" +
-            $"• ArmSecurityCommand - 启动布防\n" +
-            $"  参数：SecuritySystemId (string) - 设备ID\n" +
-            $"• DisarmSecurityCommand - 解除布防\n" +
-            $"  参数：SecuritySystemId (string) - 设备ID\n\n" +
-            $"使用示例：\n" +
-            $"- 用户说'启动安防' → 使用ArmSecurityCommand\n" +
-            $"- 用户说'关闭警报' → 使用DisarmSecurityCommand\n" +
-            $"- 用户说'布防' → 使用ArmSecurityCommand");
+            $"[Smart Security System] Monitors security devices at {State.Location}.\n" +
+            $"Current status: {status}, {lastMotion}\n\n" +
+            $"Available commands:\n" +
+            $"• ArmSecurityCommand - Activate arming\n" +
+            $"  Parameters: SecuritySystemId (string) - Device ID\n" +
+            $"• DisarmSecurityCommand - Deactivate arming\n" +
+            $"  Parameters: SecuritySystemId (string) - Device ID\n\n" +
+            $"Usage examples:\n" +
+            $"- User says 'activate security' → Use ArmSecurityCommand\n" +
+            $"- User says 'turn off alarm' → Use DisarmSecurityCommand\n" +
+            $"- User says 'arm system' → Use ArmSecurityCommand");
     }
 
     #region Public Methods
@@ -147,7 +147,7 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
             RaiseEvent(new SystemArmedLogEvent { Timestamp = DateTime.UtcNow });
             return ConfirmEvents();
         }
-        
+
         Logger.LogDebug("Security system {SecuritySystemId} is already armed", State.SecuritySystemId);
         return Task.CompletedTask;
     }
@@ -159,7 +159,7 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
             RaiseEvent(new SystemDisarmedLogEvent { Timestamp = DateTime.UtcNow });
             return ConfirmEvents();
         }
-        
+
         Logger.LogDebug("Security system {SecuritySystemId} is already disarmed", State.SecuritySystemId);
         return Task.CompletedTask;
     }
@@ -180,22 +180,22 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
                 Timestamp = DateTime.UtcNow
             });
             await ConfirmEvents();
-            
-            // 发布移动检测事件
+
+            // Publish motion detection event
             await PublishAsync(new MotionDetectedEvent
             {
                 SecuritySystemId = State.SecuritySystemId,
                 Location = location,
                 DetectedAt = State.LastMotionDetected
             });
-            
+
             Logger.LogWarning("Motion detected at {Location} while system is armed!", location);
         }
     }
 
     private async Task SimulateRandomMotionAsync()
     {
-        // 仅在布防状态下，有20%的概率检测到移动
+        // Only in armed state, 20% chance to detect motion
         if (State.IsArmed && _random.Next(100) < 20)
         {
             var location = _locations[_random.Next(_locations.Length)];
@@ -218,8 +218,8 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
 
         Logger.LogInformation("Arming security system {SecuritySystemId}", State.SecuritySystemId);
         await ArmAsync();
-        
-        // 发布状态变化事件
+
+        // Publish state change event
         await PublishAsync(new SecurityStateChangedEvent
         {
             SecuritySystemId = State.SecuritySystemId,
@@ -233,14 +233,15 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
     {
         if (command.SecuritySystemId != State.SecuritySystemId && !string.IsNullOrEmpty(command.SecuritySystemId))
         {
-            Logger.LogDebug("Ignoring DisarmCommand for different security system: {TargetId}", command.SecuritySystemId);
+            Logger.LogDebug("Ignoring DisarmCommand for different security system: {TargetId}",
+                command.SecuritySystemId);
             return;
         }
 
         Logger.LogInformation("Disarming security system {SecuritySystemId}", State.SecuritySystemId);
         await DisarmAsync();
-        
-        // 发布状态变化事件
+
+        // Publish state change event
         await PublishAsync(new SecurityStateChangedEvent
         {
             SecuritySystemId = State.SecuritySystemId,
@@ -260,17 +261,17 @@ public class SecurityGAgent : GAgentBase<SecurityState, SecurityStateLogEvent>, 
             case SystemArmedLogEvent e:
                 state.IsArmed = true;
                 state.LastChangeAt = e.Timestamp;
-                Logger.LogDebug("Security system {SecuritySystemId} armed at {Timestamp}", 
+                Logger.LogDebug("Security system {SecuritySystemId} armed at {Timestamp}",
                     state.SecuritySystemId, e.Timestamp);
                 break;
-                
+
             case SystemDisarmedLogEvent e:
                 state.IsArmed = false;
                 state.LastChangeAt = e.Timestamp;
-                Logger.LogDebug("Security system {SecuritySystemId} disarmed at {Timestamp}", 
+                Logger.LogDebug("Security system {SecuritySystemId} disarmed at {Timestamp}",
                     state.SecuritySystemId, e.Timestamp);
                 break;
-                
+
             case MotionDetectedLogEvent e:
                 state.LastMotionDetected = e.Timestamp;
                 state.LastMotionLocation = e.Location;

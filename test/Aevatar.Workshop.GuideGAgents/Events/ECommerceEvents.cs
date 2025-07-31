@@ -3,7 +3,7 @@ using Aevatar.Core.Abstractions;
 namespace Aevatar.Workshop.GuideGAgents.Events;
 
 /// <summary>
-/// 订单提交事件
+/// Order submission event
 /// </summary>
 [GenerateSerializer]
 public class OrderSubmittedEvent : EventBase
@@ -16,7 +16,7 @@ public class OrderSubmittedEvent : EventBase
 }
 
 /// <summary>
-/// 订单验证完成事件
+/// Order validation completed event
 /// </summary>
 [GenerateSerializer]
 public class OrderValidatedEvent : EventBase
@@ -29,7 +29,7 @@ public class OrderValidatedEvent : EventBase
 }
 
 /// <summary>
-/// 支付处理完成事件
+/// Payment processing completed event
 /// </summary>
 [GenerateSerializer]
 public class PaymentProcessedEvent : EventBase
@@ -44,7 +44,7 @@ public class PaymentProcessedEvent : EventBase
 }
 
 /// <summary>
-/// 库存预留事件
+/// Inventory reservation event
 /// </summary>
 [GenerateSerializer]
 public class InventoryReservedEvent : EventBase
@@ -55,7 +55,7 @@ public class InventoryReservedEvent : EventBase
 }
 
 /// <summary>
-/// 库存预留失败事件
+/// Inventory reservation failed event
 /// </summary>
 [GenerateSerializer]
 public class InventoryReservationFailedEvent : EventBase
@@ -67,7 +67,7 @@ public class InventoryReservationFailedEvent : EventBase
 }
 
 /// <summary>
-/// 订单发货事件
+/// Order shipped event
 /// </summary>
 [GenerateSerializer]
 public class OrderShippedEvent : EventBase
@@ -80,7 +80,7 @@ public class OrderShippedEvent : EventBase
 }
 
 /// <summary>
-/// 订单通知事件
+/// Order notification event
 /// </summary>
 [GenerateSerializer]
 public class OrderNotificationEvent : EventBase
@@ -94,7 +94,7 @@ public class OrderNotificationEvent : EventBase
 }
 
 /// <summary>
-/// 订单项
+/// Order item
 /// </summary>
 [GenerateSerializer]
 public class OrderItem
@@ -107,7 +107,7 @@ public class OrderItem
 }
 
 /// <summary>
-/// 库存预留信息
+/// Inventory reservation information
 /// </summary>
 [GenerateSerializer]
 public class InventoryReservation
@@ -120,7 +120,7 @@ public class InventoryReservation
 }
 
 /// <summary>
-/// 通知类型
+/// Notification type
 /// </summary>
 public enum NotificationType
 {

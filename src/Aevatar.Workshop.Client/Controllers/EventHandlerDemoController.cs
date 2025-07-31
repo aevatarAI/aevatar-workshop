@@ -27,8 +27,8 @@ public class EventHandlerDemoController : ControllerBase
         new DemoGAgentInfo
         {
             Name = "NotificationGAgent",
-            DisplayName = "通知处理器",
-            Description = "处理和记录通知事件的演示GAgent",
+            DisplayName = "Notification Handler",
+            Description = "Demo GAgent for processing and recording notification events",
             GrainType = GrainType.Create("workshop.notification-demo"),
             EventHandlers = new List<string> 
             { 
@@ -39,8 +39,8 @@ public class EventHandlerDemoController : ControllerBase
         new DemoGAgentInfo
         {
             Name = "ProcessingGAgent",
-            DisplayName = "数据处理器",
-            Description = "处理数据处理任务的演示GAgent，支持优先级队列",
+            DisplayName = "Data Processor",
+            Description = "Demo GAgent for handling data processing tasks with priority queue support",
             GrainType = GrainType.Create("workshop.processing-demo"),
             EventHandlers =
             [
@@ -52,8 +52,8 @@ public class EventHandlerDemoController : ControllerBase
         new DemoGAgentInfo
         {
             Name = "CoordinatorDemoGAgent",
-            DisplayName = "协调器",
-            Description = "协调多个GAgent协同工作的演示GAgent",
+            DisplayName = "Coordinator",
+            Description = "Demo GAgent for coordinating multiple GAgents to work together",
             GrainType = GrainType.Create("workshop.coordinator-demo"),
             EventHandlers = new List<string>
             {
@@ -64,8 +64,8 @@ public class EventHandlerDemoController : ControllerBase
         new DemoGAgentInfo
         {
             Name = "EventLoggerGAgent",
-            DisplayName = "事件记录器",
-            Description = "记录和分析系统中所有事件的演示GAgent",
+            DisplayName = "Event Logger",
+            Description = "Demo GAgent for recording and analyzing all events in the system",
             GrainType = GrainType.Create("workshop.event-logger-demo"),
             EventHandlers = new List<string>
             {
@@ -84,7 +84,7 @@ public class EventHandlerDemoController : ControllerBase
     }
 
     /// <summary>
-    /// 获取所有demo GAgent信息
+    /// Get all demo GAgent information
     /// </summary>
     [HttpGet("agents")]
     public IActionResult GetDemoAgents()
@@ -104,7 +104,7 @@ public class EventHandlerDemoController : ControllerBase
     }
 
     /// <summary>
-    /// 初始化demo环境
+    /// Initialize demo environment
     /// </summary>
     [HttpPost("initialize")]
     public async Task<IActionResult> InitializeDemoAsync()
@@ -113,13 +113,13 @@ public class EventHandlerDemoController : ControllerBase
         {
             var results = new List<object>();
 
-            // 1. 创建PublishingGAgent作为parent
+            // 1. Create PublishingGAgent as parent
             var publishingAgent = await _gAgentFactory.GetGAgentAsync<IPublishingGAgent>(PublishingAgentId);
             await publishingAgent.ActivateAsync();
             
-            _logger.LogInformation("创建PublishingGAgent: {GrainId}", PublishingAgentId);
+            _logger.LogInformation("Creating PublishingGAgent: {GrainId}", PublishingAgentId);
 
-            // 2. 创建每个demo GAgent并注册为PublishingGAgent的children
+            // 2. Create each demo GAgent and register as children of PublishingGAgent
             foreach (var agentInfo in DemoGAgents)
             {
                 var agentId = Guid.NewGuid();
@@ -128,11 +128,11 @@ public class EventHandlerDemoController : ControllerBase
                 var grainId = GrainId.Create(agentInfo.GrainType, agentId.ToString());
                 var agent = await _gAgentFactory.GetGAgentAsync(grainId);
                 
-                // 激活agent
+                // Activate agent
                 await agent.ActivateAsync();
                 var description = await agent.GetDescriptionAsync();
                 
-                // 将agent注册为PublishingGAgent的child
+                // Register agent as child of PublishingGAgent
                 await publishingAgent.RegisterAsync(agent);
                 
                 results.Add(new
@@ -143,11 +143,11 @@ public class EventHandlerDemoController : ControllerBase
                     status = "initialized"
                 });
 
-                _logger.LogInformation("初始化并注册 {AgentName}: {GrainId}", agentInfo.Name, grainId);
+                _logger.LogInformation("Initializing and registering {AgentName}: {GrainId}", agentInfo.Name, grainId);
             }
 
-            // 3. 设置特殊的订阅关系
-            // EventLoggerGAgent应该也订阅其他GAgent以记录它们的事件
+            // 3. Set up special subscription relationships
+            // EventLoggerGAgent should also subscribe to other GAgents to record their events
             var eventLogger = await _gAgentFactory.GetGAgentAsync<IEventLoggerGAgent>(DemoGAgentIds["EventLoggerGAgent"]);
             
             foreach (var agentInfo in DemoGAgents.Where(a => a.Name != "EventLoggerGAgent"))
@@ -155,26 +155,26 @@ public class EventHandlerDemoController : ControllerBase
                 var agentGrainId = GrainId.Create(agentInfo.GrainType, DemoGAgentIds[agentInfo.Name].ToString());
                 var agent = await _gAgentFactory.GetGAgentAsync(agentGrainId);
                 
-                // EventLogger订阅其他agent的事件
+                // EventLogger subscribes to other agents' events
                 await agent.RegisterAsync(eventLogger);
-                _logger.LogInformation("EventLogger订阅 {AgentName}", agentInfo.Name);
+                _logger.LogInformation("EventLogger subscribing to {AgentName}", agentInfo.Name);
             }
             
-            // 同时，为了让EventLogger能记录PublishingGAgent发布的事件，也需要让PublishingGAgent注册EventLogger
+            // At the same time, to allow EventLogger to record events published by PublishingGAgent, PublishingGAgent also needs to register EventLogger
             await publishingAgent.RegisterAsync(eventLogger);
-            _logger.LogInformation("PublishingGAgent注册EventLogger为child");
+            _logger.LogInformation("PublishingGAgent registering EventLogger as child");
 
             return Ok(new { success = true, agents = results, publishingAgentId = PublishingAgentId });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "初始化demo环境失败");
+            _logger.LogError(ex, "Failed to initialize demo environment");
             return StatusCode(500, new { success = false, error = ex.Message });
         }
     }
 
     /// <summary>
-    /// 获取指定GAgent的统计信息
+    /// Get statistics for specified GAgent
     /// </summary>
     [HttpGet("statistics/{agentName}")]
     public async Task<IActionResult> GetAgentStatisticsAsync(string agentName)
@@ -223,13 +223,13 @@ public class EventHandlerDemoController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "获取统计信息失败");
+            _logger.LogError(ex, "Failed to get statistics");
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
     /// <summary>
-    /// 触发通知事件
+    /// Trigger notification event
     /// </summary>
     [HttpPost("trigger/notification")]
     public async Task<IActionResult> TriggerNotificationAsync([FromBody] TriggerNotificationRequest request)
@@ -244,20 +244,20 @@ public class EventHandlerDemoController : ControllerBase
                 Source = request.Source ?? "EventHandlerDemo"
             };
 
-            // 通过PublishingGAgent发布事件
+            // Publish event through PublishingGAgent
             await PublishEventAsync(notificationEvent);
 
             return Ok(new { success = true, eventId = notificationEvent.GetHashCode() });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "触发通知事件失败");
+            _logger.LogError(ex, "Failed to trigger notification event");
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
     /// <summary>
-    /// 触发数据处理事件
+    /// Trigger data processing event
     /// </summary>
     [HttpPost("trigger/processing")]
     public async Task<IActionResult> TriggerProcessingAsync([FromBody] TriggerProcessingRequest request)
@@ -277,13 +277,13 @@ public class EventHandlerDemoController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "触发数据处理事件失败");
+            _logger.LogError(ex, "Failed to trigger data processing event");
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
     /// <summary>
-    /// 触发协调请求事件
+    /// Trigger coordination request event
     /// </summary>
     [HttpPost("trigger/coordination")]
     public async Task<IActionResult> TriggerCoordinationAsync([FromBody] TriggerCoordinationRequest request)
@@ -303,13 +303,13 @@ public class EventHandlerDemoController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "触发协调请求事件失败");
+            _logger.LogError(ex, "Failed to trigger coordination request event");
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
     /// <summary>
-    /// 搜索事件日志
+    /// Search event logs
     /// </summary>
     [HttpGet("events/search")]
     public async Task<IActionResult> SearchEventsAsync(
@@ -323,7 +323,7 @@ public class EventHandlerDemoController : ControllerBase
                 return BadRequest(new { error = "EventLogger not initialized" });
             }
 
-            // 获取EventLogger实例
+            // Get EventLogger instance
             var loggerAgent = await _gAgentFactory.GetGAgentAsync<IEventLoggerGAgent>(guid);
             
             var events = await loggerAgent.SearchEventsAsync(eventType, sourceAgent);
@@ -332,30 +332,30 @@ public class EventHandlerDemoController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "搜索事件日志失败");
+            _logger.LogError(ex, "Failed to search event logs");
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
     /// <summary>
-    /// 创建模拟场景
+    /// Create simulation scenario
     /// </summary>
     [HttpPost("scenario/simulate")]
     public async Task<IActionResult> SimulateScenarioAsync()
     {
         try
         {
-            // 1. 发送一些通知
+            // 1. Send some notifications
             await TriggerNotificationAsync(new TriggerNotificationRequest
             {
-                Title = "系统启动",
-                Message = "Event Handler Demo系统已启动",
+                Title = "System Startup",
+                Message = "Event Handler Demo system started",
                 Level = NotificationLevel.Info
             });
 
             await Task.Delay(500);
 
-            // 2. 触发数据处理
+            // 2. Trigger data processing
             await TriggerProcessingAsync(new TriggerProcessingRequest
             {
                 DataType = "UserData",
@@ -365,39 +365,39 @@ public class EventHandlerDemoController : ControllerBase
 
             await Task.Delay(500);
 
-            // 3. 触发协调任务
+            // 3. Trigger coordination task
             await TriggerCoordinationAsync(new TriggerCoordinationRequest
             {
-                TaskName = "数据同步任务",
+                TaskName = "Data Synchronization Task",
                 RequiredAgents = new List<string> { "DataAgent", "CacheAgent", "DBAgent" }
             });
 
             await Task.Delay(500);
 
-            // 4. 触发错误通知
+            // 4. Trigger error notification
             await TriggerNotificationAsync(new TriggerNotificationRequest
             {
-                Title = "处理错误",
-                Message = "数据验证失败",
+                Title = "Processing Error",
+                Message = "Data validation failed",
                 Level = NotificationLevel.Error
             });
 
-            return Ok(new { success = true, message = "模拟场景已执行" });
+            return Ok(new { success = true, message = "Simulation scenario executed" });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "执行模拟场景失败");
+            _logger.LogError(ex, "Failed to execute simulation scenario");
             return StatusCode(500, new { error = ex.Message });
         }
     }
 
     private async Task PublishEventAsync(EventBase eventBase)
     {
-        // 获取PublishingGAgent并发布事件
+        // Get PublishingGAgent and publish event
         var publishingAgent = await _gAgentFactory.GetGAgentAsync<IPublishingGAgent>(PublishingAgentId);
         await publishingAgent.PublishEventAsync(eventBase);
         
-        _logger.LogInformation("通过PublishingGAgent发布事件: {EventType}", eventBase.GetType().Name);
+        _logger.LogInformation("Publishing event through PublishingGAgent: {EventType}", eventBase.GetType().Name);
     }
 
     // DTOs

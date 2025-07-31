@@ -23,7 +23,7 @@ public static class Startup
                 
                 if (isDocker && gatewayHost != "localhost")
                 {
-                    // 容器环境：使用静态集群配置连接到Host容器
+                    // Container environment: use static cluster configuration to connect to Host container
                     try
                     {
                         var hostEntry = System.Net.Dns.GetHostEntry(gatewayHost);
@@ -44,7 +44,7 @@ public static class Startup
                 }
                 else
                 {
-                    // 本地开发环境或localhost配置
+                    // Local development environment or localhost configuration
                     client.UseLocalhostClustering(gatewayPort);
                 }
                 

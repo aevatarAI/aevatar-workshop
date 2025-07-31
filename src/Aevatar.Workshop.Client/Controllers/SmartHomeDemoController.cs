@@ -54,7 +54,7 @@ namespace Aevatar.Workshop.Client.Controllers
                 var lightConfig = new LightConfiguration
                 {
                     LightId = LIGHT_ID.ToString("N"),
-                    Location = "客厅"
+                    Location = "Living Room"
                 };
                 var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
                 _logger.LogInformation("Light GAgent created with GrainId: {GrainId}", light.GetGrainId().ToString());
