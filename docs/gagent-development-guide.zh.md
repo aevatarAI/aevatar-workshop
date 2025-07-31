@@ -969,6 +969,120 @@ public class PaymentGAgent : GAgentBase<PaymentState, PaymentStateLogEvent>, IPa
     // ... 实现细节
 }
 
+// === 通知 GAgent ===
+[GAgent("notification", "ecommerce")]
+public class NotificationGAgent : GAgentBase<NotificationState, NotificationStateLogEvent>, INotificationGAgent
+{
+    public override Task<string> GetDescriptionAsync()
+        => Task.FromResult("Sends notifications to customers via multiple channels");
+
+    [EventHandler]
+    public async Task HandleOrderNotificationAsync(OrderNotificationEvent @event)
+    {
+        Logger.LogInformation("Sending {Type} notification to customer {CustomerId} for order {OrderId}", 
+            @event.Type, @event.CustomerId, @event.OrderId);
+
+        // Check customer notification preferences
+        var preferences = await GetCustomerPreferencesAsync(@event.CustomerId);
+        
+        if (!ShouldSendNotification(@event.Type, preferences))
+        {
+            Logger.LogInformation("Notification skipped due to customer preferences");
+            return;
+        }
+
+        // Determine notification channel
+        var channel = DetermineChannel(@event.Type, preferences);
+        
+        // Create notification record
+        var notificationId = Guid.NewGuid().ToString();
+        var notification = new NotificationRecord
+        {
+            Id = notificationId,
+            CustomerId = @event.CustomerId,
+            Type = @event.Type,
+            Channel = channel,
+            Subject = @event.Subject,
+            Message = @event.Message,
+            SentAt = DateTime.UtcNow,
+            Status = NotificationStatus.Sent
+        };
+
+        // Send notification
+        var success = await SendNotificationAsync(notification);
+        if (!success)
+        {
+            notification.Status = NotificationStatus.Failed;
+            notification.ErrorMessage = "Failed to send notification";
+        }
+
+        // Update state
+        RaiseEvent(new NotificationSentLogEvent { Record = notification });
+        await ConfirmEvents();
+
+        Logger.LogInformation("Notification {NotificationId} processed with status {Status}", 
+            notificationId, notification.Status);
+    }
+
+    private async Task<bool> SendNotificationAsync(NotificationRecord notification)
+    {
+        // Simulate sending notification via different channels
+        await Task.Delay(100); // Simulate network call
+        
+        return notification.Channel switch
+        {
+            NotificationChannel.Email => await SendEmailAsync(notification),
+            NotificationChannel.SMS => await SendSmsAsync(notification),
+            NotificationChannel.Push => await SendPushNotificationAsync(notification),
+            _ => false
+        };
+    }
+
+    private Task<bool> SendEmailAsync(NotificationRecord notification)
+    {
+        // Email sending logic
+        Logger.LogInformation("Sending email to customer {CustomerId}: {Subject}", 
+            notification.CustomerId, notification.Subject);
+        return Task.FromResult(new Random().NextDouble() > 0.05); // 95% success rate
+    }
+
+    private Task<bool> SendSmsAsync(NotificationRecord notification)
+    {
+        // SMS sending logic  
+        Logger.LogInformation("Sending SMS to customer {CustomerId}: {Subject}", 
+            notification.CustomerId, notification.Subject);
+        return Task.FromResult(new Random().NextDouble() > 0.03); // 97% success rate
+    }
+
+    private Task<bool> SendPushNotificationAsync(NotificationRecord notification)
+    {
+        // Push notification logic
+        Logger.LogInformation("Sending push notification to customer {CustomerId}: {Subject}", 
+            notification.CustomerId, notification.Subject);
+        return Task.FromResult(new Random().NextDouble() > 0.02); // 98% success rate
+    }
+
+    protected override void GAgentTransitionState(NotificationState state, StateLogEventBase<NotificationStateLogEvent> @event)
+    {
+        switch (@event)
+        {
+            case NotificationSentLogEvent e:
+                // Add to customer notification history
+                if (!state.CustomerNotifications.ContainsKey(e.Record.CustomerId))
+                    state.CustomerNotifications[e.Record.CustomerId] = new List<NotificationRecord>();
+                
+                state.CustomerNotifications[e.Record.CustomerId].Add(e.Record);
+                
+                // Update statistics
+                state.TotalNotificationsSent++;
+                state.LastNotificationTime = e.Record.SentAt;
+                break;
+        }
+    }
+
+    // ... 实现细节
+}
+
 // === 使用 ===
 public class ECommerceService
 {

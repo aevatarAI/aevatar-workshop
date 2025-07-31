@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 namespace Aevatar.Workshop.Tests;
 
 [Collection(ClusterCollection.Name)]
-public class CounterGAgentTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
+public sealed class CounterGAgentTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
 {
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly IGAgentFactory _gAgentFactory;
