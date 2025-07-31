@@ -942,7 +942,7 @@
             const systemLLM = document.getElementById('systemLLM').value;
             
             if (!systemLLM) {
-                addEventWithGAgentFlow('系统', '请先配置LLM模型', '错误');
+                addEventWithGAgentFlow('System', '请先配置LLM模型', '错误');
                 return;
             }
             const reinitBtn = document.getElementById('reinitializeBtn');
@@ -951,7 +951,7 @@
             reinitBtn.textContent = '初始化中...';
             
             try {
-                addEventWithGAgentFlow('系统', `正在重新初始化智能家居系统 (AI: ${systemLLM})...`, '系统');
+                addEventWithGAgentFlow('System', `正在重新初始化智能家居系统 (AI: ${systemLLM})...`, '系统');
                 
                 const response = await fetch('/api/smarthome/initialize', {
                     method: 'POST',
@@ -961,7 +961,7 @@
                 
                 const result = await response.json();
                 if (result.success) {
-                    addEventWithGAgentFlow('系统', `智能家居系统重新初始化成功`, '系统');
+                    addEventWithGAgentFlow('System', `智能家居系统重新初始化成功`, '系统');
                                          updateLLMConfigStatus(true, getTranslation('using_llm', [systemLLM]));
                     dismissLLMAlert();
                     // 停止LLM配置监视器（因为已经初始化成功）
@@ -969,12 +969,12 @@
                     // 刷新状态
                     await refreshDeviceStates();
                 } else {
-                    addEventWithGAgentFlow('系统', '重新初始化失败: ' + (result.error || '未知错误'), '错误');
+                    addEventWithGAgentFlow('System', '重新初始化失败: ' + (result.error || '未知错误'), '错误');
                                             updateLLMConfigStatus(false, getTranslation('initialization_failed'));
                 }
             } catch (error) {
                 console.error('重新初始化失败:', error);
-                addEventWithGAgentFlow('系统', '重新初始化失败: 网络错误', '错误');
+                addEventWithGAgentFlow('System', '重新初始化失败: 网络错误', '错误');
                 updateLLMConfigStatus(false, '连接失败');
             } finally {
                 reinitBtn.disabled = false;
@@ -997,7 +997,7 @@
                 clearInterval(llmConfigWatcher);
             }
             
-            addEventWithGAgentFlow('系统', '开始监听LLM配置变更...', '信息');
+            addEventWithGAgentFlow('System', '开始监听LLM配置变更...', '信息');
             
             llmConfigWatcher = setInterval(async () => {
                 try {
@@ -1009,7 +1009,7 @@
                     
                     // 如果检测到新的LLM配置
                     if (hasLLMConfig && (!lastLLMCheckResult || lastLLMCheckResult.length === 0)) {
-                        addEventWithGAgentFlow('系统', `🎉 检测到新的LLM配置: ${llmKeys.join(', ')}`, '系统');
+                        addEventWithGAgentFlow('System', `🎉 检测到新的LLM配置: ${llmKeys.join(', ')}`, '系统');
                         
                         // 停止监视器
                         clearInterval(llmConfigWatcher);
@@ -1021,7 +1021,7 @@
                         // 自动触发重新初始化
                         const systemLLM = document.getElementById('systemLLM').value;
                         if (systemLLM && !systemLLM.includes('未配置') && !systemLLM.includes('无法加载')) {
-                            addEventWithGAgentFlow('系统', '自动重新初始化智能家居系统...', '系统');
+                            addEventWithGAgentFlow('System', '自动重新初始化智能家居系统...', '系统');
                             await reinitializeSystem();
                         }
                     }
@@ -1037,7 +1037,7 @@
             if (llmConfigWatcher) {
                 clearInterval(llmConfigWatcher);
                 llmConfigWatcher = null;
-                addEventWithGAgentFlow('系统', '停止监听LLM配置变更', '信息');
+                addEventWithGAgentFlow('System', '停止监听LLM配置变更', '信息');
             }
         }
 
@@ -1060,7 +1060,7 @@
             const systemLLM = document.getElementById('systemLLM').value;
             if (systemLLM && !systemLLM.includes('未配置') && !systemLLM.includes('无法加载')) {
                 try {
-                    addEventWithGAgentFlow('系统', `正在初始化智能家居系统 (AI: ${systemLLM})...`, '系统');
+                    addEventWithGAgentFlow('System', `正在初始化智能家居系统 (AI: ${systemLLM})...`, '系统');
                     
                     const response = await fetch('/api/smarthome/initialize', {
                         method: 'POST',
@@ -1070,7 +1070,7 @@
                     
                     const result = await response.json();
                     if (result.success) {
-                        addEventWithGAgentFlow('系统', `智能家居系统初始化成功 (AI: ${systemLLM})`, '系统');
+                        addEventWithGAgentFlow('System', `智能家居系统初始化成功 (AI: ${systemLLM})`, '系统');
                         addEventWithGAgentFlow(getTranslation('system'), getTranslation('all_gagents_activated'), getTranslation('system'), true);
                         updateLLMConfigStatus(true, getTranslation('using_llm', [systemLLM]));
                         // 停止LLM配置监视器（因为已经初始化成功）
@@ -1078,20 +1078,20 @@
                         // 获取初始状态
                         await refreshDeviceStates();
                     } else {
-                        addEventWithGAgentFlow('系统', '智能家居系统初始化失败', '错误');
+                        addEventWithGAgentFlow('System', '智能家居系统初始化失败', '错误');
                         updateLLMConfigStatus(false, getTranslation('initialization_failed'));
                         showLLMConfigAlert();
                     }
                 } catch (error) {
                     console.error('初始化失败:', error);
-                    addEventWithGAgentFlow('系统', '无法连接到智能家居系统', '错误');
+                    addEventWithGAgentFlow('System', '无法连接到智能家居系统', '错误');
                     updateLLMConfigStatus(false, getTranslation('connection_failed'));
                     showLLMConfigAlert();
                 }
             } else {
-                addEventWithGAgentFlow('系统', '智能家居系统已启动（手动控制模式）', '信息');
+                addEventWithGAgentFlow('System', '智能家居系统已启动（手动控制模式）', '信息');
                 addEventWithGAgentFlow(getTranslation('system'), getTranslation('device_gagents_activated'), getTranslation('system'), true);
-                addEventWithGAgentFlow('系统', '💡 提示：配置 LLM API Key 后可启用 AI 语音控制功能', '信息');
+                addEventWithGAgentFlow('System', '💡 提示：配置 LLM API Key 后可启用 AI 语音控制功能', '信息');
                 updateLLMConfigStatus(false, getTranslation('ai_model_not_configured'));
                 showLLMConfigAlert();
                 // 仍然加载设备状态
@@ -1532,14 +1532,20 @@
             // 根据事件类型添加图标
             const iconMap = {
                 '用户': '👤',
+                'User': '👤',
                 'AI': '🧠',
                 '灯光': '💡',
+                'Light': '💡',
                 '恒温器': '🌡️',
+                'Thermostat': '🌡️',
                 '安防系统': '🔒',
+                'Security System': '🔒',
                 '窗帘': '🪟',
+                'Curtain': '🪟',
                 '系统': '⚙️',
-                'AI工具': '🛠️',
-                'AI执行': '🔧'
+                'System': '⚙️',
+                'AI Tool': '🛠️',
+                'AI Execute': '🔧'
             };
             
             const icon = iconMap[source] || iconMap[type] || '📝';
@@ -1549,7 +1555,7 @@
                 <span class="event-message" style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 16px;">${icon}</span>
                     <span>${source}: ${message}</span>
-                    ${isGAgentInteraction ? '<span style="font-size: 12px; color: #0ea5e9; font-weight: bold;">[GAgent交互]</span>' : ''}
+                    ${isGAgentInteraction ? '<span style="font-size: 12px; color: #0ea5e9; font-weight: bold;">[GAgent Interact]</span>' : ''}
                 </span>
                 <span class="event-type">${type}</span>
             `;
@@ -1635,11 +1641,11 @@
         // 显示工具调用详情
         function showToolCallDetails(toolCalls) {
             let detailsHtml = '<div style="margin-top: 10px;">';
-            detailsHtml += '<strong>🛠️ AI 调用的工具：</strong><br/>';
+            detailsHtml += '<strong>🛠️ Tools called by AI：</strong><br/>';
             
             toolCalls.forEach((call, index) => {
                 // 解析函数名，提取设备类型和操作
-                const functionName = call.functionName || '未知功能';
+                const functionName = call.functionName || 'Unknown Function';
                 let readableName = functionName;
                 
                 // 解析常见的智能家居操作
@@ -1680,7 +1686,7 @@
             
             // 添加到事件日志
             addEventWithGAgentFlow(getTranslation('ai_agent'), getTranslation('ai_tool_success'), getTranslation('ai_tool'), true);
-            addEvent('AI执行', detailsHtml, 'AI工具', true);
+            addEvent('AI Execute', detailsHtml, 'AI Tool', true);
         }
 
         // 监听回车键
@@ -1715,7 +1721,7 @@
         document.getElementById('systemLLM').addEventListener('change', async function() {
             const systemLLM = this.value;
             if (systemLLM && !systemLLM.includes('未配置') && !systemLLM.includes('无法加载')) {
-                addEventWithGAgentFlow('系统', `正在切换到 ${systemLLM} 模型...`, '信息');
+                addEventWithGAgentFlow('System', `正在切换到 ${systemLLM} 模型...`, '信息');
                 
                 // 重新初始化系统
                 try {
@@ -1727,17 +1733,17 @@
                     
                     const result = await response.json();
                     if (result.success) {
-                        addEventWithGAgentFlow('系统', `已切换到 ${systemLLM} 模型`, '系统');
+                        addEventWithGAgentFlow('System', `已切换到 ${systemLLM} 模型`, '系统');
                         updateLLMConfigStatus(true, getTranslation('using_llm', [systemLLM]));
                         dismissLLMAlert();
                         await refreshDeviceStates();
                     } else {
-                        addEventWithGAgentFlow('系统', '切换模型失败', '错误');
+                        addEventWithGAgentFlow('System', '切换模型失败', '错误');
                         updateLLMConfigStatus(false, getTranslation('switch_failed'));
                     }
                 } catch (error) {
                     console.error('切换模型失败:', error);
-                    addEventWithGAgentFlow('系统', '切换模型时发生错误', '错误');
+                    addEventWithGAgentFlow('System', '切换模型时发生错误', '错误');
                     updateLLMConfigStatus(false, getTranslation('connection_failed'));
                 }
             }
