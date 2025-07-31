@@ -490,14 +490,48 @@
         <div class="control-panel">
             <h2>🏠 智能家居控制中心</h2>
             
+            <!-- LLM 配置状态提示 -->
+            <div id="llmConfigAlert" class="llm-config-alert" style="margin-bottom: 20px; padding: 15px; border-radius: 12px; border: 2px solid #f59e0b; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); display: none;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="font-size: 24px;">⚠️</div>
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 8px 0; color: #d97706; font-size: 16px;">需要配置 LLM API Key</h4>
+                        <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.4;">
+                            要体验 AI 智能家居控制，请先在系统中配置 LLM API Key。<br>
+                            没有 API Key？您仍可以通过下方设备卡片手动控制智能家居设备。
+                        </p>
+                    </div>
+                    <button onclick="dismissLLMAlert()" style="background: none; border: none; font-size: 18px; color: #d97706; cursor: pointer; padding: 5px;">✕</button>
+                </div>
+            </div>
+            
+            <!-- GAgent 架构说明 -->
+            <div class="gagent-explanation" style="margin-bottom: 20px; padding: 15px; border-radius: 12px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 2px solid #3b82f6;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+                    <div style="font-size: 24px;">🤖</div>
+                    <h4 style="margin: 0; color: #1d4ed8; font-size: 16px;">Aevatar 多智能体架构</h4>
+                </div>
+                <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.4;">
+                    本演示展示了 <strong>事件驱动</strong> 的多智能体系统：AI 理解您的指令 → 发送事件 → 设备 GAgent 接收事件 → 更新设备状态。每个设备都是独立的 GAgent，通过事件进行通信。
+                </p>
+            </div>
+            
             <div class="natural-language-control">
-                <h3 style="margin: 0 0 15px 0; font-size: 18px;">💬 自然语言控制</h3>
+                <h3 style="margin: 0 0 15px 0; font-size: 18px;">💬 AI 自然语言控制</h3>
+                
+                <div class="llm-config-status" id="llmConfigStatus" style="margin-bottom: 15px; padding: 12px; border-radius: 8px; background: #f3f4f6; border: 1px solid #d1d5db;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span id="llmStatusIcon">🔄</span>
+                        <span id="llmStatusText" style="font-size: 14px; color: #6b7280;">正在检查 LLM 配置...</span>
+                    </div>
+                </div>
                 
                 <div class="llm-selector" style="margin-bottom: 15px;">
                     <label for="systemLLM" style="display: inline-block; margin-right: 10px; font-weight: 500;">AI 模型：</label>
                     <select id="systemLLM" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: white; font-size: 14px; min-width: 150px;">
                         <option value="">加载中...</option>
                     </select>
+                    <button id="reinitializeBtn" onclick="reinitializeSystem()" style="margin-left: 10px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">重新初始化</button>
                 </div>
                 
                 <div class="input-group">
@@ -515,6 +549,14 @@
         </div>
 
         <!-- 设备状态显示 -->
+        <div style="margin-bottom: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #10b981;">
+            <div style="font-size: 14px; color: #059669; margin-bottom: 5px;">
+                <strong>💡 手动控制提示：</strong>无论是否配置 LLM Key，您都可以直接点击下方设备卡片进行手动控制
+            </div>
+            <div style="font-size: 13px; color: #6b7280;">
+                手动操作时也会触发相应的 GAgent 事件，您可以在事件流中观察到 GAgent 之间的交互过程
+            </div>
+        </div>
         <div class="devices-grid">
             <!-- 灯光控制 -->
             <div class="device-card" id="light-card">
@@ -640,13 +682,53 @@
             </div>
         </div>
 
+        <!-- 事件交互流程图 -->
+        <div class="event-flow-visualization" style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; border: 2px solid #0ea5e9;">
+            <h3 style="margin: 0 0 15px 0; color: #0369a1; display: flex; align-items: center; gap: 8px;">
+                <span>🔄</span>
+                <span>GAgent 事件交互流程</span>
+            </h3>
+            <div class="flow-diagram" style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div class="flow-step" style="text-align: center; min-width: 120px;">
+                    <div style="width: 60px; height: 60px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: white; font-size: 24px;">🧠</div>
+                    <div style="font-size: 12px; font-weight: bold; color: #1e40af;">AI GAgent</div>
+                    <div style="font-size: 11px; color: #1e40af;">理解指令</div>
+                </div>
+                <div style="font-size: 20px; color: #0ea5e9;">→</div>
+                <div class="flow-step" style="text-align: center; min-width: 120px;">
+                    <div style="width: 60px; height: 60px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: white; font-size: 24px;">📡</div>
+                    <div style="font-size: 12px; font-weight: bold; color: #059669;">发送事件</div>
+                    <div style="font-size: 11px; color: #059669;">Event Handler</div>
+                </div>
+                <div style="font-size: 20px; color: #0ea5e9;">→</div>
+                <div class="flow-step" style="text-align: center; min-width: 120px;">
+                    <div style="width: 60px; height: 60px; background: #f59e0b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: white; font-size: 24px;">🔧</div>
+                    <div style="font-size: 12px; font-weight: bold; color: #d97706;">设备 GAgent</div>
+                    <div style="font-size: 11px; color: #d97706;">处理事件</div>
+                </div>
+                <div style="font-size: 20px; color: #0ea5e9;">→</div>
+                <div class="flow-step" style="text-align: center; min-width: 120px;">
+                    <div style="width: 60px; height: 60px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: white; font-size: 24px;">💾</div>
+                    <div style="font-size: 12px; font-weight: bold; color: #dc2626;">更新状态</div>
+                    <div style="font-size: 11px; color: #dc2626;">State Change</div>
+                </div>
+            </div>
+            <div style="text-align: center; color: #0369a1; font-size: 13px; background: rgba(255,255,255,0.6); padding: 8px; border-radius: 6px;">
+                每个设备都是独立的 GAgent，通过 <strong>Event Handler</strong> 接收事件并更新自己的 <strong>State</strong>
+            </div>
+        </div>
+        
         <!-- 事件日志 -->
         <div class="event-log">
-            <h3>📊 实时事件流</h3>
+            <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                <span>📊</span>
+                <span>实时事件流</span>
+                <span style="font-size: 12px; color: #666; font-weight: normal;">- 观察 GAgent 如何通过事件通信</span>
+            </h3>
             <div class="event-list" id="eventList">
                 <div class="event-item">
                     <span class="event-time">--:--:--</span>
-                    <span class="event-message">欢迎使用智能家居系统！试试说："打开客厅的灯" 或点击场景按钮</span>
+                    <span class="event-message">欢迎使用智能家居系统！试试说："打开客厅的灯" 或手动点击设备按钮</span>
                     <span class="event-type">提示</span>
                 </div>
                 <div class="event-item">
@@ -659,8 +741,20 @@
         
         <!-- GAgent 活动历史 -->
         <div class="gagent-activities" style="margin-top: 20px;">
-            <h3>🤖 GAgent 活动状态</h3>
-            <div id="gagentActivities" style="background: #f9f9f9; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto;">
+            <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                <span>🤖</span>
+                <span>GAgent 状态监控</span>
+                <span style="font-size: 12px; color: #666; font-weight: normal;">- 每个设备都是独立的智能体</span>
+            </h3>
+            <div class="gagent-status-legend" style="margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                <div style="font-size: 13px; color: #1e40af; margin-bottom: 5px;">
+                    <strong>💡 观察要点：</strong>每个设备都是一个独立的 GAgent，拥有自己的 State（状态）和 Event Handler（事件处理器）
+                </div>
+                <div style="font-size: 12px; color: #475569;">
+                    当您发送指令时，AI GAgent 会发送事件给对应的设备 GAgent，设备 GAgent 接收事件后更新自己的状态
+                </div>
+            </div>
+            <div id="gagentActivities" style="background: #f9f9f9; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto; border: 2px solid #e2e8f0;">
                 <div style="color: #666; text-align: center;">正在加载 GAgent 状态...</div>
             </div>
         </div>
@@ -699,18 +793,97 @@
                     if (llmKeys.includes('DeepSeek')) {
                         selectElement.value = 'DeepSeek';
                     }
+                    
+                    // 更新LLM配置状态为成功
+                    updateLLMConfigStatus(true, llmKeys.length > 0 ? `已配置 ${llmKeys.length} 个模型` : '');
                 } else {
-                    // 如果没有找到配置，使用默认选项
+                    // 如果没有找到配置，使用默认选项并显示警告
                     const option = document.createElement('option');
                     option.value = 'DeepSeek';
                     option.textContent = 'DeepSeek (默认)';
                     selectElement.appendChild(option);
+                    
+                    updateLLMConfigStatus(false, '未找到已配置的LLM模型');
+                    showLLMConfigAlert();
                 }
             } catch (error) {
                 console.error('加载 LLM 配置失败:', error);
                 // 使用默认选项
                 const selectElement = document.getElementById('systemLLM');
                 selectElement.innerHTML = '<option value="DeepSeek">DeepSeek (默认)</option>';
+                
+                updateLLMConfigStatus(false, '连接LLM配置服务失败');
+                showLLMConfigAlert();
+            }
+        }
+
+        // 更新LLM配置状态显示
+        function updateLLMConfigStatus(isConfigured, message) {
+            const statusIcon = document.getElementById('llmStatusIcon');
+            const statusText = document.getElementById('llmStatusText');
+            const statusDiv = document.getElementById('llmConfigStatus');
+            
+            if (isConfigured) {
+                statusIcon.textContent = '✅';
+                statusText.textContent = message || 'LLM 配置正常';
+                statusDiv.style.background = '#d1fae5';
+                statusDiv.style.borderColor = '#10b981';
+            } else {
+                statusIcon.textContent = '⚠️';
+                statusText.textContent = message || 'LLM 配置异常';
+                statusDiv.style.background = '#fef3c7';
+                statusDiv.style.borderColor = '#f59e0b';
+            }
+        }
+
+        // 显示LLM配置警告
+        function showLLMConfigAlert() {
+            const alertDiv = document.getElementById('llmConfigAlert');
+            alertDiv.style.display = 'block';
+        }
+
+        // 隐藏LLM配置警告
+        function dismissLLMAlert() {
+            const alertDiv = document.getElementById('llmConfigAlert');
+            alertDiv.style.display = 'none';
+        }
+
+        // 重新初始化系统
+        async function reinitializeSystem() {
+            const systemLLM = document.getElementById('systemLLM').value;
+            const reinitBtn = document.getElementById('reinitializeBtn');
+            
+            reinitBtn.disabled = true;
+            reinitBtn.textContent = '初始化中...';
+            
+            try {
+                addEventWithGAgentFlow('系统', `正在重新初始化智能家居系统 (AI: ${systemLLM})...`, '系统');
+                
+                const response = await fetch('/api/smarthome/initialize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ systemLLM })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    addEventWithGAgentFlow('系统', `智能家居系统重新初始化成功`, '系统');
+                    updateLLMConfigStatus(true, `使用 ${systemLLM} 模型`);
+                    dismissLLMAlert();
+                    // 刷新状态
+                    await refreshDeviceStates();
+                    await loadGAgentActivities();
+                } else {
+                    addEventWithGAgentFlow('系统', '重新初始化失败: ' + (result.error || '未知错误'), '错误');
+                    updateLLMConfigStatus(false, '初始化失败');
+                }
+            } catch (error) {
+                console.error('重新初始化失败:', error);
+                addEventWithGAgentFlow('系统', '重新初始化失败: 网络错误', '错误');
+                updateLLMConfigStatus(false, '连接失败');
+            } finally {
+                reinitBtn.disabled = false;
+                reinitBtn.textContent = '重新初始化';
             }
         }
 
@@ -788,16 +961,17 @@
                 
                 const result = await response.json();
                 if (result.success) {
-                    addEvent('系统', `智能家居系统初始化成功 (AI: ${systemLLM})`, '系统');
+                    addEventWithGAgentFlow('系统', `智能家居系统初始化成功 (AI: ${systemLLM})`, '系统');
+                    addEventWithGAgentFlow('系统', '所有 GAgent 已激活: AI GAgent, Light GAgent, Thermostat GAgent, Security GAgent, Curtain GAgent', '系统', true);
                     // 获取初始状态
                     await refreshDeviceStates();
                     await loadGAgentActivities();
                 } else {
-                    addEvent('系统', '智能家居系统初始化失败', '错误');
+                    addEventWithGAgentFlow('系统', '智能家居系统初始化失败', '错误');
                 }
             } catch (error) {
                 console.error('初始化失败:', error);
-                addEvent('系统', '无法连接到智能家居系统', '错误');
+                addEventWithGAgentFlow('系统', '无法连接到智能家居系统', '错误');
             }
         }
         
@@ -825,7 +999,8 @@
             // 显示加载状态
             console.log('开始发送命令:', command);
             showLoading(true);
-            addEvent('用户', `"${command}"`, '命令');
+            addEventWithGAgentFlow('用户', `发送AI指令: "${command}"`, '命令');
+            addEventWithGAgentFlow('AI', 'AI GAgent 开始分析指令...', 'AI', true);
             
             try {
                 // 设置超时控制
@@ -935,7 +1110,10 @@
             const isOn = action === 'on';
             deviceStates.light.isOn = isOn;
             updateLightUI();
-            addEvent('灯光', isOn ? '已开启' : '已关闭', '设备');
+            
+            // 突出显示这是GAgent交互
+            addEventWithGAgentFlow('用户', `手动控制 → ${isOn ? '开启' : '关闭'}灯光`, '手动操作');
+            addEventWithGAgentFlow('灯光', `Light GAgent 收到事件 → 状态更新为: ${isOn ? '开启' : '关闭'}`, '设备', true);
             
             // 调用后端 API
             fetch('/api/smarthome/device/light', {
@@ -953,7 +1131,8 @@
             // 防抖处理
             clearTimeout(this.brightnessTimeout);
             this.brightnessTimeout = setTimeout(() => {
-                addEvent('灯光', `亮度调整至 ${value}%`, '设备');
+                addEventWithGAgentFlow('用户', `手动调节 → 设置亮度为 ${value}%`, '手动操作');
+                addEventWithGAgentFlow('灯光', `Light GAgent 收到事件 → 亮度更新为: ${value}%`, '设备', true);
                 
                 // 调用后端 API
                 fetch('/api/smarthome/device/light/brightness', {
@@ -972,7 +1151,8 @@
             // 防抖处理
             clearTimeout(this.temperatureTimeout);
             this.temperatureTimeout = setTimeout(() => {
-                addEvent('恒温器', `目标温度设置为 ${value}°C`, '设备');
+                addEventWithGAgentFlow('用户', `手动调节 → 设置温度为 ${value}°C`, '手动操作');
+                addEventWithGAgentFlow('恒温器', `Thermostat GAgent 收到事件 → 目标温度更新为: ${value}°C`, '设备', true);
                 
                 // 调用后端 API
                 fetch('/api/smarthome/device/thermostat/temperature', {
@@ -994,7 +1174,8 @@
             event.target.classList.add('active');
             
             const modeNames = { 'auto': '自动', 'heat': '制热', 'cool': '制冷' };
-            addEvent('恒温器', `模式切换为${modeNames[mode]}`, '设备');
+            addEventWithGAgentFlow('用户', `手动操作 → 切换恒温器模式`, '手动操作');
+            addEventWithGAgentFlow('恒温器', `Thermostat GAgent 收到事件 → 模式更新为: ${modeNames[mode]}`, '设备', true);
             
             // 调用后端 API
             fetch('/api/smarthome/device/thermostat/mode', {
@@ -1009,7 +1190,10 @@
             const isArmed = action === 'arm';
             deviceStates.security.isArmed = isArmed;
             updateSecurityUI();
-            addEvent('安防系统', isArmed ? '已布防' : '已撤防', '安防');
+            
+            // 突出显示这是GAgent交互
+            addEventWithGAgentFlow('用户', `手动控制 → ${isArmed ? '布防' : '撤防'}安防系统`, '手动操作');
+            addEventWithGAgentFlow('安防系统', `Security GAgent 收到事件 → 状态更新为: ${isArmed ? '布防' : '撤防'}`, '安防', true);
             
             // 调用后端 API
             fetch('/api/smarthome/device/security', {
@@ -1029,7 +1213,8 @@
             // 防抖处理
             clearTimeout(this.curtainTimeout);
             this.curtainTimeout = setTimeout(() => {
-                addEvent('窗帘', `开合度调整至 ${value}%`, '设备');
+                addEventWithGAgentFlow('用户', `手动调节 → 设置窗帘开合度为 ${value}%`, '手动操作');
+                addEventWithGAgentFlow('窗帘', `Curtain GAgent 收到事件 → 开合度更新为: ${value}%`, '设备', true);
                 
                 // 调用后端 API
                 fetch('/api/smarthome/device/curtain', {
@@ -1186,6 +1371,76 @@
             }
         }
         
+        // 添加带有GAgent交互流程的事件
+        function addEventWithGAgentFlow(source, message, type, isGAgentInteraction = false) {
+            const eventList = document.getElementById('eventList');
+            const time = new Date().toLocaleTimeString('zh-CN');
+            
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            
+            // 为GAgent交互事件添加特殊样式
+            if (isGAgentInteraction) {
+                eventItem.style.background = 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)';
+                eventItem.style.border = '1px solid #0ea5e9';
+                eventItem.style.borderRadius = '8px';
+                eventItem.style.margin = '5px 0';
+                eventItem.style.padding = '10px';
+            }
+            
+            // 根据事件类型添加图标
+            const iconMap = {
+                '用户': '👤',
+                'AI': '🧠',
+                '灯光': '💡',
+                '恒温器': '🌡️',
+                '安防系统': '🔒',
+                '窗帘': '🪟',
+                '系统': '⚙️',
+                'AI工具': '🛠️',
+                'AI执行': '🔧'
+            };
+            
+            const icon = iconMap[source] || iconMap[type] || '📝';
+            
+            eventItem.innerHTML = `
+                <span class="event-time">${time}</span>
+                <span class="event-message" style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 16px;">${icon}</span>
+                    <span>${source}: ${message}</span>
+                    ${isGAgentInteraction ? '<span style="font-size: 12px; color: #0ea5e9; font-weight: bold;">[GAgent交互]</span>' : ''}
+                </span>
+                <span class="event-type">${type}</span>
+            `;
+            
+            eventList.insertBefore(eventItem, eventList.firstChild);
+            
+            // 保持最多30条记录
+            while (eventList.children.length > 30) {
+                eventList.removeChild(eventList.lastChild);
+            }
+            
+            // 如果是GAgent交互，在流程图上高亮显示
+            if (isGAgentInteraction) {
+                highlightFlowDiagram();
+            }
+        }
+        
+        // 高亮显示流程图
+        function highlightFlowDiagram() {
+            const flowSteps = document.querySelectorAll('.flow-step');
+            flowSteps.forEach(step => {
+                step.style.transform = 'scale(1.05)';
+                step.style.transition = 'transform 0.3s ease';
+            });
+            
+            setTimeout(() => {
+                flowSteps.forEach(step => {
+                    step.style.transform = 'scale(1)';
+                });
+            }, 1000);
+        }
+        
         // 切换事件详情显示
         function toggleEventDetails(element) {
             const details = element.nextElementSibling;
@@ -1246,6 +1501,7 @@
             detailsHtml += '</div>';
             
             // 添加到事件日志
+            addEventWithGAgentFlow('AI', 'AI GAgent 成功执行工具调用 → 设备状态已更新', 'AI工具', true);
             addEvent('AI执行', detailsHtml, 'AI工具', true);
         }
 

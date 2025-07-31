@@ -4,8 +4,6 @@ using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.Workshop.GAgent.Events;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Orleans;
-using Orleans.Concurrency;
 
 namespace Aevatar.Workshop.GAgent.GAgents.SmartHome;
 
