@@ -1,83 +1,114 @@
-# Smart Home Multi-Agent Demo
+# Smart Home Demo
+
+This demonstration showcases the power of AI GAgent system in managing smart home devices through natural language interactions.
 
 ## Overview
 
-Experience the power of Aevatar's multi-agent system through an intuitive smart home control interface. This demo showcases how multiple autonomous agents collaborate through event-driven communication to create an intelligent home automation system.
+The Smart Home Demo integrates multiple intelligent agents (GAgents) to create a cohesive smart home experience. Each device is represented by its own GAgent, and a central AI GAgent coordinates all interactions using natural language processing.
 
-## Key Features
+## System Architecture
 
-### 🤖 Natural Language Control
-- **AI-Powered Interface**: Control your entire home with natural language commands
-- **Intelligent Understanding**: The AI agent understands context and intent
-- **Real-time Feedback**: Get instant responses from the AI assistant
+### Core Components
 
-### 🏠 Multi-Agent Architecture
-- **Independent Agents**: Each device operates as an autonomous agent
-- **Event-Driven Communication**: Agents communicate through events, not direct calls
-- **Fault Tolerance**: If one device fails, others continue working independently
+1. **HomeAIGAgent**: Central AI coordinator that processes natural language commands
+2. **LightGAgent**: Manages smart lighting systems
+3. **ThermostatGAgent**: Controls heating and cooling systems
+4. **SecurityGAgent**: Handles security system operations
+5. **CurtainGAgent**: Manages automated window coverings
 
-### 🎯 Smart Device Control
-- **Multiple Device Types**: Control lights, thermostat, security system, and smart curtains
-- **Manual Controls**: Direct device interaction through intuitive interface
-- **Smart Coordination**: AI can control multiple devices with a single command
+### Technology Stack
+
+- **Orleans Framework**: Distributed actor model for GAgent implementation
+- **AI Integration**: Large Language Model (LLM) integration for natural language understanding
+- **Event-Driven Architecture**: Real-time communication between GAgents
+- **Multi-language Support**: Complete internationalization (English/Chinese)
+
+## Features
+
+### Natural Language Control
+- Process commands in both English and Chinese
+- Understand complex, contextual requests
+- Support for conversational interactions
+
+### Device Management
+- **Smart Lights**: On/off control, brightness adjustment (0-100%)
+- **Thermostat**: Temperature setting, mode switching (heat/cool/auto/off)
+- **Security System**: Arm/disarm functionality, motion detection alerts
+- **Smart Curtains**: Position control (0-100% open/closed)
+
+### Real-time Synchronization
+- Instant device status updates
+- Live feedback on command execution
+- Synchronized state across all interfaces
+
+### Multi-language Interface
+- Automatic language detection from browser settings
+- Manual language switching
+- Localized error messages and responses
 
 ## How It Works
 
-1. **Natural Language Processing**
-   - User says: "Turn on the living room lights"
-   - HomeAIGAgent processes the command using Semantic Kernel
-   - Converts natural language to structured events
+1. **Initialization**: The system creates and registers all GAgents
+2. **Event Subscription**: The AI GAgent subscribes to events from all device GAgents
+3. **Command Processing**: Natural language commands are processed by the AI GAgent
+4. **Tool Calling**: The AI GAgent calls appropriate device GAgent methods
+5. **State Updates**: Device states are updated through event sourcing
+6. **Response Generation**: User-friendly responses are generated in the selected language
 
-2. **Event Flow**
-   - AI publishes `DeviceControlIntentEvent`
-   - HomeCoordinatorGAgent receives and routes the event
-   - Specific device agent (LightGAgent) executes the command
-   - State changes are published as events
+## Example Commands
 
-3. **State Management**
-   - Each agent maintains its own state independently
-   - Event sourcing provides complete history
-   - Orleans framework ensures reliability and scalability
+### English Commands
+- "Turn on the living room lights"
+- "Set temperature to 22 degrees"
+- "Arm the security system"
+- "Close the curtains halfway"
+- "Dim the lights to 30%"
 
-## Device Control Options
+### Chinese Commands
+- "打开客厅的灯"
+- "把温度设置为22度"
+- "启动安防系统"
+- "把窗帘关到一半"
+- "把灯光调暗到30%"
 
-### 💡 Smart Lighting
-- **On/Off Control**: Turn lights on or off
-- **Brightness Adjustment**: Fine-tune lighting levels (0-100%)
-- **Voice Commands**: "Turn on the lights", "Set brightness to 50%"
+## Technical Implementation
 
-### 🌡️ Smart Thermostat
-- **Temperature Control**: Adjust target temperature (16-30°C)
-- **Mode Selection**: Auto, Heat, Cool modes
-- **Voice Commands**: "Set temperature to 22 degrees", "Switch to cool mode"
+### GAgent Communication
+```csharp
+// Example: AI GAgent calling Light GAgent
+var lightGAgent = await GAgentFactory.GetGAgentAsync<ILightGAgent>(lightId);
+await lightGAgent.TurnOnAsync();
+```
 
-### 🔒 Security System
-- **Arm/Disarm**: Control home security status
-- **Activity Monitoring**: Track last security events
-- **Voice Commands**: "Arm security", "Disarm the alarm"
+### Event Sourcing
+```csharp
+// State changes are tracked through events
+RaiseEvent(new LightTurnedOnEvent { Brightness = 100 });
+await ConfirmEvents();
+```
 
-### 🪟 Smart Curtains
-- **Position Control**: Adjust curtain openness (0-100%)
-- **Quick Presets**: Fully open, half open, fully closed
-- **Voice Commands**: "Open the curtains", "Close curtains halfway"
+### Internationalization
+```csharp
+// Localized responses based on user language
+var message = _localizationService.GetText("light_turned_on", userLanguage);
+```
 
-## Try These Commands
+## Getting Started
 
-- **Basic Control**: "Turn on the lights", "Set temperature to 22 degrees"
-- **Complex Commands**: "Turn off all lights and arm the security system"
-- **Status Queries**: "What's the current temperature?", "Are the lights on?"
-- **Multi-device Control**: "Turn on lights and open curtains"
+1. Click "Open Smart Home Demo" to launch the standalone interface
+2. Initialize the system by clicking "Initialize System"
+3. Try natural language commands in the command input area
+4. Use manual controls for direct device interaction
+5. Switch languages using the language selector in the top-right corner
 
-## Architecture Benefits
+## API Endpoints
 
-- **Scalability**: Easy to add new devices - just create a new GAgent
-- **Reliability**: Failure isolation - each agent runs independently
-- **Maintainability**: Clear responsibilities for each agent
-- **Extensibility**: Add new features without modifying existing code
+The demo exposes RESTful APIs for external integration:
 
-## Technical Highlights
+- `POST /api/smarthome/initialize` - Initialize the smart home system
+- `POST /api/smarthome/command` - Process natural language commands
+- `GET /api/smarthome/status` - Get current device states
+- `POST /api/smarthome/device/{type}` - Direct device control
+- `GET /api/localization/current-language` - Get user's preferred language
 
-- **Orleans Virtual Actors**: Each device is a grain with persistent state
-- **Event Sourcing**: Complete audit trail of all home activities
-- **AI Integration**: Semantic Kernel for natural language understanding
-- **Real-time Updates**: Event-driven architecture ensures instant feedback 
+This demonstration showcases how AI GAgents can create intelligent, responsive, and user-friendly smart home experiences with minimal technical complexity for end users. 

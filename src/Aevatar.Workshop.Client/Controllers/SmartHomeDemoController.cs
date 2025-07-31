@@ -5,6 +5,7 @@ using Aevatar.Workshop.GAgent.Events;
 using Aevatar.Workshop.GAgent.GAgents.SmartHome;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Aevatar.Workshop.Client.Services;
 
 namespace Aevatar.Workshop.Client.Controllers
 {
@@ -15,8 +16,9 @@ namespace Aevatar.Workshop.Client.Controllers
         private readonly ILogger<SmartHomeDemoController> _logger;
         private readonly IGAgentFactory _gAgentFactory;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILocalizationService _localizationService;
 
-        // Agent IDs - 使用固定的 Guid 以确保一致性
+        // Agent IDs - using fixed GUIDs to ensure consistency
         private static readonly Guid AI_AGENT_ID = "ai agent".ToGuid();
         private static readonly Guid LIGHT_ID = "light agent".ToGuid();
         private static readonly Guid THERMOSTAT_ID = "thermostat agent".ToGuid();
@@ -26,22 +28,26 @@ namespace Aevatar.Workshop.Client.Controllers
         public SmartHomeDemoController(
             ILogger<SmartHomeDemoController> logger,
             IGAgentFactory gAgentFactory,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            ILocalizationService localizationService)
         {
             _logger = logger;
             _gAgentFactory = gAgentFactory;
             _serviceProvider = serviceProvider;
+            _localizationService = localizationService;
         }
 
         /// <summary>
-        /// 初始化智能家居系统
+        /// Initialize smart home system
         /// </summary>
         [HttpPost("initialize")]
         public async Task<IActionResult> Initialize([FromBody] InitializeRequest request)
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
-                // 创建所有智能体
+                // Create all smart agents
                 var aiAgent = await _gAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
                 
                 // Create light with proper configuration
@@ -51,36 +57,37 @@ namespace Aevatar.Workshop.Client.Controllers
                     Location = "客厅"
                 };
                 var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
-                _logger.LogInformation($"Light GAgent GrainId: {light.GetGrainId().ToString()}");
+                _logger.LogInformation("Light GAgent created with GrainId: {GrainId}", light.GetGrainId().ToString());
+                
                 var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
                 var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
                 var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
-                // 设置 AI 为所有设备的父级，以便接收事件
+                // Set AI as parent for all devices to receive events
                 await aiAgent.RegisterAsync(light);
                 await aiAgent.RegisterAsync(thermostat);
                 await aiAgent.RegisterAsync(security);
                 await aiAgent.RegisterAsync(curtain);
 
-                // 检查初始化状态
+                // Check initialization status
                 var wasInitialized = await aiAgent.IsInitializedAsync();
                 _logger.LogInformation("AI Agent initialization status before: {WasInitialized}", wasInitialized);
                 
-                // 初始化 AI 并自动注册 GAgent tools
+                // Initialize AI and automatically register GAgent tools
                 var aiInitialized = await aiAgent.InitializeAsync(request.SystemLLM);
                 _logger.LogInformation("AI Agent initialization result: {AiInitialized}", aiInitialized);
                 
-                // 再次检查初始化状态
+                // Check initialization status again
                 var isNowInitialized = await aiAgent.IsInitializedAsync();
                 _logger.LogInformation("AI Agent initialization status after: {IsNowInitialized}", isNowInitialized);
 
-                // 获取初始设备状态
+                // Get initial device states
                 var deviceStates = await GetDeviceStatesInternal();
 
                 return Ok(new
                 {
                     success = true,
-                    message = "智能家居系统初始化成功",
+                    message = _localizationService.GetText("system_initialized", language),
                     aiInitialized,
                     deviceStates,
                     deviceIds = new
@@ -94,31 +101,37 @@ namespace Aevatar.Workshop.Client.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "初始化智能家居系统失败");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Failed to initialize smart home system");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("system_init_failed", language),
+                    error = ex.Message 
+                });
             }
         }
 
         /// <summary>
-        /// 处理自然语言命令
+        /// Process natural language commands
         /// </summary>
         [HttpPost("command")]
         public async Task<IActionResult> ProcessCommand([FromBody] CommandRequest request)
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
-                _logger.LogInformation($"Processing command: {request.Command}");
+                _logger.LogInformation("Processing command: {Command}", request.Command);
 
                 var aiAgent = await _gAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
                 var result = await aiAgent.ProcessCommandAsync(request.Command);
 
-                // 延迟一下让设备状态更新
+                // Delay to allow device state updates
                 await Task.Delay(500);
 
-                // 获取所有设备的当前状态
+                // Get current states of all devices
                 var deviceStates = await GetDeviceStatesInternal();
 
-                // 格式化工具调用信息
+                // Format tool call information
                 var toolCallsInfo = result.ToolCalls?.Select(tc => new
                 {
                     functionName = tc.ToolName,
@@ -128,7 +141,8 @@ namespace Aevatar.Workshop.Client.Controllers
                     timestamp = tc.Timestamp
                 }).ToList();
 
-                _logger.LogInformation($"Processed command: {request.Command}, Result: {JsonSerializer.Serialize(toolCallsInfo)}");
+                _logger.LogInformation("Command processed: {Command}, Tool calls: {ToolCalls}", 
+                    request.Command, JsonSerializer.Serialize(toolCallsInfo));
 
                 return Ok(new
                 {
@@ -141,22 +155,24 @@ namespace Aevatar.Workshop.Client.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "处理命令失败: {Command}", request.Command);
+                _logger.LogError(ex, "Failed to process command: {Command}", request.Command);
                 return Ok(new
                 {
                     success = false,
-                    response = "抱歉，处理您的请求时出现了错误。",
+                    response = _localizationService.GetText("sorry_error_occurred", language),
                     error = ex.Message
                 });
             }
         }
 
         /// <summary>
-        /// 控制灯光
+        /// Control light device
         /// </summary>
         [HttpPost("device/light")]
         public async Task<IActionResult> ControlLight([FromBody] LightControlRequest request)
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
                 var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID);
@@ -180,84 +196,116 @@ namespace Aevatar.Workshop.Client.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "控制灯光失败");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Failed to control light");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("device_control_failed", language)
+                });
             }
         }
 
         /// <summary>
-        /// 调整灯光亮度
+        /// Adjust light brightness
         /// </summary>
         [HttpPost("device/light/brightness")]
         public async Task<IActionResult> SetBrightness([FromBody] BrightnessRequest request)
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
                 var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID);
                 await light.SetBrightnessAsync(request.Brightness);
                 
-                return Ok(new { success = true });
+                return Ok(new { 
+                    success = true,
+                    message = _localizationService.GetText("brightness_set", language)
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "调整亮度失败");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Failed to set brightness");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("device_control_failed", language)
+                });
             }
         }
 
         /// <summary>
-        /// 设置温度
+        /// Set temperature
         /// </summary>
         [HttpPost("device/thermostat/temperature")]
         public async Task<IActionResult> SetTemperature([FromBody] TemperatureRequest request)
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
                 var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
                 await thermostat.SetTargetTemperatureAsync(request.Temperature);
                 
-                return Ok(new { success = true });
+                return Ok(new { 
+                    success = true,
+                    message = _localizationService.GetText("temperature_set", language)
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "设置温度失败");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Failed to set temperature");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("device_control_failed", language)
+                });
             }
         }
 
         /// <summary>
-        /// 设置恒温器模式
+        /// Set thermostat mode
         /// </summary>
         [HttpPost("device/thermostat/mode")]
         public async Task<IActionResult> SetThermostatMode([FromBody] ModeRequest request)
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
                 var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
                 
-                // 将 string 转换为 ThermostatMode 枚举
+                // Convert string to ThermostatMode enum
                 if (!Enum.TryParse<ThermostatMode>(request.Mode, true, out var mode))
                 {
-                    return BadRequest(new { success = false, message = $"无效的模式: {request.Mode}" });
+                    return BadRequest(new { 
+                        success = false, 
+                        message = _localizationService.GetText("invalid_mode", new object[] { request.Mode }, language)
+                    });
                 }
                 
                 await thermostat.SetModeAsync(mode);
                 
-                return Ok(new { success = true });
+                return Ok(new { 
+                    success = true,
+                    message = _localizationService.GetText("mode_set", language)
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "设置模式失败");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Failed to set thermostat mode");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("device_control_failed", language)
+                });
             }
         }
 
         /// <summary>
-        /// 控制安防系统
+        /// Control security system
         /// </summary>
         [HttpPost("device/security")]
         public async Task<IActionResult> ControlSecurity([FromBody] SecurityControlRequest request)
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
                 var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
@@ -276,24 +324,31 @@ namespace Aevatar.Workshop.Client.Controllers
                     {
                         isArmed = state.IsArmed,
                         lastActivity = state.LastMotionDetected == DateTime.MinValue 
-                            ? "无" 
-                            : $"{state.LastMotionDetected:yyyy-MM-dd HH:mm:ss} - {state.LastMotionLocation}"
+                            ? _localizationService.GetText("no_motion", language)
+                            : _localizationService.GetText("motion_detected_at", 
+                                new object[] { state.LastMotionDetected.ToString("yyyy-MM-dd HH:mm:ss"), state.LastMotionLocation }, 
+                                language)
                     }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "控制安防系统失败");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Failed to control security system");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("device_control_failed", language)
+                });
             }
         }
 
         /// <summary>
-        /// 获取所有设备状态
+        /// Get all device states
         /// </summary>
         [HttpGet("status")]
         public async Task<IActionResult> GetAllDeviceStates()
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
                 var states = await GetDeviceStatesInternal();
@@ -305,17 +360,22 @@ namespace Aevatar.Workshop.Client.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "获取设备状态失败");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Failed to get device states");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("get_states_failed", language)
+                });
             }
         }
 
         /// <summary>
-        /// 控制窗帘
+        /// Control curtain
         /// </summary>
         [HttpPost("device/curtain")]
         public async Task<IActionResult> ControlCurtain([FromBody] CurtainControlRequest request)
         {
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+            
             try
             {
                 var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
@@ -332,8 +392,11 @@ namespace Aevatar.Workshop.Client.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "控制窗帘失败: {Level}", request.Level);
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Failed to control curtain: {Level}", request.Level);
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("device_control_failed", language)
+                });
             }
         }
 
@@ -349,6 +412,8 @@ namespace Aevatar.Workshop.Client.Controllers
             var securityState = await security.GetStateAsync();
             var curtainState = await curtain.GetStateAsync();
 
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
+
             return new Dictionary<string, object>
             {
                 ["light"] = new
@@ -360,14 +425,16 @@ namespace Aevatar.Workshop.Client.Controllers
                 {
                     temperature = thermostatState.CurrentTemperature,
                     targetTemperature = thermostatState.TargetTemperature,
-                    mode = thermostatState.Mode.ToString().ToLower() // 将枚举转换为小写字符串
+                    mode = thermostatState.Mode.ToString().ToLower() // Convert enum to lowercase string
                 },
                 ["security"] = new
                 {
                     isArmed = securityState.IsArmed,
                     lastActivity = securityState.LastMotionDetected == DateTime.MinValue 
-                        ? "无" 
-                        : $"{securityState.LastMotionDetected:yyyy-MM-dd HH:mm:ss} - {securityState.LastMotionLocation}"
+                        ? _localizationService.GetText("no_motion", language)
+                        : _localizationService.GetText("motion_detected_at", 
+                            new object[] { securityState.LastMotionDetected.ToString("yyyy-MM-dd HH:mm:ss"), securityState.LastMotionLocation }, 
+                            language)
                 },
                 ["curtain"] = new
                 {
@@ -427,72 +494,77 @@ namespace Aevatar.Workshop.Client.Controllers
         }
         
         /// <summary>
-        /// 获取 GAgent 活动历史
+        /// Get GAgent activity history
         /// </summary>
         [HttpGet("gagent-activities")]
         public async Task<IActionResult> GetGAgentActivities()
         {
-        try
-        {
-            var activities = new List<object>();
+            var language = _localizationService.GetCurrentLanguage(HttpContext);
             
-            // 获取各个 GAgent 的描述和状态
-            var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID);
-            var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
-            var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
-            var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
-            
-            // 获取描述
-            activities.Add(new
+            try
             {
-                gagent = "LightGAgent",
-                description = await light.GetDescriptionAsync(),
-                timestamp = DateTime.UtcNow
-            });
-            
-            activities.Add(new
+                var activities = new List<object>();
+                
+                // Get descriptions and states of various GAgents
+                var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID);
+                var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+                var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+                var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+                
+                // Get descriptions
+                activities.Add(new
+                {
+                    gagent = "LightGAgent",
+                    description = await light.GetDescriptionAsync(),
+                    timestamp = DateTime.UtcNow
+                });
+                
+                activities.Add(new
+                {
+                    gagent = "ThermostatGAgent",
+                    description = await thermostat.GetDescriptionAsync(),
+                    timestamp = DateTime.UtcNow
+                });
+                
+                activities.Add(new
+                {
+                    gagent = "SecurityGAgent",
+                    description = await security.GetDescriptionAsync(),
+                    timestamp = DateTime.UtcNow
+                });
+                
+                activities.Add(new
+                {
+                    gagent = "CurtainGAgent",
+                    description = await curtain.GetDescriptionAsync(),
+                    timestamp = DateTime.UtcNow
+                });
+                
+                // Get AI chat history
+                var aiAgent = await _gAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
+                var chatHistory = await aiAgent.GetChatHistoryAsync();
+                
+                activities.Add(new
+                {
+                    gagent = "HomeAIGAgent",
+                    chatHistory = chatHistory.TakeLast(10),
+                    timestamp = DateTime.UtcNow
+                });
+                
+                return Ok(new
+                {
+                    success = true,
+                    activities
+                });
+            }
+            catch (Exception ex)
             {
-                gagent = "ThermostatGAgent",
-                description = await thermostat.GetDescriptionAsync(),
-                timestamp = DateTime.UtcNow
-            });
-            
-            activities.Add(new
-            {
-                gagent = "SecurityGAgent",
-                description = await security.GetDescriptionAsync(),
-                timestamp = DateTime.UtcNow
-            });
-            
-            activities.Add(new
-            {
-                gagent = "CurtainGAgent",
-                description = await curtain.GetDescriptionAsync(),
-                timestamp = DateTime.UtcNow
-            });
-            
-            // 获取 AI 聊天历史
-            var aiAgent = await _gAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
-            var chatHistory = await aiAgent.GetChatHistoryAsync();
-            
-            activities.Add(new
-            {
-                gagent = "HomeAIGAgent",
-                chatHistory = chatHistory.TakeLast(10),
-                timestamp = DateTime.UtcNow
-            });
-            
-            return Ok(new
-            {
-                success = true,
-                activities
-            });
+                _logger.LogError(ex, "Failed to get GAgent activities");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = _localizationService.GetText("get_activities_failed", language)
+                });
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "获取 GAgent 活动失败");
-            return StatusCode(500, new { success = false, message = ex.Message });
-        }
-    }
     }
 } 

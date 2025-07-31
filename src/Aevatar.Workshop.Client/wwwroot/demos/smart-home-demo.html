@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Home Control - Aevatar Multi-Agent Demo</title>
+    <title data-i18n="smart_home_demo">Smart Home Control - Aevatar Multi-Agent Demo</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         /* 现代化的智能家居界面样式 */
@@ -468,19 +468,118 @@
         .event-list::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+
+        /* 事件通知样式 */
+        .notification-container {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+        
+        .notification {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1e293b;
+            padding: 14px 18px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            max-width: 400px;
+            min-height: 60px;
+            animation: slideInNotification 0.3s ease-out forwards;
+            transform: translateX(100%);
+            pointer-events: auto;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .notification.fade-out {
+            animation: fadeOutNotification 0.3s ease-out forwards;
+        }
+        
+        .notification::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            box-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+            animation: notificationProgress 4.7s linear;
+            z-index: 1;
+        }
+        
+        .notification-header {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.4;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+        }
+        
+        .notification-content {
+            font-size: 13px;
+            opacity: 0.8;
+            line-height: 1.5;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        
+        .notification-icon {
+            font-size: 16px;
+        }
+        
+        .notification.event-user { background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); color: #1e40af; }
+        .notification.event-ai { background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46; }
+        .notification.event-device { background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%); color: #9a3412; }
+        .notification.event-system { background: linear-gradient(135deg, #e9d5ff 0%, #ddd6fe 100%); color: #5b21b6; }
+        .notification.event-error { background: linear-gradient(135deg, #fecaca 0%, #fca5a5 100%); color: #991b1b; }
+        
+        @keyframes slideInNotification {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeOutNotification {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        @keyframes notificationProgress {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
     </style>
 </head>
 <body>
+    <!-- Language Switcher -->
+    <div class="language-switcher" style="position: fixed; top: 20px; right: 20px; z-index: 1001; background: rgba(255, 255, 255, 0.9); padding: 10px; border-radius: 8px; backdrop-filter: blur(10px);">
+        <button id="lang-en" onclick="setLanguage('en')" style="background: none; border: none; padding: 5px 10px; margin: 0 5px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;">EN</button>
+        <button id="lang-zh" onclick="setLanguage('zh')" style="background: none; border: none; padding: 5px 10px; margin: 0 5px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: all 0.3s ease;">中文</button>
+    </div>
+
+    <!-- Event Notifications Container -->
+    <div id="notification-container" class="notification-container"></div>
+
     <!-- 演示标题区域 -->
     <div class="demo-header">
         <div class="demo-header-content">
-            <h1><i class="fas fa-home"></i> Aevatar 智能家居多智能体演示</h1>
-            <p>体验多个自主智能体如何通过事件驱动通信协作，创建智能家居自动化系统</p>
+            <h1 data-i18n="smart_home_title"><i class="fas fa-home"></i> Aevatar 智能家居多智能体演示</h1>
+            <p data-i18n="smart_home_subtitle">体验多个自主智能体如何通过事件驱动通信协作，创建智能家居自动化系统</p>
             <div class="demo-features">
-                <span class="feature-tag"><i class="fas fa-brain"></i> AI 自然语言控制</span>
-                <span class="feature-tag"><i class="fas fa-network-wired"></i> 多智能体协作</span>
-                <span class="feature-tag"><i class="fas fa-bolt"></i> 实时事件流</span>
-                <span class="feature-tag"><i class="fas fa-shield-alt"></i> Orleans 框架</span>
+                <span class="feature-tag" data-i18n="ai_natural_control"><i class="fas fa-brain"></i> AI 自然语言控制</span>
+                <span class="feature-tag" data-i18n="multi_agent_cooperation"><i class="fas fa-network-wired"></i> 多智能体协作</span>
+                <span class="feature-tag" data-i18n="realtime_streaming"><i class="fas fa-bolt"></i> 实时事件流</span>
+                <span class="feature-tag" data-i18n="orleans_framework"><i class="fas fa-shield-alt"></i> Orleans 框架</span>
             </div>
         </div>
     </div>
@@ -488,15 +587,15 @@
     <div class="smart-home-container">
         <!-- AI 控制面板 -->
         <div class="control-panel">
-            <h2>🏠 智能家居控制中心</h2>
+                         <h2 data-i18n="smart_home_control_center">🏠 智能家居控制中心</h2>
             
             <!-- LLM 配置状态提示 -->
             <div id="llmConfigAlert" class="llm-config-alert" style="margin-bottom: 20px; padding: 15px; border-radius: 12px; border: 2px solid #f59e0b; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); display: none;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="font-size: 24px;">⚠️</div>
                     <div style="flex: 1;">
-                        <h4 style="margin: 0 0 8px 0; color: #d97706; font-size: 16px;">需要配置 LLM API Key</h4>
-                        <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.4;">
+                        <h4 style="margin: 0 0 8px 0; color: #d97706; font-size: 16px;" data-i18n="llm_api_key_needed">需要配置 LLM API Key</h4>
+                        <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.4;" data-i18n="llm_api_key_description">
                             要体验 AI 智能家居控制，请先在系统中配置 LLM API Key。<br>
                             没有 API Key？您仍可以通过下方设备卡片手动控制智能家居设备。
                         </p>
@@ -509,40 +608,40 @@
             <div class="gagent-explanation" style="margin-bottom: 20px; padding: 15px; border-radius: 12px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border: 2px solid #3b82f6;">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
                     <div style="font-size: 24px;">🤖</div>
-                    <h4 style="margin: 0; color: #1d4ed8; font-size: 16px;">Aevatar 多智能体架构</h4>
+                    <h4 style="margin: 0; color: #1d4ed8; font-size: 16px;" data-i18n="gagent_architecture">Aevatar 多智能体架构</h4>
                 </div>
-                <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.4;">
+                <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.4;" data-i18n="gagent_architecture_description">
                     本演示展示了 <strong>事件驱动</strong> 的多智能体系统：AI 理解您的指令 → 发送事件 → 设备 GAgent 接收事件 → 更新设备状态。每个设备都是独立的 GAgent，通过事件进行通信。
                 </p>
             </div>
             
             <div class="natural-language-control">
-                <h3 style="margin: 0 0 15px 0; font-size: 18px;">💬 AI 自然语言控制</h3>
+                <h3 style="margin: 0 0 15px 0; font-size: 18px;" data-i18n="ai_natural_control">💬 AI 自然语言控制</h3>
                 
                 <div class="llm-config-status" id="llmConfigStatus" style="margin-bottom: 15px; padding: 12px; border-radius: 8px; background: #f3f4f6; border: 1px solid #d1d5db;">
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <span id="llmStatusIcon">🔄</span>
-                        <span id="llmStatusText" style="font-size: 14px; color: #6b7280;">正在检查 LLM 配置...</span>
+                        <span id="llmStatusText" style="font-size: 14px; color: #6b7280;" data-i18n="llm_checking">正在检查 LLM 配置...</span>
                     </div>
                 </div>
                 
                 <div class="llm-selector" style="margin-bottom: 15px;">
-                    <label for="systemLLM" style="display: inline-block; margin-right: 10px; font-weight: 500;">AI 模型：</label>
+                    <label for="systemLLM" style="display: inline-block; margin-right: 10px; font-weight: 500;" data-i18n="ai_model">AI 模型：</label>
                     <select id="systemLLM" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: white; font-size: 14px; min-width: 150px;">
-                        <option value="">加载中...</option>
+                        <option value="" data-i18n="loading">加载中...</option>
                     </select>
-                    <button id="configLLMBtn" onclick="openLLMConfig()" style="margin-left: 10px; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">配置LLM</button>
-                    <button id="reinitializeBtn" onclick="reinitializeSystem()" style="margin-left: 10px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">重新初始化</button>
+                    <button id="configLLMBtn" onclick="openLLMConfig()" style="margin-left: 10px; padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;" data-i18n="config_llm">配置LLM</button>
+                    <button id="reinitializeBtn" onclick="reinitializeSystem()" style="margin-left: 10px; padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;" data-i18n="reinitialize">重新初始化</button>
                 </div>
                 
                 <div class="input-group">
-                    <input type="text" id="commandInput" placeholder="说出您的指令，例如：打开客厅的灯..." />
-                    <button class="send-btn" onclick="sendCommand()">发送</button>
+                    <input type="text" id="commandInput" data-i18n-placeholder="enter_command" placeholder="说出您的指令，例如：打开客厅的灯..." />
+                    <button class="send-btn" onclick="sendCommand()" data-i18n="send">发送</button>
                 </div>
                 
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
-                    <span>AI 正在处理您的请求...</span>
+                    <span data-i18n="ai_processing">AI 正在处理您的请求...</span>
                 </div>
                 
                 <div class="ai-response" id="aiResponse"></div>
@@ -551,10 +650,10 @@
 
         <!-- 设备状态显示 -->
         <div style="margin-bottom: 15px; padding: 12px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #10b981;">
-            <div style="font-size: 14px; color: #059669; margin-bottom: 5px;">
+            <div style="font-size: 14px; color: #059669; margin-bottom: 5px;" data-i18n="manual_control_tip">
                 <strong>💡 手动控制提示：</strong>无论是否配置 LLM Key，您都可以直接点击下方设备卡片进行手动控制
             </div>
-            <div style="font-size: 13px; color: #6b7280;">
+            <div style="font-size: 13px; color: #6b7280;" data-i18n="manual_operation_tip">
                 手动操作时也会触发相应的 GAgent 事件，您可以在事件流中观察到 GAgent 之间的交互过程
             </div>
         </div>
@@ -564,24 +663,24 @@
                 <div class="device-header">
                     <div>
                         <div class="device-icon">💡</div>
-                        <h3 class="device-name">智能灯光</h3>
-                        <p class="device-location">客厅</p>
+                                                 <h3 class="device-name" data-i18n="smart_light">智能灯光</h3>
+                         <p class="device-location" data-i18n="living_room">客厅</p>
                     </div>
                 </div>
                 
                 <div class="device-status">
                     <span class="status-indicator" id="light-status"></span>
-                    <span id="light-status-text">关闭</span>
+                                         <span id="light-status-text">关闭</span>
                 </div>
                 
                 <div class="device-controls">
-                    <button class="device-btn" id="light-on-btn" onclick="controlLight('on')">开启</button>
-                    <button class="device-btn" id="light-off-btn" onclick="controlLight('off')">关闭</button>
+                                         <button class="device-btn" id="light-on-btn" onclick="controlLight('on')" data-i18n="turn_on">开启</button>
+                     <button class="device-btn" id="light-off-btn" onclick="controlLight('off')" data-i18n="turn_off">关闭</button>
                 </div>
                 
                 <div class="slider-control">
                     <div class="slider-label">
-                        <span>亮度</span>
+                                                 <span data-i18n="brightness">亮度</span>
                         <span id="brightness-value">100%</span>
                     </div>
                     <input type="range" class="slider" id="brightness-slider" 
@@ -595,19 +694,19 @@
                 <div class="device-header">
                     <div>
                         <div class="device-icon">🌡️</div>
-                        <h3 class="device-name">智能恒温器</h3>
-                        <p class="device-location">全屋</p>
+                                                 <h3 class="device-name" data-i18n="smart_thermostat">智能恒温器</h3>
+                         <p class="device-location" data-i18n="whole_house">全屋</p>
                     </div>
                 </div>
                 
                 <div class="device-status">
                     <span class="status-indicator on"></span>
-                    <span id="thermostat-status-text">当前温度: 22°C</span>
+                                         <span id="thermostat-status-text">当前温度: 22°C</span>
                 </div>
                 
                 <div class="slider-control">
                     <div class="slider-label">
-                        <span>目标温度</span>
+                                                 <span data-i18n="target_temp">目标温度</span>
                         <span id="temperature-value">22°C</span>
                     </div>
                     <input type="range" class="slider" id="temperature-slider" 
@@ -616,9 +715,9 @@
                 </div>
                 
                 <div class="device-controls" style="margin-top: 15px;">
-                    <button class="device-btn active" onclick="setThermostatMode('auto')">自动</button>
-                    <button class="device-btn" onclick="setThermostatMode('heat')">制热</button>
-                    <button class="device-btn" onclick="setThermostatMode('cool')">制冷</button>
+                                         <button class="device-btn active" onclick="setThermostatMode('auto')" data-i18n="mode_auto">自动</button>
+                     <button class="device-btn" onclick="setThermostatMode('heat')" data-i18n="mode_heat">制热</button>
+                     <button class="device-btn" onclick="setThermostatMode('cool')" data-i18n="mode_cool">制冷</button>
                 </div>
             </div>
 
@@ -627,25 +726,25 @@
                 <div class="device-header">
                     <div>
                         <div class="device-icon">🔒</div>
-                        <h3 class="device-name">安防系统</h3>
-                        <p class="device-location">全屋</p>
+                                                 <h3 class="device-name" data-i18n="security_system">安防系统</h3>
+                         <p class="device-location" data-i18n="whole_house">全屋</p>
                     </div>
                 </div>
                 
                 <div class="device-status">
                     <span class="status-indicator" id="security-status"></span>
-                    <span id="security-status-text">撤防</span>
+                                         <span id="security-status-text">撤防</span>
                 </div>
                 
                 <div class="device-controls">
-                    <button class="device-btn" id="security-arm-btn" onclick="controlSecurity('arm')">布防</button>
-                    <button class="device-btn" id="security-disarm-btn" onclick="controlSecurity('disarm')">撤防</button>
+                                         <button class="device-btn" id="security-arm-btn" onclick="controlSecurity('arm')" data-i18n="arm">布防</button>
+                     <button class="device-btn" id="security-disarm-btn" onclick="controlSecurity('disarm')" data-i18n="disarm">撤防</button>
                 </div>
                 
                 <div style="margin-top: 20px; padding: 10px; background: #f8f9fa; border-radius: 8px;">
                     <p style="margin: 0; font-size: 14px; color: #666;">
-                        <span style="font-weight: bold;">最后活动:</span>
-                        <span id="security-last-activity">无</span>
+                        <span style="font-weight: bold;" data-i18n="last_activity">最后活动:</span>
+                        <span id="security-last-activity" data-i18n="none">无</span>
                     </p>
                 </div>
             </div>
@@ -655,8 +754,8 @@
                 <div class="device-header">
                     <div>
                         <div class="device-icon">🪟</div>
-                        <h3 class="device-name">智能窗帘</h3>
-                        <p class="device-location">主卧</p>
+                        <h3 class="device-name" data-i18n="smart_curtain">智能窗帘</h3>
+                        <p class="device-location" data-i18n="bedroom">主卧</p>
                     </div>
                 </div>
                 
@@ -667,7 +766,7 @@
                 
                 <div class="slider-control">
                     <div class="slider-label">
-                        <span>开合度</span>
+                                                 <span data-i18n="opening_level">开合度</span>
                         <span id="curtain-value">100%</span>
                     </div>
                     <input type="range" class="slider" id="curtain-slider" 
@@ -676,9 +775,9 @@
                 </div>
                 
                 <div class="device-controls" style="margin-top: 15px;">
-                    <button class="device-btn" onclick="setCurtain(100)">全开</button>
-                    <button class="device-btn" onclick="setCurtain(50)">半开</button>
-                    <button class="device-btn" onclick="setCurtain(0)">关闭</button>
+                                         <button class="device-btn" onclick="setCurtain(100)" data-i18n="fully_open">全开</button>
+                     <button class="device-btn" onclick="setCurtain(50)" data-i18n="half_open">半开</button>
+                     <button class="device-btn" onclick="setCurtain(0)" data-i18n="close">关闭</button>
                 </div>
             </div>
         </div>
@@ -687,34 +786,34 @@
         <div class="event-flow-visualization" style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 12px; border: 2px solid #0ea5e9;">
             <h3 style="margin: 0 0 15px 0; color: #0369a1; display: flex; align-items: center; gap: 8px;">
                 <span>🔄</span>
-                <span>GAgent 事件交互流程</span>
+                <span data-i18n="gagent_events">GAgent 事件交互流程</span>
             </h3>
             <div class="flow-diagram" style="display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 15px;">
                 <div class="flow-step" style="text-align: center; min-width: 120px;">
                     <div style="width: 60px; height: 60px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: white; font-size: 24px;">🧠</div>
                     <div style="font-size: 12px; font-weight: bold; color: #1e40af;">AI GAgent</div>
-                    <div style="font-size: 11px; color: #1e40af;">理解指令</div>
+                    <div style="font-size: 11px; color: #1e40af;" data-i18n="understand_command">理解指令</div>
                 </div>
                 <div style="font-size: 20px; color: #0ea5e9;">→</div>
                 <div class="flow-step" style="text-align: center; min-width: 120px;">
                     <div style="width: 60px; height: 60px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: white; font-size: 24px;">📡</div>
-                    <div style="font-size: 12px; font-weight: bold; color: #059669;">发送事件</div>
+                    <div style="font-size: 12px; font-weight: bold; color: #059669;" data-i18n="send_event">发送事件</div>
                     <div style="font-size: 11px; color: #059669;">Event Handler</div>
                 </div>
                 <div style="font-size: 20px; color: #0ea5e9;">→</div>
                 <div class="flow-step" style="text-align: center; min-width: 120px;">
                     <div style="width: 60px; height: 60px; background: #f59e0b; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: white; font-size: 24px;">🔧</div>
-                    <div style="font-size: 12px; font-weight: bold; color: #d97706;">设备 GAgent</div>
-                    <div style="font-size: 11px; color: #d97706;">处理事件</div>
+                    <div style="font-size: 12px; font-weight: bold; color: #d97706;" data-i18n="device_gagent">设备 GAgent</div>
+                    <div style="font-size: 11px; color: #d97706;" data-i18n="process_event">处理事件</div>
                 </div>
                 <div style="font-size: 20px; color: #0ea5e9;">→</div>
                 <div class="flow-step" style="text-align: center; min-width: 120px;">
                     <div style="width: 60px; height: 60px; background: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; color: white; font-size: 24px;">💾</div>
-                    <div style="font-size: 12px; font-weight: bold; color: #dc2626;">更新状态</div>
-                    <div style="font-size: 11px; color: #dc2626;">State Change</div>
+                    <div style="font-size: 12px; font-weight: bold; color: #dc2626;" data-i18n="update_state">更新状态</div>
+                    <div style="font-size: 11px; color: #dc2626;" data-i18n="state_change">State Change</div>
                 </div>
             </div>
-            <div style="text-align: center; color: #0369a1; font-size: 13px; background: rgba(255,255,255,0.6); padding: 8px; border-radius: 6px;">
+            <div style="text-align: center; color: #0369a1; font-size: 13px; background: rgba(255,255,255,0.6); padding: 8px; border-radius: 6px;" data-i18n="gagent_event_explanation">
                 每个设备都是独立的 GAgent，通过 <strong>Event Handler</strong> 接收事件并更新自己的 <strong>State</strong>
             </div>
         </div>
@@ -723,42 +822,25 @@
         <div class="event-log">
             <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
                 <span>📊</span>
-                <span>实时事件流</span>
-                <span style="font-size: 12px; color: #666; font-weight: normal;">- 观察 GAgent 如何通过事件通信</span>
+                <span data-i18n="realtime_event_flow">实时事件流</span>
+                <span style="font-size: 12px; color: #666; font-weight: normal;" data-i18n="observe_gagent_communication">- 观察 GAgent 如何通过事件通信</span>
             </h3>
             <div class="event-list" id="eventList">
                 <div class="event-item">
                     <span class="event-time">--:--:--</span>
-                    <span class="event-message">欢迎使用智能家居系统！试试说："打开客厅的灯" 或手动点击设备按钮</span>
-                    <span class="event-type">提示</span>
+                    <span class="event-message" data-i18n="welcome_message">欢迎使用智能家居系统！试试说："打开客厅的灯" 或手动点击设备按钮</span>
+                    <span class="event-type" data-i18n="hint">提示</span>
                 </div>
                 <div class="event-item">
                     <span class="event-time">--:--:--</span>
-                    <span class="event-message">系统已就绪，正在连接到 Aevatar 多智能体框架...</span>
-                    <span class="event-type">系统</span>
+                    <span class="event-message" data-i18n="system_ready">系统已就绪，正在连接到 Aevatar 多智能体框架...</span>
+                    <span class="event-type" data-i18n="system">系统</span>
                 </div>
             </div>
         </div>
         
         <!-- GAgent 活动历史 -->
-        <div class="gagent-activities" style="margin-top: 20px;">
-            <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
-                <span>🤖</span>
-                <span>GAgent 状态监控</span>
-                <span style="font-size: 12px; color: #666; font-weight: normal;">- 每个设备都是独立的智能体</span>
-            </h3>
-            <div class="gagent-status-legend" style="margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 8px; border-left: 4px solid #3b82f6;">
-                <div style="font-size: 13px; color: #1e40af; margin-bottom: 5px;">
-                    <strong>💡 观察要点：</strong>每个设备都是一个独立的 GAgent，拥有自己的 State（状态）和 Event Handler（事件处理器）
-                </div>
-                <div style="font-size: 12px; color: #475569;">
-                    当您发送指令时，AI GAgent 会发送事件给对应的设备 GAgent，设备 GAgent 接收事件后更新自己的状态
-                </div>
-            </div>
-            <div id="gagentActivities" style="background: #f9f9f9; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto; border: 2px solid #e2e8f0;">
-                <div style="color: #666; text-align: center;">正在加载 GAgent 状态...</div>
-            </div>
-        </div>
+
     </div>
 
     <script>
@@ -796,7 +878,7 @@
                     }
                     
                     // 更新LLM配置状态为成功
-                    updateLLMConfigStatus(true, llmKeys.length > 0 ? `已配置 ${llmKeys.length} 个模型` : '');
+                    updateLLMConfigStatus(true, llmKeys.length > 0 ? getTranslation('llm_models_configured', [llmKeys.length]) : '');
                 } else {
                     // 如果没有找到配置，显示未配置状态
                     const option = document.createElement('option');
@@ -806,7 +888,7 @@
                     selectElement.appendChild(option);
                     selectElement.value = '';
                     
-                    updateLLMConfigStatus(false, '未找到已配置的LLM模型');
+                    updateLLMConfigStatus(false, getTranslation('llm_not_found'));
                     showLLMConfigAlert();
                 }
             } catch (error) {
@@ -816,7 +898,7 @@
                 selectElement.innerHTML = '<option value="" disabled>无法加载LLM配置</option>';
                 selectElement.value = '';
                 
-                updateLLMConfigStatus(false, '连接LLM配置服务失败');
+                updateLLMConfigStatus(false, getTranslation('llm_service_failed'));
                 showLLMConfigAlert();
             }
         }
@@ -827,14 +909,17 @@
             const statusText = document.getElementById('llmStatusText');
             const statusDiv = document.getElementById('llmConfigStatus');
             
+            // Remove data-i18n attribute to prevent translation override
+            statusText.removeAttribute('data-i18n');
+            
             if (isConfigured) {
                 statusIcon.textContent = '✅';
-                statusText.textContent = message || 'LLM 配置正常';
+                statusText.textContent = message || getTranslation('llm_configured');
                 statusDiv.style.background = '#d1fae5';
                 statusDiv.style.borderColor = '#10b981';
             } else {
                 statusIcon.textContent = '⚠️';
-                statusText.textContent = message || 'LLM 配置异常';
+                statusText.textContent = message || getTranslation('llm_config_needed');
                 statusDiv.style.background = '#fef3c7';
                 statusDiv.style.borderColor = '#f59e0b';
             }
@@ -877,16 +962,15 @@
                 const result = await response.json();
                 if (result.success) {
                     addEventWithGAgentFlow('系统', `智能家居系统重新初始化成功`, '系统');
-                    updateLLMConfigStatus(true, `使用 ${systemLLM} 模型`);
+                                         updateLLMConfigStatus(true, getTranslation('using_llm', [systemLLM]));
                     dismissLLMAlert();
                     // 停止LLM配置监视器（因为已经初始化成功）
                     stopLLMConfigWatcher();
                     // 刷新状态
                     await refreshDeviceStates();
-                    await loadGAgentActivities();
                 } else {
                     addEventWithGAgentFlow('系统', '重新初始化失败: ' + (result.error || '未知错误'), '错误');
-                    updateLLMConfigStatus(false, '初始化失败');
+                                            updateLLMConfigStatus(false, getTranslation('initialization_failed'));
                 }
             } catch (error) {
                 console.error('重新初始化失败:', error);
@@ -957,55 +1041,7 @@
             }
         }
 
-        // 获取并显示 GAgent 活动
-        async function loadGAgentActivities() {
-            try {
-                const response = await fetch('/api/smarthome/gagent-activities');
-                const result = await response.json();
-                
-                if (result.success) {
-                    const container = document.getElementById('gagentActivities');
-                    container.innerHTML = '';
-                    
-                    result.activities.forEach(activity => {
-                        const activityDiv = document.createElement('div');
-                        activityDiv.style.cssText = 'margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
-                        
-                        if (activity.gagent === 'HomeAIGAgent') {
-                            // 显示 AI 聊天历史
-                            activityDiv.innerHTML = `
-                                <h4 style="margin: 0 0 10px 0; color: #4CAF50;">🧠 ${activity.gagent}</h4>
-                                <div style="font-size: 14px; color: #666;">
-                                    <strong>最近对话：</strong>
-                                    <div style="max-height: 100px; overflow-y: auto; margin-top: 5px;">
-                                        ${activity.chatHistory ? activity.chatHistory.map(msg => `<div style="margin: 2px 0;">${msg}</div>`).join('') : '暂无对话记录'}
-                                    </div>
-                                </div>
-                            `;
-                        } else {
-                            // 显示其他 GAgent 的状态描述
-                            const iconMap = {
-                                'LightGAgent': '💡',
-                                'ThermostatGAgent': '🌡️',
-                                'SecurityGAgent': '🔒',
-                                'CurtainGAgent': '🪟'
-                            };
-                            activityDiv.innerHTML = `
-                                <h4 style="margin: 0 0 5px 0; color: #2196F3;">${iconMap[activity.gagent] || '🔧'} ${activity.gagent}</h4>
-                                <div style="font-size: 14px; color: #666;">${activity.description}</div>
-                            `;
-                        }
-                        
-                        container.appendChild(activityDiv);
-                    });
-                }
-            } catch (error) {
-                console.error('加载 GAgent 活动失败:', error);
-            }
-        }
-        
-        // 定期刷新 GAgent 活动
-        setInterval(loadGAgentActivities, 5000);
+
         
         // 定期刷新设备状态
         setInterval(refreshDeviceStates, 3000);
@@ -1035,29 +1071,28 @@
                     const result = await response.json();
                     if (result.success) {
                         addEventWithGAgentFlow('系统', `智能家居系统初始化成功 (AI: ${systemLLM})`, '系统');
-                        addEventWithGAgentFlow('系统', '所有 GAgent 已激活: AI GAgent, Light GAgent, Thermostat GAgent, Security GAgent, Curtain GAgent', '系统', true);
-                        updateLLMConfigStatus(true, `使用 ${systemLLM} 模型`);
+                        addEventWithGAgentFlow(getTranslation('system'), getTranslation('all_gagents_activated'), getTranslation('system'), true);
+                        updateLLMConfigStatus(true, getTranslation('using_llm', [systemLLM]));
                         // 停止LLM配置监视器（因为已经初始化成功）
                         stopLLMConfigWatcher();
                         // 获取初始状态
                         await refreshDeviceStates();
-                        await loadGAgentActivities();
                     } else {
                         addEventWithGAgentFlow('系统', '智能家居系统初始化失败', '错误');
-                        updateLLMConfigStatus(false, '初始化失败');
+                        updateLLMConfigStatus(false, getTranslation('initialization_failed'));
                         showLLMConfigAlert();
                     }
                 } catch (error) {
                     console.error('初始化失败:', error);
                     addEventWithGAgentFlow('系统', '无法连接到智能家居系统', '错误');
-                    updateLLMConfigStatus(false, '连接失败');
+                    updateLLMConfigStatus(false, getTranslation('connection_failed'));
                     showLLMConfigAlert();
                 }
             } else {
                 addEventWithGAgentFlow('系统', '智能家居系统已启动（手动控制模式）', '信息');
-                addEventWithGAgentFlow('系统', '设备 GAgent 已激活: Light GAgent, Thermostat GAgent, Security GAgent, Curtain GAgent', '系统', true);
+                addEventWithGAgentFlow(getTranslation('system'), getTranslation('device_gagents_activated'), getTranslation('system'), true);
                 addEventWithGAgentFlow('系统', '💡 提示：配置 LLM API Key 后可启用 AI 语音控制功能', '信息');
-                updateLLMConfigStatus(false, '未配置AI模型');
+                updateLLMConfigStatus(false, getTranslation('ai_model_not_configured'));
                 showLLMConfigAlert();
                 // 仍然加载设备状态
                 await refreshDeviceStates();
@@ -1091,15 +1126,15 @@
             // 检查是否配置了LLM
             const systemLLM = document.getElementById('systemLLM').value;
             if (!systemLLM) {
-                addEventWithGAgentFlow('系统', '请先配置LLM模型才能使用AI功能', '错误');
+                addEventWithGAgentFlow(getTranslation('system'), getTranslation('please_configure_llm_ai'), getTranslation('error'));
                 return;
             }
             
             // 显示加载状态
             console.log('开始发送命令:', command);
             showLoading(true);
-            addEventWithGAgentFlow('用户', `发送AI指令: "${command}"`, '命令');
-            addEventWithGAgentFlow('AI', 'AI GAgent 开始分析指令...', 'AI', true);
+            addEventWithGAgentFlow(getTranslation('user'), getTranslation('sending_ai_command', [command]), getTranslation('command'));
+            addEventWithGAgentFlow(getTranslation('ai_agent'), getTranslation('ai_analyzing'), getTranslation('ai_agent'), true);
             
             try {
                 // 设置超时控制
@@ -1211,8 +1246,8 @@
             updateLightUI();
             
             // 突出显示这是GAgent交互
-            addEventWithGAgentFlow('用户', `手动控制 → ${isOn ? '开启' : '关闭'}灯光`, '手动操作');
-            addEventWithGAgentFlow('灯光', `Light GAgent 收到事件 → 状态更新为: ${isOn ? '开启' : '关闭'}`, '设备', true);
+            addEventWithGAgentFlow(getTranslation('user'), getTranslation('manual_light_control', [isOn ? getTranslation('on') : getTranslation('off')]), getTranslation('manual_operation'));
+            addEventWithGAgentFlow(getTranslation('light_agent'), getTranslation('light_gagent_update', [isOn ? getTranslation('on') : getTranslation('off')]), getTranslation('device'), true);
             
             // 调用后端 API
             fetch('/api/smarthome/device/light', {
@@ -1230,8 +1265,8 @@
             // 防抖处理
             clearTimeout(this.brightnessTimeout);
             this.brightnessTimeout = setTimeout(() => {
-                addEventWithGAgentFlow('用户', `手动调节 → 设置亮度为 ${value}%`, '手动操作');
-                addEventWithGAgentFlow('灯光', `Light GAgent 收到事件 → 亮度更新为: ${value}%`, '设备', true);
+                            addEventWithGAgentFlow(getTranslation('user'), getTranslation('manual_brightness', [value]), getTranslation('manual_operation'));
+            addEventWithGAgentFlow(getTranslation('light_agent'), getTranslation('light_brightness_update', [value]), getTranslation('device'), true);
                 
                 // 调用后端 API
                 fetch('/api/smarthome/device/light/brightness', {
@@ -1250,8 +1285,8 @@
             // 防抖处理
             clearTimeout(this.temperatureTimeout);
             this.temperatureTimeout = setTimeout(() => {
-                addEventWithGAgentFlow('用户', `手动调节 → 设置温度为 ${value}°C`, '手动操作');
-                addEventWithGAgentFlow('恒温器', `Thermostat GAgent 收到事件 → 目标温度更新为: ${value}°C`, '设备', true);
+                            addEventWithGAgentFlow(getTranslation('user'), getTranslation('manual_temperature', [value]), getTranslation('manual_operation'));
+            addEventWithGAgentFlow(getTranslation('thermostat_agent'), getTranslation('thermostat_temp_update', [value]), getTranslation('device'), true);
                 
                 // 调用后端 API
                 fetch('/api/smarthome/device/thermostat/temperature', {
@@ -1272,9 +1307,13 @@
             });
             event.target.classList.add('active');
             
-            const modeNames = { 'auto': '自动', 'heat': '制热', 'cool': '制冷' };
-            addEventWithGAgentFlow('用户', `手动操作 → 切换恒温器模式`, '手动操作');
-            addEventWithGAgentFlow('恒温器', `Thermostat GAgent 收到事件 → 模式更新为: ${modeNames[mode]}`, '设备', true);
+            const modeNames = { 
+                'auto': getTranslation('mode_auto'), 
+                'heat': getTranslation('mode_heat'), 
+                'cool': getTranslation('mode_cool') 
+            };
+            addEventWithGAgentFlow(getTranslation('user'), getTranslation('manual_thermostat_mode'), getTranslation('manual_operation'));
+            addEventWithGAgentFlow(getTranslation('thermostat_agent'), getTranslation('thermostat_mode_update', [modeNames[mode]]), getTranslation('device'), true);
             
             // 调用后端 API
             fetch('/api/smarthome/device/thermostat/mode', {
@@ -1291,8 +1330,8 @@
             updateSecurityUI();
             
             // 突出显示这是GAgent交互
-            addEventWithGAgentFlow('用户', `手动控制 → ${isArmed ? '布防' : '撤防'}安防系统`, '手动操作');
-            addEventWithGAgentFlow('安防系统', `Security GAgent 收到事件 → 状态更新为: ${isArmed ? '布防' : '撤防'}`, '安防', true);
+            addEventWithGAgentFlow(getTranslation('user'), getTranslation('manual_security', [isArmed ? getTranslation('arm') : getTranslation('disarm')]), getTranslation('manual_operation'));
+            addEventWithGAgentFlow(getTranslation('security_agent'), getTranslation('security_status_update', [isArmed ? getTranslation('arm') : getTranslation('disarm')]), getTranslation('security'), true);
             
             // 调用后端 API
             fetch('/api/smarthome/device/security', {
@@ -1307,13 +1346,13 @@
             deviceStates.curtain.openLevel = value;
             document.getElementById('curtain-value').textContent = value + '%';
             document.getElementById('curtain-status-text').textContent = 
-                value === 0 ? '关闭' : `打开 ${value}%`;
+                value === 0 ? getTranslation('close') : getTranslation('opening_status', [value]);
             
             // 防抖处理
             clearTimeout(this.curtainTimeout);
             this.curtainTimeout = setTimeout(() => {
-                addEventWithGAgentFlow('用户', `手动调节 → 设置窗帘开合度为 ${value}%`, '手动操作');
-                addEventWithGAgentFlow('窗帘', `Curtain GAgent 收到事件 → 开合度更新为: ${value}%`, '设备', true);
+                            addEventWithGAgentFlow(getTranslation('user'), getTranslation('manual_curtain', [value]), getTranslation('manual_operation'));
+            addEventWithGAgentFlow(getTranslation('curtain_agent'), getTranslation('curtain_position_update', [value]), getTranslation('device'), true);
                 
                 // 调用后端 API
                 fetch('/api/smarthome/device/curtain', {
@@ -1349,7 +1388,7 @@
             const brightnessSlider = document.getElementById('brightness-slider');
             
             statusIndicator.classList.toggle('on', isOn);
-            statusText.textContent = isOn ? '开启' : '关闭';
+            statusText.textContent = isOn ? getTranslation('on') : getTranslation('off');
             onBtn.classList.toggle('active', isOn);
             offBtn.classList.toggle('active', !isOn);
             
@@ -1371,7 +1410,7 @@
             const disarmBtn = document.getElementById('security-disarm-btn');
             
             statusIndicator.classList.toggle('on', isArmed);
-            statusText.textContent = isArmed ? '布防' : '撤防';
+            statusText.textContent = isArmed ? getTranslation('arm') : getTranslation('disarm');
             armBtn.classList.toggle('active', isArmed);
             disarmBtn.classList.toggle('active', !isArmed);
         }
@@ -1383,7 +1422,7 @@
             const tempValue = document.getElementById('temperature-value');
             const tempSlider = document.getElementById('temperature-slider');
             
-            statusText.textContent = `当前温度: ${temperature}°C`;
+                         statusText.textContent = getTranslation('current_temperature') + ' ' + temperature + '°C';
             tempValue.textContent = `${targetTemperature}°C`;
             tempSlider.value = targetTemperature;
         }
@@ -1395,7 +1434,7 @@
             const curtainValue = document.getElementById('curtain-value');
             const curtainSlider = document.getElementById('curtain-slider');
             
-            statusText.textContent = `打开 ${openLevel}%`;
+            statusText.textContent = getTranslation('opening_status', [openLevel]);
             curtainValue.textContent = `${openLevel}%`;
             curtainSlider.value = openLevel;
         }
@@ -1468,6 +1507,9 @@
             while (eventList.children.length > 30) {
                 eventList.removeChild(eventList.lastChild);
             }
+            
+            // 显示右上角通知
+            showEventNotification(source, message, type);
         }
         
         // 添加带有GAgent交互流程的事件
@@ -1551,8 +1593,45 @@
                 details.style.display = 'none';
                 arrow.textContent = '▶';
             }
+                }
+
+        // 格式化JSON数据以便更好显示
+        function formatJsonForDisplay(data) {
+            if (data === null || data === undefined) {
+                return '无';
+            }
+            
+            // 如果是字符串，尝试解析为JSON
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data);
+                } catch (e) {
+                    // 如果解析失败，直接返回字符串（去除Unicode转义）
+                    return data.replace(/\\u([0-9a-fA-F]{4})/g, (match, code) => {
+                        return String.fromCharCode(parseInt(code, 16));
+                    });
+                }
+            }
+            
+            // 如果是对象，格式化为易读的JSON
+            if (typeof data === 'object') {
+                try {
+                    // 使用空格缩进格式化JSON，然后解码Unicode
+                    let formatted = JSON.stringify(data, null, 2);
+                    // 解码Unicode转义序列
+                    formatted = formatted.replace(/\\u([0-9a-fA-F]{4})/g, (match, code) => {
+                        return String.fromCharCode(parseInt(code, 16));
+                    });
+                    // 使用<pre>标签保持格式
+                    return `<pre style="margin: 0; white-space: pre-wrap; word-break: break-all; background: #f8f9fa; padding: 8px; border-radius: 4px; font-size: 0.85em;">${formatted}</pre>`;
+                } catch (e) {
+                    return String(data);
+                }
+            }
+            
+            return String(data);
         }
-        
+
         // 显示工具调用详情
         function showToolCallDetails(toolCalls) {
             let detailsHtml = '<div style="margin-top: 10px;">';
@@ -1565,33 +1644,33 @@
                 
                 // 解析常见的智能家居操作
                 if (functionName.includes('TurnOnLight')) {
-                    readableName = '💡 开灯';
+                    readableName = '💡 ' + getTranslation('turn_on_light');
                 } else if (functionName.includes('TurnOffLight')) {
-                    readableName = '💡 关灯';
+                    readableName = '💡 ' + getTranslation('turn_off_light');
                 } else if (functionName.includes('SetBrightness')) {
-                    readableName = '💡 调节亮度';
+                    readableName = '💡 ' + getTranslation('set_brightness');
                 } else if (functionName.includes('SetTemperature')) {
-                    readableName = '🌡️ 设置温度';
+                    readableName = '🌡️ ' + getTranslation('set_temperature');
                 } else if (functionName.includes('ChangeMode')) {
-                    readableName = '🌡️ 切换模式';
+                    readableName = '🌡️ ' + getTranslation('change_mode');
                 } else if (functionName.includes('ArmSecurity')) {
-                    readableName = '🔒 布防';
+                    readableName = '🔒 ' + getTranslation('arm');
                 } else if (functionName.includes('DisarmSecurity')) {
-                    readableName = '🔓 撤防';
+                    readableName = '🔓 ' + getTranslation('disarm');
                 } else if (functionName.includes('SetCurtainPosition')) {
-                    readableName = '🪟 设置窗帘位置';
+                    readableName = '🪟 ' + getTranslation('set_curtain_position');
                 } else if (functionName.includes('OpenCurtain')) {
-                    readableName = '🪟 打开窗帘';
+                    readableName = '🪟 ' + getTranslation('open_curtain');
                 } else if (functionName.includes('CloseCurtain')) {
-                    readableName = '🪟 关闭窗帘';
+                    readableName = '🪟 ' + getTranslation('close_curtain');
                 }
                 
                 detailsHtml += `
                     <div style="margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 4px;">
-                        <div><strong>${index + 1}. ${readableName}</strong> (耗时: ${call.durationMs || 0}ms)</div>
+                        <div><strong>${index + 1}. ${readableName}</strong> (Duration: ${call.durationMs || 0}ms)</div>
                         <div style="margin-left: 20px; font-size: 0.9em;">
-                            <div>参数: ${JSON.stringify(call.parameters || {})}</div>
-                            <div>结果: ${call.result || '执行成功'}</div>
+                            <div>Paremeter: ${formatJsonForDisplay(call.parameters || {})}</div>
+                            <div>Result: ${formatJsonForDisplay(call.result) || 'Success'}</div>
                         </div>
                     </div>
                 `;
@@ -1600,7 +1679,7 @@
             detailsHtml += '</div>';
             
             // 添加到事件日志
-            addEventWithGAgentFlow('AI', 'AI GAgent 成功执行工具调用 → 设备状态已更新', 'AI工具', true);
+            addEventWithGAgentFlow(getTranslation('ai_agent'), getTranslation('ai_tool_success'), getTranslation('ai_tool'), true);
             addEvent('AI执行', detailsHtml, 'AI工具', true);
         }
 
@@ -1649,24 +1728,551 @@
                     const result = await response.json();
                     if (result.success) {
                         addEventWithGAgentFlow('系统', `已切换到 ${systemLLM} 模型`, '系统');
-                        updateLLMConfigStatus(true, `使用 ${systemLLM} 模型`);
+                        updateLLMConfigStatus(true, getTranslation('using_llm', [systemLLM]));
                         dismissLLMAlert();
                         await refreshDeviceStates();
-                        await loadGAgentActivities();
                     } else {
                         addEventWithGAgentFlow('系统', '切换模型失败', '错误');
-                        updateLLMConfigStatus(false, '切换失败');
+                        updateLLMConfigStatus(false, getTranslation('switch_failed'));
                     }
                 } catch (error) {
                     console.error('切换模型失败:', error);
                     addEventWithGAgentFlow('系统', '切换模型时发生错误', '错误');
-                    updateLLMConfigStatus(false, '连接失败');
+                    updateLLMConfigStatus(false, getTranslation('connection_failed'));
                 }
             }
         });
 
+        // === Multi-language Support ===
+        let currentLanguage = localStorage.getItem('language') || 'zh';
+        let translations = {};
+
+        // Language resources
+        const languageResources = {
+            en: {
+                smart_home_title: '<i class="fas fa-home"></i> Aevatar Smart Home Multi-Agent Demo',
+                smart_home_subtitle: 'Experience how multiple autonomous agents collaborate through event-driven communication to create smart home automation systems',
+                ai_natural_control: '💬 AI Natural Language Control',
+                llm_checking: 'Checking LLM configuration...',
+                llm_configured: 'LLM configured successfully',
+                llm_config_needed: 'LLM configuration needed',
+                llm_models_configured: '{0} models configured',
+                llm_not_found: 'No LLM models found',
+                llm_service_failed: 'Failed to connect to LLM service',
+                initialization_failed: 'Initialization failed',
+                connection_failed: 'Connection failed',
+                ai_model_not_configured: 'AI model not configured',
+                switch_failed: 'Model switch failed',
+                ai_model: 'AI Model:',
+                config_llm: 'Config LLM',
+                reinitialize: 'Reinitialize',
+                enter_command: 'Enter your command, e.g.: Turn on the living room lights...',
+                send: 'Send',
+                ai_processing: 'AI is processing your request...',
+                manual_control_tip: '💡 Manual Control Tip: Whether LLM Key is configured or not, you can directly click on the device cards below for manual control',
+                manual_operation_tip: 'Manual operations also trigger corresponding GAgent events, you can observe the interactions between GAgents in the event flow',
+                smart_light: 'Smart Light',
+                living_room: 'Living Room',
+                turn_on: 'Turn On',
+                turn_off: 'Turn Off',
+                brightness: 'Brightness',
+                smart_thermostat: 'Smart Thermostat',
+                whole_house: 'Whole House',
+                current_temp: 'Current',
+                target_temp: 'Target',
+                mode: 'Mode',
+                security_system: 'Security System',
+                entrance: 'Entrance',
+                arm: 'Arm',
+                disarm: 'Disarm',
+                smart_curtain: 'Smart Curtain',
+                bedroom: 'Bedroom',
+                open: 'Open',
+                close: 'Close',
+                opening_level: 'Opening Level',
+                gagent_events: 'GAgent Event Flow',
+                system: 'System',
+                user: 'User',
+                ai_agent: 'AI Agent',
+                light_agent: 'Light Agent',
+                thermostat_agent: 'Thermostat Agent',
+                security_agent: 'Security Agent',
+                curtain_agent: 'Curtain Agent',
+                clear_events: 'Clear Events',
+                event_time: 'Time',
+                event_source: 'Source',
+                event_content: 'Content',
+                gagent_activities: 'GAgent Activities',
+                refresh_activities: 'Refresh Activities',
+                llm_api_key_needed: 'LLM API Key Configuration Required',
+                llm_api_key_description: 'To experience AI smart home control, please configure LLM API Key in the system first.<br>No API Key? You can still manually control smart home devices through the device cards below.',
+                gagent_architecture: 'Aevatar Multi-Agent Architecture',
+                gagent_architecture_description: 'This demo showcases an <strong>event-driven</strong> multi-agent system: AI understands your commands → sends events → device GAgents receive events → update device states. Each device is an independent GAgent that communicates through events.',
+                loading: 'Loading...',
+                mode_auto: 'Auto',
+                mode_heat: 'Heat',
+                mode_cool: 'Cool',
+                last_activity: 'Last Activity:',
+                none: 'None',
+                fully_open: 'Fully Open',
+                half_open: 'Half Open',
+                close: 'Close',
+                realtime_event_flow: 'Real-time Event Flow',
+                observe_gagent_communication: '- Observe how GAgents communicate through events',
+                gagent_status_monitoring: 'GAgent Status Monitoring',
+                each_device_independent: '- Each device is an independent agent',
+                observation_points: '💡 Observation Points:',
+                each_device_gagent_description: 'Each device is an independent GAgent with its own State and Event Handler',
+                command_flow_description: 'When you send commands, the AI GAgent sends events to corresponding device GAgents, which then update their states upon receiving the events',
+                loading_gagent_status: 'Loading GAgent status...',
+                welcome_message: 'Welcome to the smart home system! Try saying: "Turn on the living room lights" or manually click device buttons',
+                system_ready: 'System ready, connecting to Aevatar multi-agent framework...',
+                hint: 'Hint',
+                current_temperature: 'Current Temperature:',
+                // Event messages
+                please_configure_llm: 'Please configure LLM model first',
+                reinitializing_system: 'Reinitializing smart home system (AI: {0})...',
+                reinitialization_success: 'Smart home system reinitialized successfully',
+                reinitialization_failed: 'Reinitialization failed: {0}',
+                reinitialization_network_error: 'Reinitialization failed: Network error',
+                monitoring_llm_config: 'Started monitoring LLM configuration changes...',
+                detected_new_llm: '🎉 Detected new LLM configuration: {0}',
+                auto_reinitializing: 'Auto-reinitializing smart home system...',
+                stop_monitoring_llm: 'Stopped monitoring LLM configuration changes',
+                initializing_system: 'Initializing smart home system (AI: {0})...',
+                initialization_success: 'Smart home system initialized successfully (AI: {0})',
+                all_gagents_activated: 'All GAgents activated: AI GAgent, Light GAgent, Thermostat GAgent, Security GAgent, Curtain GAgent',
+                initialization_failed: 'Smart home system initialization failed',
+                cannot_connect: 'Cannot connect to smart home system',
+                manual_mode_started: 'Smart home system started (manual control mode)',
+                device_gagents_activated: 'Device GAgents activated: Light GAgent, Thermostat GAgent, Security GAgent, Curtain GAgent',
+                llm_tip: '💡 Tip: Configure LLM API Key to enable AI voice control',
+                please_configure_llm_ai: 'Please configure LLM model to use AI functionality',
+                sending_ai_command: 'Sending AI command: "{0}"',
+                ai_analyzing: 'AI GAgent started analyzing command...',
+                manual_light_control: 'Manual control → {0} light',
+                light_gagent_update: 'Light GAgent received event → Status updated to: {0}',
+                manual_brightness: 'Manual adjustment → Set brightness to {0}%',
+                light_brightness_update: 'Light GAgent received event → Brightness updated to: {0}%',
+                manual_temperature: 'Manual adjustment → Set temperature to {0}°C',
+                thermostat_temp_update: 'Thermostat GAgent received event → Target temperature updated to: {0}°C',
+                manual_thermostat_mode: 'Manual operation → Switch thermostat mode',
+                thermostat_mode_update: 'Thermostat GAgent received event → Mode updated to: {0}',
+                manual_security: 'Manual control → {0} security system',
+                security_status_update: 'Security GAgent received event → Status updated to: {0}',
+                manual_curtain: 'Manual adjustment → Set curtain opening to {0}%',
+                curtain_position_update: 'Curtain GAgent received event → Opening updated to: {0}%',
+                ai_tool_success: 'AI GAgent successfully executed tool call → Device status updated',
+                switching_model: 'Switching to {0} model...',
+                switched_model: 'Switched to {0} model',
+                switch_model_failed: 'Model switch failed',
+                switch_model_error: 'Error occurred while switching model',
+                on: 'On',
+                off: 'Off',
+                command: 'Command',
+                manual_operation: 'Manual Operation',
+                device: 'Device',
+                security: 'Security',
+                ai_tool: 'AI Tool',
+                info: 'Info',
+                error: 'Error',
+                // Flow diagram translations
+                device_gagent: 'Device GAgent',
+                process_event: 'Process Event',
+                update_state: 'Update State',
+                state_change: 'State Change',
+                gagent_event_explanation: 'Each device is an independent GAgent that receives events through <strong>Event Handler</strong> and updates its <strong>State</strong>',
+                // Agent names
+                thermostat_agent: 'Thermostat',
+                curtain_agent: 'Curtain',
+                // New feature tags
+                ai_natural_control: 'AI Natural Language Control',
+                multi_agent_cooperation: 'Multi-agent Cooperation',
+                realtime_streaming: 'Real-time Streaming',
+                orleans_framework: 'Orleans Framework',
+                smart_home_control_center: '🏠 Smart Home Control Center',
+                // Additional UI elements
+                user: 'User',
+                ai_agent: 'AI',
+                system: 'System',
+                using_llm: 'Using LLM: {0}',
+                // Action translations
+                turn_on_light: 'Turn On Light',
+                turn_off_light: 'Turn Off Light',
+                set_brightness: 'Set Brightness',
+                set_temperature: 'Set Temperature',
+                change_mode: 'Change Mode',
+                set_curtain_position: 'Set Curtain Position',
+                open_curtain: 'Open Curtain',
+                close_curtain: 'Close Curtain',
+                opening_status: 'Open {0}%',
+                understand_command: 'Understand Command',
+                send_event: 'Send Event',
+                light_agent: 'Light',
+                security_agent: 'Security System',
+                on: 'On',
+                off: 'Off'
+            },
+            zh: {
+                smart_home_title: '<i class="fas fa-home"></i> Aevatar 智能家居多智能体演示',
+                smart_home_subtitle: '体验多个自主智能体如何通过事件驱动通信协作，创建智能家居自动化系统',
+                ai_natural_control: '💬 AI 自然语言控制',
+                llm_checking: '正在检查 LLM 配置...',
+                llm_configured: 'LLM 配置正常',
+                llm_config_needed: 'LLM 配置异常',
+                llm_models_configured: '已配置 {0} 个模型',
+                llm_not_found: '未找到已配置的LLM模型',
+                llm_service_failed: '连接LLM配置服务失败',
+                initialization_failed: '初始化失败',
+                connection_failed: '连接失败',
+                ai_model_not_configured: '未配置AI模型',
+                switch_failed: '切换失败',
+                ai_model: 'AI 模型：',
+                config_llm: '配置LLM',
+                reinitialize: '重新初始化',
+                enter_command: '说出您的指令，例如：打开客厅的灯...',
+                send: '发送',
+                ai_processing: 'AI 正在处理您的请求...',
+                manual_control_tip: '💡 手动控制提示：无论是否配置 LLM Key，您都可以直接点击下方设备卡片进行手动控制',
+                manual_operation_tip: '手动操作时也会触发相应的 GAgent 事件，您可以在事件流中观察到 GAgent 之间的交互过程',
+                smart_light: '智能灯光',
+                living_room: '客厅',
+                turn_on: '开启',
+                turn_off: '关闭',
+                brightness: '亮度',
+                smart_thermostat: '智能恒温器',
+                whole_house: '全屋',
+                current_temp: '当前',
+                target_temp: '目标',
+                mode: '模式',
+                security_system: '安防系统',
+                entrance: '入口',
+                arm: '布防',
+                disarm: '撤防',
+                smart_curtain: '智能窗帘',
+                bedroom: '卧室',
+                open: '开启',
+                close: '关闭',
+                opening_level: '开启程度',
+                gagent_events: 'GAgent 事件流',
+                system: '系统',
+                user: '用户',
+                ai_agent: 'AI 智能体',
+                light_agent: '灯光智能体',
+                thermostat_agent: '恒温器智能体',
+                security_agent: '安防智能体',
+                curtain_agent: '窗帘智能体',
+                clear_events: '清空事件',
+                event_time: '时间',
+                event_source: '来源',
+                event_content: '内容',
+                gagent_activities: 'GAgent 活动',
+                refresh_activities: '刷新活动',
+                llm_api_key_needed: '需要配置 LLM API Key',
+                llm_api_key_description: '要体验 AI 智能家居控制，请先在系统中配置 LLM API Key。<br>没有 API Key？您仍可以通过下方设备卡片手动控制智能家居设备。',
+                gagent_architecture: 'Aevatar 多智能体架构',
+                gagent_architecture_description: '本演示展示了 <strong>事件驱动</strong> 的多智能体系统：AI 理解您的指令 → 发送事件 → 设备 GAgent 接收事件 → 更新设备状态。每个设备都是独立的 GAgent，通过事件进行通信。',
+                loading: '加载中...',
+                mode_auto: '自动',
+                mode_heat: '制热',
+                mode_cool: '制冷',
+                last_activity: '最后活动:',
+                none: '无',
+                fully_open: '全开',
+                half_open: '半开',
+                close: '关闭',
+                realtime_event_flow: '实时事件流',
+                observe_gagent_communication: '- 观察 GAgent 如何通过事件通信',
+                gagent_status_monitoring: 'GAgent 状态监控',
+                each_device_independent: '- 每个设备都是独立的智能体',
+                observation_points: '💡 观察要点：',
+                each_device_gagent_description: '每个设备都是一个独立的 GAgent，拥有自己的 State（状态）和 Event Handler（事件处理器）',
+                command_flow_description: '当您发送指令时，AI GAgent 会发送事件给对应的设备 GAgent，设备 GAgent 接收事件后更新自己的状态',
+                loading_gagent_status: '正在加载 GAgent 状态...',
+                welcome_message: '欢迎使用智能家居系统！试试说："打开客厅的灯" 或手动点击设备按钮',
+                system_ready: '系统已就绪，正在连接到 Aevatar 多智能体框架...',
+                hint: '提示',
+                current_temperature: '当前温度:',
+                // Event messages
+                please_configure_llm: '请先配置LLM模型',
+                reinitializing_system: '正在重新初始化智能家居系统 (AI: {0})...',
+                reinitialization_success: '智能家居系统重新初始化成功',
+                reinitialization_failed: '重新初始化失败: {0}',
+                reinitialization_network_error: '重新初始化失败: 网络错误',
+                monitoring_llm_config: '开始监听LLM配置变更...',
+                detected_new_llm: '🎉 检测到新的LLM配置: {0}',
+                auto_reinitializing: '自动重新初始化智能家居系统...',
+                stop_monitoring_llm: '停止监听LLM配置变更',
+                initializing_system: '正在初始化智能家居系统 (AI: {0})...',
+                initialization_success: '智能家居系统初始化成功 (AI: {0})',
+                all_gagents_activated: '所有 GAgent 已激活: AI GAgent, Light GAgent, Thermostat GAgent, Security GAgent, Curtain GAgent',
+                initialization_failed: '智能家居系统初始化失败',
+                cannot_connect: '无法连接到智能家居系统',
+                manual_mode_started: '智能家居系统已启动（手动控制模式）',
+                device_gagents_activated: '设备 GAgent 已激活: Light GAgent, Thermostat GAgent, Security GAgent, Curtain GAgent',
+                llm_tip: '💡 提示：配置 LLM API Key 后可启用 AI 语音控制功能',
+                please_configure_llm_ai: '请先配置LLM模型才能使用AI功能',
+                sending_ai_command: '发送AI指令: "{0}"',
+                ai_analyzing: 'AI GAgent 开始分析指令...',
+                manual_light_control: '手动控制 → {0}灯光',
+                light_gagent_update: 'Light GAgent 收到事件 → 状态更新为: {0}',
+                manual_brightness: '手动调节 → 设置亮度为 {0}%',
+                light_brightness_update: 'Light GAgent 收到事件 → 亮度更新为: {0}%',
+                manual_temperature: '手动调节 → 设置温度为 {0}°C',
+                thermostat_temp_update: 'Thermostat GAgent 收到事件 → 目标温度更新为: {0}°C',
+                manual_thermostat_mode: '手动操作 → 切换恒温器模式',
+                thermostat_mode_update: 'Thermostat GAgent 收到事件 → 模式更新为: {0}',
+                manual_security: '手动控制 → {0}安防系统',
+                security_status_update: 'Security GAgent 收到事件 → 状态更新为: {0}',
+                manual_curtain: '手动调节 → 设置窗帘开合度为 {0}%',
+                curtain_position_update: 'Curtain GAgent 收到事件 → 开合度更新为: {0}%',
+                ai_tool_success: 'AI GAgent 成功执行工具调用 → 设备状态已更新',
+                switching_model: '正在切换到 {0} 模型...',
+                switched_model: '已切换到 {0} 模型',
+                switch_model_failed: '切换模型失败',
+                switch_model_error: '切换模型时发生错误',
+                on: '开启',
+                off: '关闭',
+                command: '命令',
+                manual_operation: '手动操作',
+                device: '设备',
+                security: '安防',
+                ai_tool: 'AI工具',
+                info: '信息',
+                error: '错误',
+                // Flow diagram translations
+                device_gagent: '设备 GAgent',
+                process_event: '处理事件',
+                update_state: '更新状态',
+                state_change: 'State Change',
+                gagent_event_explanation: '每个设备都是独立的 GAgent，通过 <strong>Event Handler</strong> 接收事件并更新自己的 <strong>State</strong>',
+                // Agent names
+                thermostat_agent: '恒温器',
+                curtain_agent: '窗帘',
+                // New feature tags
+                ai_natural_control: 'AI 自然语言控制',
+                multi_agent_cooperation: '多智能体协作',
+                realtime_streaming: '实时事件流',
+                orleans_framework: 'Orleans 框架',
+                smart_home_control_center: '🏠 智能家居控制中心',
+                // Additional UI elements
+                user: '用户',
+                ai_agent: 'AI',
+                system: '系统',
+                using_llm: '使用 {0} 模型',
+                // Action translations
+                turn_on_light: '开灯',
+                turn_off_light: '关灯',
+                set_brightness: '调节亮度',
+                set_temperature: '设置温度',
+                change_mode: '切换模式',
+                set_curtain_position: '设置窗帘位置',
+                open_curtain: '打开窗帘',
+                close_curtain: '关闭窗帘',
+                opening_status: '打开 {0}%',
+                understand_command: '理解指令',
+                send_event: '发送事件',
+                light_agent: '灯光',
+                security_agent: '安防系统',
+                on: '开启',
+                off: '关闭'
+            }
+        };
+
+        // Detect language from URL or browser
+        function detectLanguage() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const langParam = urlParams.get('lang');
+            
+            if (langParam && languageResources[langParam]) {
+                return langParam;
+            }
+            
+            const browserLang = navigator.language.toLowerCase();
+            if (browserLang.startsWith('zh')) {
+                return 'zh';
+            }
+            
+            return 'en';
+        }
+
+        // Get translated text
+        function getTranslation(key, params = []) {
+            const translation = translations[key] || key;
+            if (params.length === 0) {
+                return translation;
+            }
+            return translation.replace(/\{(\d+)\}/g, (match, index) => {
+                return params[parseInt(index)] || match;
+            });
+        }
+
+        // Apply translations
+        function applyTranslations() {
+            translations = languageResources[currentLanguage];
+            
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[key]) {
+                    element.innerHTML = translations[key];
+                }
+            });
+            
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                if (translations[key]) {
+                    element.placeholder = translations[key];
+                }
+            });
+            
+            // Update document title
+            if (translations['smart_home_title']) {
+                document.title = translations['smart_home_title'].replace(/<[^>]*>/g, '') + ' - Aevatar Multi-Agent Demo';
+            }
+            
+            // Note: Elements that have had their data-i18n attribute removed 
+            // (e.g., LLM status after being set) will not be affected by this function
+        }
+
+        // 格式化通知消息
+        function formatMessageForNotification(message) {
+            if (typeof message !== 'string') {
+                return String(message);
+            }
+            
+            // 如果消息包含HTML标签（特别是<pre>），简化为纯文本
+            if (message.includes('<pre') || message.includes('<div')) {
+                // 提取文本内容，移除HTML标签
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = message;
+                message = tempDiv.textContent || tempDiv.innerText || '';
+            }
+            
+            // 解码Unicode转义序列
+            message = message.replace(/\\u([0-9a-fA-F]{4})/g, (match, code) => {
+                return String.fromCharCode(parseInt(code, 16));
+            });
+            
+            // 清理多余的空白字符
+            message = message.trim();
+            // 清理多个连续空格和换行符
+            message = message.replace(/\s+/g, ' ');
+            
+            // 对于极长的消息适度限制，保留重要信息
+            if (message.length > 500) {
+                message = message.substring(0, 497) + '...';
+            }
+            
+            return message;
+        }
+
+        // Event notification system
+        function showEventNotification(actor, message, type = 'system') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            
+            // Get icon based on type
+            const icons = {
+                'user': '👤',
+                'ai': '🤖', 
+                'device': '⚙️',
+                'system': '🔧',
+                'error': '❌',
+                'manual_operation': '👆',
+                'command': '💬',
+                'ai_tool': '🛠️',
+                'info': 'ℹ️',
+                'security': '🔒'
+            };
+            
+            const icon = icons[type] || '📡';
+            
+            notification.className = `notification event-${type.replace('_', '-')}`;
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <span class="notification-icon">${icon}</span>
+                    <span>${actor}</span>
+                </div>
+                <div class="notification-content">${formatMessageForNotification(message)}</div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Start fade out animation before removal
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.classList.add('fade-out');
+                }
+            }, 4700);
+            
+            // Auto remove after fade out animation completes
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+
+        // Update LLM status translation when language changes
+        function updateLLMStatusTranslation() {
+            const statusText = document.getElementById('llmStatusText');
+            const statusIcon = document.getElementById('llmStatusIcon');
+            
+            // Check if LLM status has been set (no data-i18n attribute)
+            if (!statusText.hasAttribute('data-i18n')) {
+                const currentText = statusText.textContent;
+                
+                // Check if it's a "using LLM" status by looking at the icon
+                if (statusIcon.textContent === '✅') {
+                    // Extract the LLM name from current text
+                    // Match patterns like "Using LLM: XXX" or "使用 XXX 模型"
+                    const englishMatch = currentText.match(/Using LLM:\s*(.+)/);
+                    const chineseMatch = currentText.match(/使用\s*(.+?)\s*模型/);
+                    
+                    let llmName = '';
+                    if (englishMatch) {
+                        llmName = englishMatch[1];
+                    } else if (chineseMatch) {
+                        llmName = chineseMatch[1];
+                    }
+                    
+                    if (llmName) {
+                        // Update with correct translation
+                        statusText.textContent = getTranslation('using_llm', [llmName]);
+                    }
+                }
+            }
+        }
+
+        // Set language
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            
+            // Update button states
+            document.getElementById('lang-en').style.backgroundColor = lang === 'en' ? '#667eea' : 'transparent';
+            document.getElementById('lang-en').style.color = lang === 'en' ? 'white' : '#333';
+            document.getElementById('lang-zh').style.backgroundColor = lang === 'zh' ? '#667eea' : 'transparent';
+            document.getElementById('lang-zh').style.color = lang === 'zh' ? 'white' : '#333';
+            
+            applyTranslations();
+            
+            // Update LLM status translation if it has been set
+            updateLLMStatusTranslation();
+        }
+
+        // Initialize language on page load
+        function initializeLanguage() {
+            currentLanguage = detectLanguage();
+            localStorage.setItem('language', currentLanguage);
+            setLanguage(currentLanguage);
+        }
+
         // 初始化页面
-        init();
+        window.addEventListener('load', () => {
+            initializeLanguage();
+            init();
+        });
     </script>
 </body>
 </html> 
