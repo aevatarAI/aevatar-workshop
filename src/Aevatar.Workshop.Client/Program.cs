@@ -64,6 +64,9 @@ builder.Services.Configure<SystemLLMConfigOptions>(options =>
 // Add configuration sync service
 builder.Services.AddHostedService<ConfigSyncService>();
 
+// Add localization service
+builder.Services.AddSingleton<ILocalizationService, LocalizationService>();
+
 // Orleans client setup
 var serviceProvider = await Startup.RunAsync(args);
 

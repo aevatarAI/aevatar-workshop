@@ -2724,6 +2724,117 @@
     
     mainContent.appendChild(demoCard);
   }
+
+  // Smart Home Demo rendering
+  async function renderSmartHomeDemo(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = `/demos/smart-home-demo.html?lang=${currentLanguage}`;
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#667eea';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开智能家居演示' : 'Open Smart Home Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#5a67d8'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#667eea'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    }).catch(() => {
+      // Fallback content if description file doesn't exist
+      const fallbackContent = currentLanguage === 'zh' 
+        ? `# 智能家居演示
+
+这是一个展示 AI GAgent 系统在智能家居场景中应用的演示。
+
+## 功能特点
+
+- **自然语言控制**: 使用中文或英文自然语言控制智能设备
+- **多设备管理**: 支持灯光、恒温器、安防系统和窗帘的统一管理
+- **AI 智能响应**: 基于 AI GAgent 的智能设备协调和响应
+- **实时状态同步**: 设备状态的实时更新和显示
+- **多语言支持**: 完整的中英文双语界面
+
+## 支持的设备
+
+1. **智能灯光**: 开关控制、亮度调节
+2. **智能恒温器**: 温度设置、模式切换
+3. **安防系统**: 布防/撤防控制、活动监测
+4. **智能窗帘**: 位置控制、开合状态
+
+点击上方链接打开完整的演示页面。`
+        : `# Smart Home Demo
+
+This is a demonstration showcasing the application of AI GAgent system in smart home scenarios.
+
+## Features
+
+- **Natural Language Control**: Control smart devices using natural language in Chinese or English
+- **Multi-Device Management**: Unified management of lights, thermostats, security systems, and curtains
+- **AI Smart Response**: Intelligent device coordination and response based on AI GAgent
+- **Real-time Status Sync**: Real-time device status updates and display
+- **Multi-language Support**: Complete bilingual interface in Chinese and English
+
+## Supported Devices
+
+1. **Smart Lights**: On/off control, brightness adjustment
+2. **Smart Thermostat**: Temperature setting, mode switching
+3. **Security System**: Arm/disarm control, activity monitoring
+4. **Smart Curtains**: Position control, open/close status
+
+Click the link above to open the full demo page.`;
+      
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(fallbackContent));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+    
+    mainContent.appendChild(demoCard);
+  }
 </script>
 </body>
 </html>
