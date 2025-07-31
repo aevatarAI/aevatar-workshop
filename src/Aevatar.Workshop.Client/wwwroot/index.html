@@ -471,13 +471,22 @@
   const llmConfigMsg = document.getElementById('llmConfigMsg');
   let llmConfigData = {};
   // --- Demo definitions ---
-  const basicDemos = [
+  const introductionDemos = [
+    {
+      key: 'AevatarBasics',
+      name: { en: 'Aevatar Basics', zh: 'Aevatar 基础概念' },
+      desc: { en: 'demodesc/AevatarBasics.md', zh: 'demodesc/AevatarBasics.zh.md' },
+      isCustom: false // Use standard markdown rendering
+    },
     {
       key: 'SmartHomeDemo',
       name: { en: 'Smart Home Multi-Agent Demo', zh: '智能家居多智能体演示' },
       desc: { en: 'demodesc/SmartHomeDemo.md', zh: 'demodesc/SmartHomeDemo.zh.md' },
       isCustom: true // Custom rendering for smart home demo
-    },
+    }
+  ];
+
+  const basicDemos = [
     {
       key: 'GAgentServiceDemo',
       name: { en: 'GAgent Service Demo', zh: 'GAgent Service 演示' },
@@ -514,7 +523,7 @@
   ];
 
   // Combine all demos for compatibility with existing code
-  const demos = [...basicDemos, ...advancedDemos];
+  const demos = [...introductionDemos, ...basicDemos, ...advancedDemos];
   
   const logs = [
     { key: 'HostLog', name: 'Host Log' },
@@ -555,7 +564,33 @@
     console.log('DEBUG: renderSidebar called');
     sidebarList.innerHTML = '';
     
-    // Basic Demos section
+    // Introduction section
+    const introTitle = document.createElement('div');
+    introTitle.style.padding = '8px 16px';
+    introTitle.style.color = '#94a3b8';
+    introTitle.style.fontSize = '0.85rem';
+    introTitle.style.fontWeight = 'bold';
+    introTitle.style.textTransform = 'uppercase';
+    introTitle.style.letterSpacing = '0.05em';
+    introTitle.textContent = currentLanguage === 'zh' ? '入门指南' : 'Introduction';
+    sidebarList.appendChild(introTitle);
+    
+    introductionDemos.forEach(demo => {
+      const li = document.createElement('li');
+      li.className = 'sidebar-item' + (selectedKey === demo.key ? ' selected' : '');
+      li.textContent = demo.name[currentLanguage] || demo.name['en'];
+      li.onclick = () => { selectSidebar(demo.key); };
+      sidebarList.appendChild(li);
+    });
+    
+    // Divider between introduction and basic demos
+    const introDivider = document.createElement('div');
+    introDivider.style.height = '1px';
+    introDivider.style.background = '#334155';
+    introDivider.style.margin = '18px 0 12px 0';
+    sidebarList.appendChild(introDivider);
+    
+    // Basic Features section
     const basicTitle = document.createElement('div');
     basicTitle.style.padding = '8px 16px';
     basicTitle.style.color = '#94a3b8';
@@ -713,6 +748,12 @@
 
     if (demo.isCustom && demo.key === 'SmartHomeDemo') {
       renderSmartHomeDemo(demo);
+      return;
+    }
+
+    // Handle simple markdown documentation (non-custom demos)
+    if (!demo.isCustom) {
+      renderMarkdownDoc(demo);
       return;
     }
 
@@ -998,6 +1039,49 @@
     iframeContainer.appendChild(iframe);
     demoCard.appendChild(iframeContainer);
 
+    mainContent.appendChild(demoCard);
+  }
+
+  // Simple markdown documentation rendering
+  async function renderMarkdownDoc(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1200px';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    
+    try {
+      const response = await fetch(descPath);
+      const md = await response.text();
+      // Remove the title from markdown since we already have it in the card
+      const mdWithoutTitle = md.replace(/^# .*\n/, '');
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(mdWithoutTitle));
+      
+      // Highlight code blocks if hljs is available
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    } catch (error) {
+      desc.innerHTML = '<p>Failed to load documentation.</p>';
+      console.error('Failed to load markdown:', error);
+    }
+    
+    demoCard.appendChild(desc);
     mainContent.appendChild(demoCard);
   }
 
