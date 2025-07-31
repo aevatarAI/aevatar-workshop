@@ -76,7 +76,48 @@ var agent = await GAgentFactory.GetGAgentAsync<IOtherGAgent>(id);
 
 ## 第二部分：状态管理规则
 
-### 2.1 状态管理（Orleans 事件溯源）
+### 2.1 状态和状态日志事件定义规则
+
+**重要：Event、State 和 StateLogEvent 必须定义为 class，不能使用 record**
+
+```csharp
+// ✅ 正确：使用 class 定义状态
+[GenerateSerializer]
+public class MyState : StateBase
+{
+    [Id(0)] public int Counter { get; set; }
+    [Id(1)] public List<string> Items { get; set; } = new();
+}
+
+// ✅ 正确：使用 class 定义状态日志事件
+[GenerateSerializer]
+public class MyStateLogEvent : StateLogEventBase<MyStateLogEvent> { }
+
+[GenerateSerializer] 
+public class CounterIncrementedEvent : MyStateLogEvent
+{
+    [Id(0)] public int Amount { get; set; }
+}
+
+// ❌ 错误：不能使用 record 定义状态
+[GenerateSerializer]
+public record MyState : StateBase  // 这会导致序列化问题
+{
+    [Id(0)] public int Counter { get; set; }
+}
+
+// ❌ 错误：不能使用 record 定义状态日志事件
+[GenerateSerializer]
+public record MyStateLogEvent : StateLogEventBase<MyStateLogEvent>;  // 这会导致序列化问题
+```
+
+**原因：**
+- Orleans 的序列化系统对 record 类型的支持不完整
+- State 需要可变属性来支持事件溯源的状态转换
+- StateLogEvent 需要与 Orleans 事件溯源系统兼容
+- 使用 class 确保与 Orleans 序列化机制的完全兼容性
+
+### 2.2 状态管理（Orleans 事件溯源）
 ```csharp
 // 步骤 1：定义状态
 [GenerateSerializer]
@@ -577,6 +618,7 @@ src/
 
 ### 基本实现
 - [ ] 先定义接口（IStateGAgent<TState> 或 IStateGAgent<TState> + IAIGAgent）
+- [ ] **Event、State 和 StateLogEvent 必须定义为 class（不能使用 record）**
 - [ ] 无构造函数参数
 - [ ] 具有 [GAgent] 特性
 - [ ] 实现 GetDescriptionAsync()

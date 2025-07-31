@@ -1,152 +1,154 @@
 # Aevatar Workshop
 
-Welcome to the Aevatar Workshop! This is a comprehensive demonstration and learning environment for the Aevatar framework, showcasing GAgent collaboration, event-driven architecture, and AI integration capabilities.
+[🇨🇳 中文版](README.zh.md) | English
+
+Welcome to the **Aevatar Workshop** - your gateway to building intelligent multi-agent systems! This comprehensive learning environment demonstrates the power of GAgent collaboration, event-driven architecture, and AI integration.
 
 ## 🎯 What is Aevatar?
 
-Aevatar is a powerful framework for building distributed, event-driven systems using agents (GAgents). Built on Microsoft Orleans, it enables:
-- **Distributed Agents**: GAgents that can run across multiple nodes
-- **Event-Driven Communication**: Agents collaborate through events
-- **AI Integration**: Native support for AI-powered agents with tool calling
-- **MCP Support**: Model Context Protocol integration for external tools
+**Aevatar** is a cutting-edge framework for building distributed, event-driven systems using intelligent agents (GAgents). Built on Microsoft Orleans, it empowers developers to create scalable, high-concurrency multi-agent applications with:
 
----
-
-## 📋 Prerequisites
-
-- [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) installed
-- Git and a Unix-like shell (macOS/Linux recommended)
-- (Optional) Azure OpenAI or OpenAI API key for AI-powered demos
+- 🤖 **Intelligent Agents (GAgents)**: Autonomous entities that think, remember, and collaborate
+- ⚡ **Event-Driven Communication**: Seamless agent interaction through Orleans Streaming
+- 🧠 **AI Integration**: Native support for LLM-powered agents with tool calling
+- 🌐 **Distributed Architecture**: Auto-scaling across multiple nodes
+- 📊 **Event Sourcing**: Reliable state management and complete audit trails
 
 ---
 
 ## 🚀 Quick Start
 
+### Prerequisites
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
+- Git and Unix-like shell (macOS/Linux recommended)
+- (Optional) OpenAI or Azure OpenAI API key for AI demos
+
+### Installation & Launch
 ```bash
 git clone git@github.com:aevatarAI/aevatar-workshop.git
 cd aevatar-workshop
 ./quickstart.sh
 ```
 
-The `quickstart.sh` script will:
-- Build all projects
-- Start the Host service (backend) - logs in `host.log`
-- Start the Client service (frontend) - logs in `client.log`
-- Display URL for the web interface: http://localhost:5000
-
-> **Tip:** To stop all services, use `./shutdown.sh`
+The workshop will start automatically:
+- 🖥️ **Web Interface**: http://localhost:5000
+- 📝 **Backend Logs**: `host.log`
+- 🌐 **Frontend Logs**: `client.log`
+- 🛑 **Stop Services**: `./shutdown.sh`
 
 ---
 
-## 🎮 Available Demos
+## 📚 Learning Journey
 
-The workshop includes two categories of demos:
+### 🎓 Start Here: Aevatar Basics
 
-### Basic Demos
+**Perfect for newcomers!** Begin with our comprehensive foundation course that covers:
 
-1. **Event Handler Demo** 🎯
-   - Interactive demonstration of GAgent event handling
-   - Shows how agents define and handle custom events
-   - Displays real-time event flow and statistics
-   - Perfect for understanding event-driven architecture
+- **GAgent Fundamentals**: Understanding intelligent agents and their capabilities
+- **Orleans Virtual Actor Model**: How distributed agents work at scale
+- **Event-Driven Architecture**: Agent communication patterns and best practices  
+- **State Management**: Event sourcing and persistent agent memory
+- **Hands-on Examples**: Interactive code samples and exercises
 
-2. **GAgent Service Demo** 🔧
-   - Basic GAgent service capabilities
-   - Demonstrates agent lifecycle and state management
-   - Shows inter-agent communication patterns
+**👆 Click "Aevatar Basics" in the workshop interface to start learning!**
 
-3. **AI Tool Calling Demo** 🤖
-   - AI agents using other GAgents as tools
-   - Demonstrates Math and TimeConverter agent integration
-   - Shows how to build AI-powered workflows
+### 🏠 Flagship Demo: Smart Home Experience
 
-4. **MCP Demo** 🔌
-   - Model Context Protocol integration
-   - External tool integration capabilities
-   - Shows how to extend agents with external services
+**See Aevatar in action!** Our Smart Home Demo showcases a complete multi-agent system:
 
-### Advanced Demos
+#### Key Features
+- 🗣️ **Natural Language Control**: Speak to your smart home in English or Chinese
+- 🏡 **Multi-Device Management**: Lights, thermostat, security, and curtains
+- 🤖 **AI-Powered Coordination**: Central AI agent orchestrates all devices
+- 📱 **Real-time Updates**: Instant feedback and synchronized states
+- 🌍 **Multi-language Support**: Complete internationalization
 
-1. **Dynamic AI MCP Integration** ⚡
-   - Dynamic tool registration and discovery
-   - Complex AI orchestration patterns
-   - Real-time tool adaptation
+#### What You'll Experience
+- **Voice Commands**: "Turn on the living room lights", "Set temperature to 22°"
+- **Agent Collaboration**: Watch GAgents communicate through real-time event flows
+- **Manual Controls**: Direct device interaction alongside AI commands
+- **Event Monitoring**: Live visualization of agent interactions
 
-2. **PsiGAgent Demo** 🧠
-   - Advanced AI agent with psychological modeling
-   - Complex reasoning and decision-making
-   - Multi-agent collaboration with AI
+**👆 Click "Smart Home Demo" to experience the future of smart home control!**
 
 ---
 
-## ⚙️ Configuration
+## 🎮 Additional Demos
 
-### AI Configuration (Required for AI Demos)
+Explore advanced capabilities after mastering the basics:
 
-Edit `src/Aevatar.Workshop.Host/appsettings.json`:
+### Core Concepts
+- **GAgent Service Demo**: Agent lifecycle and service patterns
+
+### AI Integration  
+- **AI Tool Calling Demo**: How AI agents use other agents as tools
+- **MCP Demo**: Model Context Protocol integration for external tools
+
+### Advanced Topics
+- **Dynamic AI MCP Integration**: Real-time tool discovery and adaptation
+- **PsiGAgent Demo**: Advanced AI agents with psychological modeling
+
+---
+
+## ⚙️ AI Configuration (Recommended)
+
+To unlock AI-powered demos, configure your LLM provider in `src/Aevatar.Workshop.Host/appsettings.json`:
 
 ```json
 {
   "SystemLLMConfigs": {
     "OpenAI": {
-      "ProviderEnum": "Azure",      // "Azure" or "OpenAI"
-      "ModelIdEnum": "OpenAI",
+      "ProviderEnum": "OpenAI",        // or "Azure"
+      "ModelIdEnum": "OpenAI", 
       "ModelName": "gpt-4o",
-      "Endpoint": "YOUR_ENDPOINT",   // Azure: https://xxx.openai.azure.com/
-      "ApiKey": "YOUR_API_KEY"
+      "Endpoint": "https://api.openai.com/v1/",  // or Azure endpoint
+      "ApiKey": "YOUR_API_KEY_HERE"
     }
   }
 }
 ```
 
+> **Note**: The Smart Home Demo works with manual controls even without AI configuration!
+
 ---
 
-## 🏗️ Project Structure
+## 🏗️ Project Architecture
 
 ```
 aevatar-workshop/
 ├── src/
-│   ├── Aevatar.Workshop.Host/      # Backend Orleans Silo
-│   ├── Aevatar.Workshop.Client/    # Frontend Web API & UI
+│   ├── Aevatar.Workshop.Host/      # Orleans Silo (Backend)
+│   ├── Aevatar.Workshop.Client/    # Web API & UI (Frontend)  
 │   └── Aevatar.Workshop.GAgent/    # Custom GAgent implementations
-├── test/                           # Unit and integration tests
-├── docs/                          # Documentation
-│   └── demodesc/                  # Demo descriptions (EN/ZH)
-├── quickstart.sh                  # Start script
-├── shutdown.sh                    # Stop script
+├── test/                           # Comprehensive test suite
+├── docs/                           # Documentation and guides
+└── scripts/                        # Automation scripts
 ```
 
 ---
 
-## 🛠️ Creating Your Own GAgent
+## 🛠️ Building Your First GAgent
 
-### Step 1: Define Your GAgent
-
-Create a new file in `src/Aevatar.Workshop.GAgent/GAgents/`:
+After completing the basics tutorial, try creating your own GAgent:
 
 ```csharp
-using Aevatar.Core;
-using Aevatar.Core.Abstractions;
-using System.ComponentModel;
-
-[GAgent("mycustom", "workshop")]
-public class MyCustomGAgent : GAgentBase<MyCustomState, MyCustomStateLogEvent>
+[GAgent("myagent", "workshop")]
+public class MyGAgent : GAgentBase<MyState, MyStateLogEvent>, IMyGAgent
 {
     public override Task<string> GetDescriptionAsync()
-        => Task.FromResult("My custom GAgent for demonstration");
+        => Task.FromResult("My first intelligent agent");
 
     [EventHandler]
-    public async Task HandleMyEventAsync(MyCustomEvent @event)
+    public async Task HandleMyEventAsync(MyEvent @event)
     {
-        Logger.LogInformation("Received event: {Message}", @event.Message);
+        // Process the event
+        Logger.LogInformation("Received: {Message}", @event.Message);
         
-        // Update state
-        await RaiseStateEvent(new MyCustomStateLogEvent 
-        { 
-            Message = @event.Message 
-        });
+        // Update state through events
+        RaiseEvent(new MyStateLogEvent { Data = @event.Message });
+        await ConfirmEvents();
         
-        // Publish response event
+        // Publish response
         await PublishAsync(new MyResponseEvent 
         { 
             Response = $"Processed: {@event.Message}" 
@@ -155,127 +157,44 @@ public class MyCustomGAgent : GAgentBase<MyCustomState, MyCustomStateLogEvent>
 }
 ```
 
-### Step 2: Define Your Events
-
-```csharp
-using Aevatar.Core.Abstractions;
-using Orleans;
-
-[GenerateSerializer]
-public class MyCustomEvent : EventBase
-{
-    [Id(0)] public string Message { get; set; } = string.Empty;
-}
-
-[GenerateSerializer]
-public class MyResponseEvent : EventBase
-{
-    [Id(0)] public string Response { get; set; } = string.Empty;
-}
-```
-
-### Step 3: Define Your State
-
-```csharp
-[GenerateSerializer]
-public class MyCustomState : StateBase
-{
-    [Id(0)] public List<string> ProcessedMessages { get; set; } = new();
-}
-
-[GenerateSerializer]
-public class MyCustomStateLogEvent : StateLogEventBase<MyCustomStateLogEvent>
-{
-    [Id(0)] public string Message { get; set; } = string.Empty;
-    
-    public override void Apply(MyCustomState state)
-    {
-        state.ProcessedMessages.Add(Message);
-    }
-}
-```
-
-### Step 4: Use Your GAgent
-
-Your custom GAgent will automatically appear in the Event Handler Demo if placed in the Demo namespace, thanks to the reflection-based discovery system.
-
----
-
-## 🔍 Key Features
-
-### Event-Driven Architecture
-- Agents communicate through strongly-typed events
-- Support for event handlers with attributes
-- Event propagation through agent hierarchies
-
-### AI Integration
-- Native support for AI-powered agents
-- Tool calling capabilities
-- MCP (Model Context Protocol) support
-
-### Development Tools
-- **GAgent Reflection Extensions**: Automatic discovery of agents and their capabilities
-- **JsonConversionHelper**: Unified JSON serialization for Orleans
-- **Interactive Web UI**: Real-time monitoring and interaction
-
-### Testing Support
-- Comprehensive unit test examples
-- Integration test patterns
-- Orleans TestKit integration
-
----
-
-## 📚 Learning Path
-
-1. **Start with Event Handler Demo** - Understand basic event-driven patterns
-2. **Explore GAgent Service Demo** - Learn about agent lifecycle
-3. **Try AI Tool Calling Demo** - See AI integration in action
-4. **Experiment with MCP Demo** - Understand external tool integration
-5. **Create your own GAgent** - Apply what you've learned
-
 ---
 
 ## 🐛 Troubleshooting
 
-### Services won't start
-- Check if ports 5000 (Client) and 11111 (Orleans) are available
-- Ensure .NET 9.0 SDK is installed: `dotnet --version`
+### Common Issues
+- **Services won't start**: Check ports 5000 and 11111 are free
+- **Build errors**: Run `dotnet restore` and ensure .NET 9.0 is installed
+- **AI demos not working**: Verify API keys in configuration
+
+### Getting Help
 - Check logs: `tail -f host.log` and `tail -f client.log`
-
-### AI demos not working
-- Verify API keys in `appsettings.json`
-- Check if endpoint URLs are correct
-- Ensure network connectivity to AI services
-
-### Build errors
-- Run `dotnet restore` to restore packages
-- If in dev mode, ensure all submodules are cloned
-- Switch to release mode if framework source is not available
+- Review documentation in the workshop interface
+- Visit our [Discord Community](https://discord.gg/aevatar)
 
 ---
 
-## 🤝 Contributing
+## 🌟 Why Choose Aevatar?
 
-We welcome contributions! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+✅ **Developer Friendly**: Familiar C# and .NET ecosystem  
+✅ **Production Ready**: Built on proven Orleans technology  
+✅ **AI Native**: Seamless LLM integration and tool calling  
+✅ **Highly Scalable**: Automatic load balancing and distribution  
+✅ **Event Sourcing**: Complete auditability and state recovery  
 
 ---
 
 ## 🔗 Resources
 
-- [Aevatar Documentation](https://docs.aevatar.ai)
-- [Orleans Documentation](https://docs.microsoft.com/en-us/dotnet/orleans/)
-- [Discord Community](https://discord.gg/aevatar)
+- 📖 [Aevatar Documentation](https://docs.aevatar.ai)
+- 🛠️ [GAgent Development Guide](docs/gagent-development-guide.md)
+- 🏛️ [Orleans Documentation](https://docs.microsoft.com/en-us/dotnet/orleans/)
+- 💬 [Discord Community](https://discord.gg/aevatar)
+- 🐙 [GitHub Repository](https://github.com/aevatarAI/aevatar-station)
 
 ---
 
-Happy coding with Aevatar! 🚀 
+**Ready to build the future with intelligent agents?** 
+
+🎯 Start with **Aevatar Basics** → Experience the **Smart Home Demo** → Build your own GAgent!
+
+Happy coding! 🚀 

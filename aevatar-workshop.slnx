@@ -1,6 +1,5 @@
 <Solution>
-  <Folder Name="/.cursor/">
-  </Folder>
+  <Folder Name="/.cursor/" />
   <Folder Name="/.cursor/rules/">
     <File Path=".cursor\rules\code-practices.mdc" />
     <File Path=".cursor\rules\flow.mdc" />
@@ -23,16 +22,20 @@
     <File Path="docs\GAgentImplementationRules.md" />
     <File Path="docs\GAgentImplementationRules.zh.md" />
     <File Path="docs\config-sync-component-diagram.md" />
+    <File Path="docs\gagent-development-guide.md" />
+    <File Path="docs\gagent-development-guide.zh.md" />
+  </Folder>
+  <Folder Name="/scripts/">
+    <File Path="quickstart.sh" />
+    <File Path="shutdown.sh" />
   </Folder>
   <Folder Name="/solution-item/">
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
     <File Path="host.log" />
     <File Path="client.log" />
-  </Folder>
-  <Folder Name="/scripts/">
-    <File Path="quickstart.sh" />
-    <File Path="shutdown.sh" />
+    <File Path="README.md" />
+    <File Path="README.zh.md" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Aevatar.Workshop.Client/Aevatar.Workshop.Client.csproj" />
@@ -42,5 +45,6 @@
   <Folder Name="/test/">
     <Project Path="test/Aevatar.Workshop.TestBase/Aevatar.Workshop.TestBase.csproj" />
     <Project Path="test/Aevatar.Workshop.Tests/Aevatar.Workshop.Tests.csproj" />
+    <Project Path="test\Aevatar.Workshop.GuideGAgents\Aevatar.Workshop.GuideGAgents.csproj" Type="Classic C#" />
   </Folder>
 </Solution>
