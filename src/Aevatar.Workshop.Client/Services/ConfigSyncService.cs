@@ -7,6 +7,7 @@ using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.Executor;
 using Aevatar.Workshop.GAgent;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.Workshop.GAgent.Extensions;
 using Aevatar.Workshop.GAgent.Options;
 
 namespace Aevatar.Workshop.Client.Services;
@@ -73,8 +74,7 @@ public class ConfigSyncService : IHostedService
                     string.Join(", ", systemLLMConfigs.SystemLLMConfigs.Keys));
                 
                 // Get the ConfigManagerGAgent instance for SystemLLMConfigOptions
-                var configGuid = typeof(SystemLLMConfigOptions).FullName!.ToGuid();
-                var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>(configGuid);
+                var configManager = await _gAgentFactory.GetSystemLLMConfigGAgent();
 
                 // Create update event - serialize the entire dictionary
                 var updateEvent = new ConfigUpdateEvent
@@ -124,8 +124,7 @@ public class ConfigSyncService : IHostedService
                 _logger.LogInformation("Found {Count} MCPServers to sync", mcpServerOptions.MCPServers.Count);
                 
                 // Get the ConfigManagerGAgent instance for MCPServerOptions
-                var configGuid = typeof(MCPServerOptions).FullName!.ToGuid();
-                var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>(configGuid);
+                var configManager = await _gAgentFactory.GetMCPServerConfigGAgent();
 
                 // Create update event - serialize the entire dictionary
                 var updateEvent = new ConfigUpdateEvent

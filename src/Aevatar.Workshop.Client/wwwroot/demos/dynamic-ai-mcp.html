@@ -919,9 +919,14 @@
             <select id="systemLLM" style="width: 100%; padding: 8px; margin-bottom: 12px; background-color: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 6px; color: #e0e0e0;">
                 <!-- Options will be loaded dynamically -->
             </select>
-            <button class="button" id="initBtn" onclick="initializeAgent()">
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <button class="button" style="flex: 1;" onclick="openLLMConfig()">
+                    <span>Configure LLM</span>
+                </button>
+                <button class="button" id="initBtn" style="flex: 2;" onclick="initializeAgent()">
                 <span>Initialize AI Agent</span>
             </button>
+            </div>
             <div id="initStatus"></div>
         </div>
 
@@ -1099,18 +1104,26 @@
                     selectElement.value = 'DeepSeek';
                 }
             } else {
-                // Fallback option if no configs found
+                // Show unconfigured state if no configs found
                 const option = document.createElement('option');
-                option.value = 'DeepSeek';
-                option.textContent = 'DeepSeek (Default)';
+                option.value = '';
+                option.textContent = 'No LLM configured';
+                option.disabled = true;
                 selectElement.appendChild(option);
+                selectElement.value = '';
             }
         } catch (error) {
             console.error('Failed to load LLM configurations:', error);
-            // Fallback to default
+            // Show error state
             const selectElement = document.getElementById('systemLLM');
-            selectElement.innerHTML = '<option value="DeepSeek">DeepSeek (Default)</option>';
+            selectElement.innerHTML = '<option value="" disabled>Failed to load LLM config</option>';
+            selectElement.value = '';
         }
+    }
+
+    // Open LLM configuration page
+    function openLLMConfig() {
+        window.open('/', '_blank');
     }
 
     // Theme toggle function
@@ -1126,6 +1139,11 @@
         const btn = document.getElementById('initBtn');
         const status = document.getElementById('initStatus');
         const systemLLM = document.getElementById('systemLLM').value;
+
+        if (!systemLLM) {
+            status.innerHTML = '<div class="status-message error">Please configure LLM first</div>';
+            return;
+        }
 
         btn.disabled = true;
         btn.innerHTML = '<div class="spinner"></div> Initializing...';

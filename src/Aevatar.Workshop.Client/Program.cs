@@ -15,9 +15,20 @@ var builder = WebApplication.CreateBuilder(args);
 // Add configuration files
 builder.Configuration
     .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables();
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+// Add secrets file with error handling
+try
+{
+    builder.Configuration.AddJsonFile("appsettings.secrets.json", optional: true, reloadOnChange: true);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Warning: Failed to load appsettings.secrets.json: {ex.Message}");
+    Console.WriteLine("The application will continue without this configuration file.");
+}
+
+builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddControllers();
 

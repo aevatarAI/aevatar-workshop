@@ -4,6 +4,7 @@ using Aevatar.GAgents.AI.Options;
 using Aevatar.GAgents.AIGAgent.Agent;
 using Aevatar.GAgents.AIGAgent.Dtos;
 using Aevatar.GAgents.AIGAgent.State;
+using Aevatar.Workshop.GAgent.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -56,11 +57,8 @@ public abstract class WorkshopAIGAgentBase<TState, TStateLogEvent> : AIGAgentBas
         {
             Logger.LogInformation("Resolving SystemLLM config for key: {Key}", key);
             
-            // Get the GUID for SystemLLMConfigOptions type using ToGuid extension
-            var configGuid = typeof(SystemLLMConfigOptions).FullName!.ToGuid();
-            
             // Get ConfigManagerGAgent instance
-            var configManager = await GAgentFactory.GetGAgentAsync<IConfigManagerGAgent>(configGuid);
+            var configManager = await GAgentFactory.GetSystemLLMConfigGAgent();
             
             // Request configuration - we need the entire dictionary
             var requestEvent = new ConfigRequestEvent

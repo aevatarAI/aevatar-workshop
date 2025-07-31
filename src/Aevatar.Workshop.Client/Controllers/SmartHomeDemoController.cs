@@ -62,8 +62,17 @@ namespace Aevatar.Workshop.Client.Controllers
                 await aiAgent.RegisterAsync(security);
                 await aiAgent.RegisterAsync(curtain);
 
+                // 检查初始化状态
+                var wasInitialized = await aiAgent.IsInitializedAsync();
+                _logger.LogInformation("AI Agent initialization status before: {WasInitialized}", wasInitialized);
+                
                 // 初始化 AI 并自动注册 GAgent tools
                 var aiInitialized = await aiAgent.InitializeAsync(request.SystemLLM);
+                _logger.LogInformation("AI Agent initialization result: {AiInitialized}", aiInitialized);
+                
+                // 再次检查初始化状态
+                var isNowInitialized = await aiAgent.IsInitializedAsync();
+                _logger.LogInformation("AI Agent initialization status after: {IsNowInitialized}", isNowInitialized);
 
                 // 获取初始设备状态
                 var deviceStates = await GetDeviceStatesInternal();

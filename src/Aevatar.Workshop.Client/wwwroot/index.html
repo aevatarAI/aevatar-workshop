@@ -657,11 +657,21 @@
         llmConfigModal.style.display = 'flex';
         try {
           const resp = await fetch('/api/llm-configs');
+          if (resp.ok) {
           llmConfigData = await resp.json();
           renderLlmConfigForm();
-        } catch {
-          llmConfigForm.innerHTML = `<span style="color:#b91c1c;" data-i18n-key="failed-to-load-config">Failed to load config.</span>`;
-          setLanguage(currentLanguage);
+          } else if (resp.status === 404 || resp.status === 204) {
+            // No config exists yet, allow user to create new one
+            llmConfigData = {};
+            renderLlmConfigForm();
+          } else {
+            throw new Error(`HTTP ${resp.status}`);
+          }
+        } catch (error) {
+          console.warn('Failed to load LLM config, starting with empty config:', error);
+          // Start with empty config if loading fails
+          llmConfigData = {};
+          renderLlmConfigForm();
         }
         llmConfigCancelBtn.onclick = () => { llmConfigModal.style.display = 'none'; };
         llmConfigSaveBtn.onclick = async function() {

@@ -16,10 +16,10 @@ Experience the power of Aevatar's multi-agent system through an intuitive smart 
 - **Event-Driven Communication**: Agents communicate through events, not direct calls
 - **Fault Tolerance**: If one device fails, others continue working independently
 
-### 🎯 Intelligent Coordination
-- **Scene Management**: Pre-configured scenes like "Good Morning" or "Good Night"
-- **Smart Orchestration**: The coordinator agent manages complex multi-device operations
-- **Flexible Control**: Natural language or direct device control
+### 🎯 Smart Device Control
+- **Multiple Device Types**: Control lights, thermostat, security system, and smart curtains
+- **Manual Controls**: Direct device interaction through intuitive interface
+- **Smart Coordination**: AI can control multiple devices with a single command
 
 ## How It Works
 
@@ -39,12 +39,34 @@ Experience the power of Aevatar's multi-agent system through an intuitive smart 
    - Event sourcing provides complete history
    - Orleans framework ensures reliability and scalability
 
+## Device Control Options
+
+### 💡 Smart Lighting
+- **On/Off Control**: Turn lights on or off
+- **Brightness Adjustment**: Fine-tune lighting levels (0-100%)
+- **Voice Commands**: "Turn on the lights", "Set brightness to 50%"
+
+### 🌡️ Smart Thermostat
+- **Temperature Control**: Adjust target temperature (16-30°C)
+- **Mode Selection**: Auto, Heat, Cool modes
+- **Voice Commands**: "Set temperature to 22 degrees", "Switch to cool mode"
+
+### 🔒 Security System
+- **Arm/Disarm**: Control home security status
+- **Activity Monitoring**: Track last security events
+- **Voice Commands**: "Arm security", "Disarm the alarm"
+
+### 🪟 Smart Curtains
+- **Position Control**: Adjust curtain openness (0-100%)
+- **Quick Presets**: Fully open, half open, fully closed
+- **Voice Commands**: "Open the curtains", "Close curtains halfway"
+
 ## Try These Commands
 
 - **Basic Control**: "Turn on the lights", "Set temperature to 22 degrees"
-- **Scene Activation**: "Good night", "I'm leaving home"
 - **Complex Commands**: "Turn off all lights and arm the security system"
 - **Status Queries**: "What's the current temperature?", "Are the lights on?"
+- **Multi-device Control**: "Turn on lights and open curtains"
 
 ## Architecture Benefits
 

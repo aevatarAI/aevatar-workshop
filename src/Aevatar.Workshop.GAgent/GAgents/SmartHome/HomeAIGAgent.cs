@@ -47,6 +47,15 @@ public class HomeAIInitializedLogEvent : HomeAIStateLogEvent
 }
 
 /// <summary>
+/// AI重置事件
+/// </summary>
+[GenerateSerializer]
+public class HomeAIResetLogEvent : HomeAIStateLogEvent
+{
+    [Id(0)] public DateTime Timestamp { get; set; }
+}
+
+/// <summary>
 /// 聊天消息记录事件
 /// </summary>
 [GenerateSerializer]
@@ -80,6 +89,7 @@ public interface IHomeAIGAgent : IStateGAgent<HomeAIGAgentState>, IAIGAgent
     Task<bool> InitializeAsync(string llmSystem);
     Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput);
     Task<List<string>> GetChatHistoryAsync();
+    Task<bool> IsInitializedAsync();
 }
 
 #endregion
@@ -110,6 +120,21 @@ public class HomeAIGAgent : WorkshopAIGAgentBase<HomeAIGAgentState, HomeAIStateL
         try
         {
             Logger.LogInformation("Initializing HomeAIGAgent with LLM system: {System}", llmSystem);
+            
+            // If already initialized with the same LLM system, skip initialization
+            if (State.Initialized && State.SystemLLM == llmSystem)
+            {
+                Logger.LogInformation("HomeAIGAgent already initialized with the same LLM system: {System}", llmSystem);
+                return true;
+            }
+            
+            // Reset initialization state if we're reinitializing (either different LLM or failed previous init)
+            if (State.Initialized || !string.IsNullOrEmpty(State.SystemLLM))
+            {
+                Logger.LogInformation("Resetting HomeAIGAgent state before reinitializing with LLM system: {System}", llmSystem);
+                RaiseEvent(new HomeAIResetLogEvent { Timestamp = DateTime.UtcNow });
+                await ConfirmEvents();
+            }
 
             // Use the base class SetSystemLLM to configure AI
             await SetSystemLLMAsync(llmSystem);
@@ -281,6 +306,9 @@ public class HomeAIGAgent : WorkshopAIGAgentBase<HomeAIGAgentState, HomeAIStateL
     public Task<List<string>> GetChatHistoryAsync()
         => Task.FromResult(State.ChatHistory.ToList());
 
+    public Task<bool> IsInitializedAsync()
+        => Task.FromResult(State.Initialized);
+
     #endregion
 
     #region Private Methods
@@ -297,6 +325,13 @@ public class HomeAIGAgent : WorkshopAIGAgentBase<HomeAIGAgentState, HomeAIStateL
                 state.Initialized = true;
                 state.SystemLLM = e.LLMSystem;
                 Logger.LogDebug("HomeAIGAgent initialized with LLM: {LLM}", e.LLMSystem);
+                break;
+
+            case HomeAIResetLogEvent e:
+                state.Initialized = false;
+                state.SystemLLM = string.Empty;
+                state.ChatHistory.Clear();
+                Logger.LogDebug("HomeAIGAgent reset at {Timestamp}", e.Timestamp);
                 break;
 
             case ChatMessageLogEvent e:

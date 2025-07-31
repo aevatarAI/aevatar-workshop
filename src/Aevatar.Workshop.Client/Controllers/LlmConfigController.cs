@@ -2,8 +2,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using Newtonsoft.Json.Linq;
 using Aevatar.Core.Abstractions;
+using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.Executor;
 using Aevatar.Workshop.GAgent;
+using Aevatar.GAgents.AI.Options;
+using Aevatar.Workshop.GAgent.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace Aevatar.Workshop.Client.Controllers;
@@ -84,36 +87,6 @@ public class LlmConfigController : ControllerBase
             {
                 // Create a new structure matching appsettings.json format
                 jsonObj = JObject.Parse(@"{
-                    ""Serilog"": {
-                        ""Properties"": {
-                            ""Application"": ""Aevatar.Workshop.Host"",
-                            ""Environment"": ""Development""
-                        },
-                        ""MinimumLevel"": {
-                            ""Default"": ""Information"",
-                            ""Override"": {
-                                ""Default"": ""Information"",
-                                ""System"": ""Warning"",
-                                ""Microsoft"": ""Warning"",
-                                ""Orleans"": ""Error""
-                            }
-                        },
-                        ""WriteTo"": [
-                            {
-                                ""Name"": ""Console""
-                            },
-                            {
-                                ""Name"": ""RollingFile"",
-                                ""Args"": {
-                                    ""pathFormat"": ""Logs/log-{Date}.log"",
-                                    ""outputTemplate"": ""[{Timestamp:yyyy-MM-dd HH:mm:ss.fff}{Offset:zzz}][{Level:u3}] [{SourceContext}] {Message}{NewLine}{Exception}"",
-                                    ""rollOnFileSizeLimit"": true,
-                                    ""rollingInterval"": ""Day"",
-                                    ""retainedFileCountLimit"": 15
-                                }
-                            }
-                        ]
-                    }
                 }");
             }
 
@@ -125,22 +98,19 @@ public class LlmConfigController : ControllerBase
             // Step 2: Sync to host via ConfigManagerGAgent
             try
             {
-                var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>();
-                var configJson = newConfigs.ToString();
+                // Get the ConfigManagerGAgent instance for SystemLLMConfigOptions
+                var configManager = await _gAgentFactory.GetSystemLLMConfigGAgent();
 
+                // Create update event - serialize the entire dictionary
                 var updateEvent = new ConfigUpdateEvent
                 {
-                    ConfigType = "SystemLLMConfigs",
-                    ConfigJson = configJson
+                    ConfigType = typeof(SystemLLMConfigOptions).FullName!,
+                    ConfigJson = JsonSerializer.Serialize(newConfigs)
                 };
 
                 _logger.LogInformation("Sending configuration update to host...");
 
-                var responseJson = await _gAgentExecutor.ExecuteGAgentEventHandler(
-                    configManager,
-                    updateEvent);
-
-                var response = JsonSerializer.Deserialize<ConfigResponseEvent>(responseJson);
+                var response = await configManager.UpdateConfigAsync(updateEvent);
                 if (response.Success)
                 {
                     _logger.LogInformation("Configuration successfully synced to host");
@@ -273,6 +243,22 @@ public class LlmConfigController : ControllerBase
                 }
             }
 
+            // Also read from appsettings.secrets.json
+            if (System.IO.File.Exists(secretsPath))
+            {
+                var json = await System.IO.File.ReadAllTextAsync(secretsPath);
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
+                if (root.TryGetProperty("SystemLLMConfigs", out var llmConfigs) &&
+                    llmConfigs.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var prop in llmConfigs.EnumerateObject())
+                    {
+                        keys.Add(prop.Name);
+                    }
+                }
+            }
+
             return Ok(keys.ToArray());
         }
         catch
@@ -287,7 +273,7 @@ public class LlmConfigController : ControllerBase
         try
         {
             // Check if we can connect to host
-            var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>();
+            var configManager = await _gAgentFactory.GetSystemLLMConfigGAgent();
 
             return Ok(new
             {

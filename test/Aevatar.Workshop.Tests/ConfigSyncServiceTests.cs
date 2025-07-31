@@ -5,6 +5,7 @@ using Aevatar.GAgents.AI.Options;
 using Aevatar.Workshop.GAgent;
 using Aevatar.Workshop.GAgent.Options;
 using Aevatar.Workshop.Client.Services;
+using Aevatar.Workshop.GAgent.Extensions;
 using Aevatar.Workshop.TestBase;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,8 +60,7 @@ public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTes
         await service.StartAsync(CancellationToken.None);
 
         // Assert - Verify the config was stored
-        var configGuid = typeof(SystemLLMConfigOptions).FullName!.ToGuid();
-        var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>(configGuid);
+        var configManager = await _gAgentFactory.GetSystemLLMConfigGAgent();
         
         var response = await configManager.RequestConfigAsync(new ConfigRequestEvent
         {
@@ -105,8 +105,7 @@ public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTes
         await service.StartAsync(CancellationToken.None);
 
         // Assert
-        var configGuid = typeof(MCPServerOptions).FullName!.ToGuid();
-        var configManager = await _gAgentFactory.GetGAgentAsync<IConfigManagerGAgent>(configGuid);
+        var configManager = await _gAgentFactory.GetMCPServerConfigGAgent();
         
         var response = await configManager.RequestConfigAsync(new ConfigRequestEvent
         {
