@@ -1,5 +1,4 @@
 using Aevatar.GAgents.Executor;
-using Aevatar.Workshop.GAgent;
 using Aevatar.Workshop.TestBase;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Modularity;

@@ -7,12 +7,12 @@ using Xunit.Abstractions;
 namespace Aevatar.Workshop.Tests;
 
 [Collection(ClusterCollection.Name)]
-public sealed class ECommerceTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
+public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
 {
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly IGAgentFactory _gAgentFactory;
 
-    public ECommerceTests(ITestOutputHelper testOutputHelper)
+    public ECommerceGAgentsTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
         _gAgentFactory = GetRequiredService<IGAgentFactory>();

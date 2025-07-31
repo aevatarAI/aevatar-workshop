@@ -1,10 +1,16 @@
 <Solution>
+  <Folder Name="/.claude/" />
+  <Folder Name="/.claude/rules/">
+    <File Path=".claude\rules\gagent-implementation-guide.md" />
+    <File Path=".claude\rules\gagent-unit-testing-guide.md" />
+  </Folder>
   <Folder Name="/.cursor/" />
   <Folder Name="/.cursor/rules/">
     <File Path=".cursor\rules\code-practices.mdc" />
     <File Path=".cursor\rules\flow.mdc" />
     <File Path=".cursor\rules\gagent-implementation-v1.mdc" />
     <File Path=".cursor\rules\test-practices.mdc" />
+    <File Path=".cursor\rules\gagent-unit-testing-guide.mdc" />
   </Folder>
   <Folder Name="/docker/">
     <File Path="docker\README.md" />

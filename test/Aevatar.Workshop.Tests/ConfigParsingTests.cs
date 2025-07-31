@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace Aevatar.Workshop.Tests;

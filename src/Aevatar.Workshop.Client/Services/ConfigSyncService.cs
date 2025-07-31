@@ -34,12 +34,12 @@ public class ConfigSyncService : IHostedService
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("=== ConfigSyncService Starting ===");
-        
+
         try
         {
             await SyncSystemLLMConfigsAsync();
             await SyncMCPServersAsync();
-            
+
             _logger.LogInformation("=== ConfigSyncService Completed Successfully ===");
         }
         catch (Exception ex)
@@ -59,20 +59,19 @@ public class ConfigSyncService : IHostedService
         try
         {
             _logger.LogInformation("Starting SystemLLMConfigs sync");
-            
+
             // Read SystemLLMConfigs from configuration
-            var systemLLMConfigs = new SystemLLMConfigOptions
-            {
-                SystemLLMConfigs = new Dictionary<string, LLMConfig>()
-            };
-            _configuration.GetSection("SystemLLMConfigs").Bind(systemLLMConfigs.SystemLLMConfigs);
+            var systemLLMConfigs = new SystemLLMConfigOptions();
+            var systemLLMConfigsSection = _configuration.GetSection("SystemLLMConfigs");
+            systemLLMConfigs.SystemLLMConfigs = systemLLMConfigsSection.Get<Dictionary<string, LLMConfig>>() ??
+                                                new Dictionary<string, LLMConfig>();
 
             if (systemLLMConfigs.SystemLLMConfigs != null && systemLLMConfigs.SystemLLMConfigs.Any())
             {
-                _logger.LogInformation("Found {Count} SystemLLMConfigs to sync: {Keys}", 
+                _logger.LogInformation("Found {Count} SystemLLMConfigs to sync: {Keys}",
                     systemLLMConfigs.SystemLLMConfigs.Count,
                     string.Join(", ", systemLLMConfigs.SystemLLMConfigs.Keys));
-                
+
                 // Get the ConfigManagerGAgent instance for SystemLLMConfigOptions
                 var configManager = await _gAgentFactory.GetSystemLLMConfigGAgent();
 
@@ -84,7 +83,7 @@ public class ConfigSyncService : IHostedService
                 };
 
                 var response = await configManager.UpdateConfigAsync(updateEvent);
-                
+
                 if (response.Success)
                 {
                     _logger.LogInformation("Successfully synced SystemLLMConfigs to ConfigManagerGAgent");
@@ -111,18 +110,17 @@ public class ConfigSyncService : IHostedService
         try
         {
             _logger.LogInformation("Starting MCPServers sync");
-            
+
             // Read MCPServers from configuration
-            var mcpServerOptions = new MCPServerOptions
-            {
-                MCPServers = new Dictionary<string, MCPServerConfig>()
-            };
-            _configuration.GetSection("MCPServers").Bind(mcpServerOptions.MCPServers);
+            var mcpServerOptions = new MCPServerOptions();
+            var mcpServersSection = _configuration.GetSection("MCPServers");
+            mcpServerOptions.MCPServers = mcpServersSection.Get<Dictionary<string, MCPServerConfig>>() ??
+                                          new Dictionary<string, MCPServerConfig>();
 
             if (mcpServerOptions.MCPServers != null && mcpServerOptions.MCPServers.Any())
             {
                 _logger.LogInformation("Found {Count} MCPServers to sync", mcpServerOptions.MCPServers.Count);
-                
+
                 // Get the ConfigManagerGAgent instance for MCPServerOptions
                 var configManager = await _gAgentFactory.GetMCPServerConfigGAgent();
 
