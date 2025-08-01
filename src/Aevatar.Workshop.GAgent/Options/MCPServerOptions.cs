@@ -42,16 +42,6 @@ public class MCPServerConfig
     public string? Url { get; set; }
 
     /// <summary>
-    /// Initial delay in milliseconds before server is ready
-    /// </summary>
-    public int InitialDelayMs { get; set; } = 1000;
-
-    /// <summary>
-    /// Maximum number of retries if server fails to start
-    /// </summary>
-    public int MaxRetries { get; set; } = 3;
-
-    /// <summary>
     /// Whether this server is enabled by default
     /// </summary>
     public bool Enabled { get; set; } = true;
