@@ -11,25 +11,23 @@ namespace Aevatar.Workshop.Tests;
 public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
 {
     private readonly ITestOutputHelper _testOutputHelper;
-    private readonly IGAgentFactory _gAgentFactory;
 
     public ECommerceGAgentsTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        _gAgentFactory = GetRequiredService<IGAgentFactory>();
     }
 
     [Fact]
     public async Task ECommerceGAgentsBasicSetupTest()
     {
         // Create coordinator GAgent
-        var coordinator = await _gAgentFactory.GetGAgentAsync<IECommerceCoordinatorGAgent>();
+        var coordinator = await GAgentFactory.GetGAgentAsync<IECommerceCoordinatorGAgent>();
 
         // Create all e-commerce GAgents
-        var orderAgent = await _gAgentFactory.GetGAgentAsync<IOrderGAgent>();
-        var inventoryAgent = await _gAgentFactory.GetGAgentAsync<IInventoryGAgent>();
-        var notificationGAgent = await _gAgentFactory.GetGAgentAsync<INotificationGAgent>();
-        var paymentAgent = await _gAgentFactory.GetGAgentAsync<IPaymentGAgent>();
+        var orderAgent = await GAgentFactory.GetGAgentAsync<IOrderGAgent>();
+        var inventoryAgent = await GAgentFactory.GetGAgentAsync<IInventoryGAgent>();
+        var notificationGAgent = await GAgentFactory.GetGAgentAsync<INotificationGAgent>();
+        var paymentAgent = await GAgentFactory.GetGAgentAsync<IPaymentGAgent>();
 
         // Register all agents with coordinator for event communication
         await coordinator.RegisterAsync(orderAgent);
@@ -49,7 +47,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task OrderGAgent_SubmitOrder_ShouldCreateOrder()
     {
         // Arrange
-        var orderAgent = await _gAgentFactory.GetGAgentAsync<IOrderGAgent>();
+        var orderAgent = await GAgentFactory.GetGAgentAsync<IOrderGAgent>();
         
         var orderRequest = new SubmitOrderRequest
         {
@@ -96,7 +94,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task OrderGAgent_GetOrdersByCustomer_ShouldReturnCustomerOrders()
     {
         // Arrange
-        var orderAgent = await _gAgentFactory.GetGAgentAsync<IOrderGAgent>();
+        var orderAgent = await GAgentFactory.GetGAgentAsync<IOrderGAgent>();
         var customerId = "customer-002";
         
         // Submit multiple orders for the same customer
@@ -117,7 +115,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task OrderGAgent_CancelOrder_ShouldUpdateStatus()
     {
         // Arrange
-        var orderAgent = await _gAgentFactory.GetGAgentAsync<IOrderGAgent>();
+        var orderAgent = await GAgentFactory.GetGAgentAsync<IOrderGAgent>();
         var orderId = await orderAgent.SubmitOrderAsync(CreateTestOrderRequest("customer-003", "Test Product"));
 
         // Act
@@ -132,7 +130,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task InventoryGAgent_AddProduct_ShouldAddToInventory()
     {
         // Arrange
-        var inventoryAgent = await _gAgentFactory.GetGAgentAsync<IInventoryGAgent>();
+        var inventoryAgent = await GAgentFactory.GetGAgentAsync<IInventoryGAgent>();
         
         var testProduct = new Product
         {
@@ -163,7 +161,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task InventoryGAgent_CheckAvailability_ShouldReturnCorrectStatus()
     {
         // Arrange
-        var inventoryAgent = await _gAgentFactory.GetGAgentAsync<IInventoryGAgent>();
+        var inventoryAgent = await GAgentFactory.GetGAgentAsync<IInventoryGAgent>();
         
         await inventoryAgent.AddProductAsync(new Product
         {
@@ -190,7 +188,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task InventoryGAgent_UpdateStock_ShouldUpdateQuantity()
     {
         // Arrange
-        var inventoryAgent = await _gAgentFactory.GetGAgentAsync<IInventoryGAgent>();
+        var inventoryAgent = await GAgentFactory.GetGAgentAsync<IInventoryGAgent>();
         
         await inventoryAgent.AddProductAsync(new Product
         {
@@ -215,7 +213,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task PaymentGAgent_ProcessPayment_ShouldHandleValidPayment()
     {
         // Arrange
-        var paymentAgent = await _gAgentFactory.GetGAgentAsync<IPaymentGAgent>();
+        var paymentAgent = await GAgentFactory.GetGAgentAsync<IPaymentGAgent>();
         
         var paymentRequest = new PaymentRequest
         {
@@ -247,7 +245,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task PaymentGAgent_ValidatePaymentMethod_ShouldValidateCorrectly()
     {
         // Arrange
-        var paymentAgent = await _gAgentFactory.GetGAgentAsync<IPaymentGAgent>();
+        var paymentAgent = await GAgentFactory.GetGAgentAsync<IPaymentGAgent>();
 
         // Valid credit card
         var validCreditCard = new PaymentMethod
@@ -285,7 +283,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task NotificationGAgent_SendNotification_ShouldCreateRecord()
     {
         // Arrange
-        var notificationAgent = await _gAgentFactory.GetGAgentAsync<INotificationGAgent>();
+        var notificationAgent = await GAgentFactory.GetGAgentAsync<INotificationGAgent>();
         
         var notificationRequest = new NotificationRequest
         {
@@ -314,7 +312,7 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task NotificationGAgent_UpdatePreferences_ShouldSavePreferences()
     {
         // Arrange
-        var notificationAgent = await _gAgentFactory.GetGAgentAsync<INotificationGAgent>();
+        var notificationAgent = await GAgentFactory.GetGAgentAsync<INotificationGAgent>();
         var customerId = "customer-prefs-001";
         
         var preferences = new NotificationPreferences
@@ -351,11 +349,11 @@ public sealed class ECommerceGAgentsTests : AevatarWorkshopTestBase<AevatarWorks
     public async Task ECommerceSystem_EndToEndWorkflow_ShouldProcessOrder()
     {
         // Arrange - Setup the complete e-commerce system
-        var coordinator = await _gAgentFactory.GetGAgentAsync<IECommerceCoordinatorGAgent>();
-        var orderAgent = await _gAgentFactory.GetGAgentAsync<IOrderGAgent>();
-        var inventoryAgent = await _gAgentFactory.GetGAgentAsync<IInventoryGAgent>();
-        var paymentAgent = await _gAgentFactory.GetGAgentAsync<IPaymentGAgent>();
-        var notificationAgent = await _gAgentFactory.GetGAgentAsync<INotificationGAgent>();
+        var coordinator = await GAgentFactory.GetGAgentAsync<IECommerceCoordinatorGAgent>();
+        var orderAgent = await GAgentFactory.GetGAgentAsync<IOrderGAgent>();
+        var inventoryAgent = await GAgentFactory.GetGAgentAsync<IInventoryGAgent>();
+        var paymentAgent = await GAgentFactory.GetGAgentAsync<IPaymentGAgent>();
+        var notificationAgent = await GAgentFactory.GetGAgentAsync<INotificationGAgent>();
 
         // Register all agents for event communication
         await coordinator.RegisterAsync(orderAgent);

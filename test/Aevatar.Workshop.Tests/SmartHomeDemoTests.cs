@@ -16,7 +16,6 @@ namespace Aevatar.Workshop.Tests;
 public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
 {
     private readonly ITestOutputHelper _testOutputHelper;
-    private readonly IGAgentFactory _gAgentFactory;
 
     // Fixed GUIDs for consistent testing
     private static readonly Guid LIGHT_ID = "light agent".ToGuid();
@@ -28,7 +27,6 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public SmartHomeDemoTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        _gAgentFactory = GetRequiredService<IGAgentFactory>();
     }
 
     #region LightGAgent Tests
@@ -42,7 +40,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Test Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
 
         // Act & Assert - Turn On
         await light.TurnOnAsync();
@@ -64,7 +62,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Test Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
 
         // Act
         await light.SetBrightnessAsync(75);
@@ -83,7 +81,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Test Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentOutOfRangeException>(() => light.SetBrightnessAsync(-10));
@@ -99,7 +97,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Test Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
 
         // Act
         await light.TurnOnAsync();
@@ -118,7 +116,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Test Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
 
         // Act
         await light.SetBrightnessAsync(50);
@@ -136,7 +134,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task ThermostatGAgent_SetTargetTemperature_ShouldUpdateTemperature()
     {
         // Arrange
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
 
         // Act
         await thermostat.SetTargetTemperatureAsync(25.5);
@@ -150,7 +148,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task ThermostatGAgent_GetCurrentTemperature_ShouldReturnValue()
     {
         // Arrange
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
 
         // Act
         var currentTemp = await thermostat.GetCurrentTemperatureAsync();
@@ -163,7 +161,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task ThermostatGAgent_GetMode_ShouldReturnCurrentMode()
     {
         // Arrange
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
 
         // Act
         var mode = await thermostat.GetModeAsync();
@@ -176,7 +174,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task ThermostatGAgent_SetTemperatureRange_ShouldAcceptValidRange()
     {
         // Arrange
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
 
         // Act & Assert - Test various valid temperatures
         await thermostat.SetTargetTemperatureAsync(16.0); // Minimum
@@ -200,7 +198,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task SecurityGAgent_ArmDisarm_ShouldChangeArmedState()
     {
         // Arrange
-        var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+        var security = await GAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
 
         // Act & Assert - Arm system
         await security.ArmAsync();
@@ -217,7 +215,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task SecurityGAgent_SimulateMotion_ShouldDetectMotion()
     {
         // Arrange
-        var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+        var security = await GAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
         await security.ArmAsync(); // Must be armed to detect motion
 
         // Act
@@ -235,7 +233,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task SecurityGAgent_MotionWhenDisarmed_ShouldNotDetect()
     {
         // Arrange
-        var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+        var security = await GAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
         await security.DisarmAsync(); // Ensure disarmed
 
         // Act
@@ -257,7 +255,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task CurtainGAgent_SetPosition_ShouldChangePosition()
     {
         // Arrange
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act
         await curtain.SetPositionAsync(75);
@@ -275,7 +273,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task CurtainGAgent_OpenClose_ShouldSetCorrectPositions()
     {
         // Arrange
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act & Assert - Open curtain (100%)
         await curtain.OpenAsync();
@@ -294,7 +292,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task CurtainGAgent_SetInvalidPosition_ShouldClampToValidRange()
     {
         // Arrange
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act - Test boundary values
         await curtain.SetPositionAsync(-10); // Should clamp to 0
@@ -312,7 +310,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task CurtainGAgent_Stop_ShouldStopMovement()
     {
         // Arrange
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act - Start movement and then stop
         await curtain.SetPositionAsync(80);
@@ -333,7 +331,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     {
         // Arrange
         await ConfigLLMAsync();
-        var aiAgent = await _gAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
+        var aiAgent = await GAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
 
         // Act
         var result = await aiAgent.InitializeAsync("OpenAI");
@@ -349,7 +347,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     {
         // Arrange
         await ConfigLLMAsync();
-        var aiAgent = await _gAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
+        var aiAgent = await GAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
         await aiAgent.InitializeAsync("OpenAI");
 
         // Act
@@ -366,7 +364,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     {
         // Arrange
         await ConfigLLMAsync();
-        var aiAgent = await _gAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
+        var aiAgent = await GAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
         await aiAgent.InitializeAsync("OpenAI");
 
         // Act
@@ -386,17 +384,17 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
     public async Task SmartHomeSystem_CompleteSetup_ShouldInitializeAllDevices()
     {
         // Arrange
-        var aiAgent = await _gAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
+        var aiAgent = await GAgentFactory.GetGAgentAsync<IHomeAIGAgent>(AI_AGENT_ID);
 
         var lightConfig = new LightConfiguration
         {
             LightId = LIGHT_ID.ToString("N"),
             Location = "Living Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
-        var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var security = await GAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act - Setup system
         await aiAgent.RegisterAsync(light);
@@ -428,10 +426,10 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Living Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
-        var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var security = await GAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act - Execute "Good Morning" scene
         await light.TurnOnAsync();
@@ -467,10 +465,10 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Living Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
-        var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var security = await GAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act - Execute "Good Night" scene
         await light.TurnOffAsync();
@@ -504,10 +502,10 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Living Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
-        var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var security = await GAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act - Execute "Movie" scene
         await light.TurnOnAsync();
@@ -543,7 +541,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Consistency Test Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
 
         // Act - Perform multiple operations
         await light.TurnOnAsync();
@@ -574,10 +572,10 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Performance Test Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
-        var thermostat = await _gAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
-        var security = await _gAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
-        var curtain = await _gAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var thermostat = await GAgentFactory.GetGAgentAsync<IThermostatGAgent>(THERMOSTAT_ID);
+        var security = await GAgentFactory.GetGAgentAsync<ISecurityGAgent>(SECURITY_ID);
+        var curtain = await GAgentFactory.GetGAgentAsync<ICurtainGAgent>(CURTAIN_ID);
 
         // Act - Perform concurrent operations
         var tasks = new List<Task>
@@ -621,7 +619,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
             LightId = LIGHT_ID.ToString("N"),
             Location = "Error Test Room"
         };
-        var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
+        var light = await GAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
 
         // Act & Assert - Test boundary conditions
         await Should.ThrowAsync<ArgumentOutOfRangeException>(() => light.SetBrightnessAsync(-1));
@@ -644,7 +642,7 @@ public sealed class SmartHomeDemoTests : AevatarWorkshopTestBase<AevatarWorkshop
 
     private async Task ConfigLLMAsync()
     {
-        var configManager = await _gAgentFactory.GetSystemLLMConfigGAgent();
+        var configManager = await GAgentFactory.GetSystemLLMConfigGAgent();
         await configManager.UpdateConfigAsync(new ConfigUpdateEvent
         {
             ConfigType = typeof(SystemLLMConfigOptions).FullName!,

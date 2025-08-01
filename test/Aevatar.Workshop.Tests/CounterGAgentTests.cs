@@ -10,19 +10,17 @@ namespace Aevatar.Workshop.Tests;
 public sealed class CounterGAgentTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
 {
     private readonly ITestOutputHelper _testOutputHelper;
-    private readonly IGAgentFactory _gAgentFactory;
 
     public CounterGAgentTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        _gAgentFactory = GetRequiredService<IGAgentFactory>();
     }
 
     [Fact]
     public async Task CounterGAgentTest()
     {
         // Arrange.
-        var counter = await _gAgentFactory.GetGAgentAsync<ICounterGAgent>(Guid.NewGuid());
+        var counter = await GAgentFactory.GetGAgentAsync<ICounterGAgent>(Guid.NewGuid());
 
         // Action.
         await counter.IncrementAsync(5);

@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acquire - Board Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .game-board {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 2px;
+            background: #333;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tile {
+            aspect-ratio: 1;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tile:hover {
+            background: #e0e0e0;
+            transform: scale(1.05);
+        }
+
+        .tile.occupied {
+            cursor: not-allowed;
+            background: #666;
+            color: white;
+        }
+
+        .tile.tower { background: #ff6b6b; color: white; }
+        .tile.luxor { background: #4ecdc4; color: white; }
+        .tile.american { background: #45b7d1; color: white; }
+        .tile.worldwide { background: #f9ca24; color: #333; }
+        .tile.festival { background: #f0932b; color: white; }
+        .tile.imperial { background: #eb4d4b; color: white; }
+        .tile.continental { background: #6c5ce7; color: white; }
+
+        .tile.selected {
+            border: 3px solid #007bff;
+            box-shadow: 0 0 10px rgba(0,123,255,0.5);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .player-info {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .player-info h3 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .hotel-chains {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .hotel-chains h3 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #28a745;
+            padding-bottom: 5px;
+        }
+
+        .chain-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+
+        .chain-name {
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .chain-info {
+            text-align: right;
+            font-size: 0.9em;
+        }
+
+        .chain-price {
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .chain-size {
+            color: #666;
+        }
+
+        .player-tiles {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .player-tiles h3 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #ffc107;
+            padding-bottom: 5px;
+        }
+
+        .tiles-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+        }
+
+        .player-tile {
+            aspect-ratio: 1;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .player-tile:hover {
+            background: #ffeaa7;
+            transform: scale(1.1);
+        }
+
+        .player-tile.selected {
+            background: #fdcb6e;
+            border-color: #e17055;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .game-status {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .status-waiting { border-left: 5px solid #ffc107; }
+        .status-playing { border-left: 5px solid #28a745; }
+        .status-ended { border-left: 5px solid #dc3545; }
+
+        .status-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .current-player {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .game-info {
+            background: #e2e3e5;
+            color: #383d41;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .game-info strong {
+            color: #007bff;
+            font-family: monospace;
+            font-size: 1.1em;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .players-list {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .player-item.current {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .player-name {
+            font-weight: bold;
+        }
+
+        .player-money {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .stock-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .stock-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stock-control input {
+            width: 60px;
+            text-align: center;
+            margin: 5px 0;
+        }
+
+        .stock-control button {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1024px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .board-grid {
+                grid-template-columns: repeat(8, 1fr);
+                grid-template-rows: repeat(12, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .board-grid {
+                grid-template-columns: repeat(6, 1fr);
+                grid-template-rows: repeat(18, 1fr);
+            }
+            
+            .tile {
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 Acquire</h1>
+            <p>Classic Board Game - Build Your Hotel Empire</p>
+        </div>
+
+        <!-- Game Status -->
+        <div class="game-status status-waiting" id="gameStatus">
+            <div class="status-text" id="statusText">Not in game</div>
+            <div class="current-player" id="currentPlayer" style="display: none;">
+                Current Player: <span id="currentPlayerName"></span>
+            </div>
+            <div class="game-info" id="gameInfo" style="display: none;">
+                Game ID: <strong id="currentGameIdDisplay"></strong>
+                <button onclick="copyGameId()" style="margin-left: 10px; padding: 5px 10px; font-size: 12px; cursor: pointer;">📋 Copy</button>
+            </div>
+        </div>
+
+        <!-- Players List -->
+        <div class="players-list" id="playersList">
+            <h3>Players</h3>
+            <div id="playersListContent"></div>
+        </div>
+
+        <div class="game-container">
+            <!-- Game Board -->
+            <div class="game-board">
+                <h3>Game Board</h3>
+                <div class="board-grid" id="boardGrid"></div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="createGameBtn" onclick="showCreateGameModal()">
+                        Create New Game
+                    </button>
+                    <button class="btn btn-success" id="joinGameBtn" onclick="showJoinGameModal()">
+                        Join Game
+                    </button>
+                    <button class="btn btn-danger" id="leaveGameBtn" onclick="leaveGame()" style="display: none;">
+                        Leave Game
+                    </button>
+                    <button class="btn btn-warning" id="placeTileBtn" onclick="placeTile()" disabled>
+                        Place Selected Tile
+                    </button>
+                    <button class="btn btn-primary" id="endTurnBtn" onclick="endTurn()" disabled>
+                        End Turn
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Player Info -->
+                <div class="player-info">
+                    <h3>Player Info</h3>
+                    <div class="player-stats">
+                        <div class="stat">
+                            <div class="stat-value" id="playerMoney">$6000</div>
+                            <div class="stat-label">Money</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" id="playerStocks">0</div>
+                            <div class="stat-label">Stocks</div>
+                        </div>
+                    </div>
+                    <div>
+                        <strong>Tiles:</strong> <span id="playerTilesCount">0</span>
+                    </div>
+                    <div>
+                        <strong>Status:</strong> <span id="playerStatus">Not in game</span>
+                    </div>
+                </div>
+
+                <!-- Player Tiles -->
+                <div class="player-tiles">
+                    <h3>Your Tiles</h3>
+                    <div class="tiles-grid" id="playerTilesGrid"></div>
+                </div>
+
+                <!-- Hotel Chains -->
+                <div class="hotel-chains">
+                    <h3>Hotel Chains</h3>
+                    <div id="hotelChainsList"></div>
+                    
+                    <!-- Stock Controls -->
+                    <div class="stock-controls" id="stockControls" style="display: none;">
+                        <div class="stock-control">
+                            <label>Tower</label>
+                            <input type="number" id="towerStocks" min="0" max="3" value="0">
+                            <button class="btn btn-primary" onclick="buyStock('Tower')">Buy</button>
+                        </div>
+                        <div class="stock-control">
+                            <label>Luxor</label>
+                            <input type="number" id="luxorStocks" min="0" max="3" value="0">
+                            <button class="btn btn-primary" onclick="buyStock('Luxor')">Buy</button>
+                        </div>
+                        <div class="stock-control">
+                            <label>American</label>
+                            <input type="number" id="americanStocks" min="0" max="3" value="0">
+                            <button class="btn btn-primary" onclick="buyStock('American')">Buy</button>
+                        </div>
+                        <div class="stock-control">
+                            <label>Worldwide</label>
+                            <input type="number" id="worldwideStocks" min="0" max="3" value="0">
+                            <button class="btn btn-primary" onclick="buyStock('Worldwide')">Buy</button>
+                        </div>
+                        <div class="stock-control">
+                            <label>Festival</label>
+                            <input type="number" id="festivalStocks" min="0" max="3" value="0">
+                            <button class="btn btn-primary" onclick="buyStock('Festival')">Buy</button>
+                        </div>
+                        <div class="stock-control">
+                            <label>Imperial</label>
+                            <input type="number" id="imperialStocks" min="0" max="3" value="0">
+                            <button class="btn btn-primary" onclick="buyStock('Imperial')">Buy</button>
+                        </div>
+                        <div class="stock-control">
+                            <label>Continental</label>
+                            <input type="number" id="continentalStocks" min="0" max="3" value="0">
+                            <button class="btn btn-primary" onclick="buyStock('Continental')">Buy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Game Modal -->
+    <div id="createGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createGameModal')">&times;</span>
+            <h2>Create New Game</h2>
+            <div class="form-group">
+                <label for="creatorName">Your Name:</label>
+                <input type="text" id="creatorName" placeholder="Enter your name" value="Player1">
+            </div>
+            <button class="btn btn-success" onclick="createGame()">Create Game</button>
+        </div>
+    </div>
+
+    <!-- Join Game Modal -->
+    <div id="joinGameModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('joinGameModal')">&times;</span>
+            <h2>Join Game</h2>
+            <div class="form-group">
+                <label for="joinGameId">Game ID:</label>
+                <input type="text" id="joinGameId" placeholder="Enter game ID">
+            </div>
+            <div class="form-group">
+                <label for="playerName">Your Name:</label>
+                <input type="text" id="playerName" placeholder="Enter your name">
+            </div>
+            <button class="btn btn-success" onclick="joinGame()">Join Game</button>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let currentGameId = null;
+        let currentPlayerId = null;
+        let selectedTile = null;
+        let selectedBoardPosition = null;
+        let gameState = null;
+        let playerState = null;
+
+        // Initialize the board
+        function initializeBoard() {
+            const boardGrid = document.getElementById('boardGrid');
+            boardGrid.innerHTML = '';
+            
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 12; col++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    tile.dataset.row = row;
+                    tile.dataset.col = col;
+                    tile.textContent = `${String.fromCharCode(65 + row)}${col + 1}`;
+                    tile.onclick = () => selectBoardPosition(row, col);
+                    boardGrid.appendChild(tile);
+                }
+            }
+        }
+
+        // Select board position
+        function selectBoardPosition(row, col) {
+            if (!currentGameId || !playerState || !playerState.isCurrentTurn) {
+                return;
+            }
+
+            // Clear previous selection
+            document.querySelectorAll('.tile.selected').forEach(tile => {
+                tile.classList.remove('selected');
+            });
+
+            // Select new position
+            const tile = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            if (tile && !tile.classList.contains('occupied')) {
+                tile.classList.add('selected');
+                selectedBoardPosition = { row, col };
+                updateActionButtons();
+            }
+        }
+
+        // Show modals
+        function showCreateGameModal() {
+            document.getElementById('createGameModal').style.display = 'block';
+        }
+
+        function showJoinGameModal() {
+            document.getElementById('joinGameModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Create new game
+        async function createGame() {
+            const gameId = generateGameId(); // Always generate random ID
+            const creatorName = document.getElementById('creatorName').value.trim();
+
+            if (!creatorName) {
+                showNotification('Please enter your name', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/acquire/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        gameId: gameId,
+                        creatorName: creatorName
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    currentGameId = result.gameId;
+                    currentPlayerId = result.playerId;
+                    closeModal('createGameModal');
+                    
+                    // Save session
+                    saveSession();
+                    
+                    // Show game ID to the creator
+                    showNotification(`Game created successfully! Game ID: ${result.gameId}`, 'success');
+                    
+                    await loadGameState();
+                } else {
+                    showNotification('Failed to create game: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error creating game:', error);
+                showNotification('Failed to create game', 'error');
+            }
+        }
+
+        // Join existing game
+        async function joinGame() {
+            const gameId = document.getElementById('joinGameId').value;
+            const playerName = document.getElementById('playerName').value;
+
+            if (!gameId || !playerName) {
+                showNotification('Please enter both game ID and your name', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/acquire/game/${gameId}/join`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        playerName: playerName
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    currentGameId = result.gameId;
+                    currentPlayerId = result.playerId;
+                    closeModal('joinGameModal');
+                    
+                    // Save session
+                    saveSession();
+                    
+                    // Show success message
+                    showNotification(`Successfully joined game! Player: ${result.playerName}`, 'success');
+                    
+                    await loadGameState();
+                } else {
+                    showNotification('Failed to join game: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error joining game:', error);
+                showNotification('Failed to join game', 'error');
+            }
+        }
+
+        // Load game state
+        async function loadGameState() {
+            if (!currentGameId) return;
+
+            try {
+                const response = await fetch(`/api/acquire/game/${currentGameId}/state`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Combine game data with players and board data
+                    gameState = {
+                        ...result.game,
+                        players: result.players,
+                        board: result.board
+                    };
+                    updateGameDisplay();
+                    
+                    if (currentPlayerId) {
+                        await loadPlayerState();
+                    }
+                } else {
+                    console.error('Failed to load game state:', result.error);
+                }
+            } catch (error) {
+                console.error('Error loading game state:', error);
+            }
+        }
+
+        // Load player state
+        async function loadPlayerState() {
+            if (!currentPlayerId) return;
+
+            try {
+                const response = await fetch(`/api/acquire/player/${currentPlayerId}/state`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    playerState = result.player;
+                    updatePlayerDisplay();
+                } else {
+                    console.error('Failed to load player state:', result.error);
+                }
+            } catch (error) {
+                console.error('Error loading player state:', error);
+            }
+        }
+
+        // Update game display
+        function updateGameDisplay() {
+            if (!gameState) return;
+
+            // Update status
+            const statusElement = document.getElementById('gameStatus');
+            const statusText = document.getElementById('statusText');
+            
+            statusElement.className = `game-status status-${gameState.status.toLowerCase()}`;
+            
+            switch (gameState.status) {
+                case 'WaitingForPlayers':
+                    statusText.textContent = 'Waiting for players...';
+                    break;
+                case 'InProgress':
+                    statusText.textContent = 'Game in progress';
+                    break;
+                case 'Ended':
+                    statusText.textContent = 'Game ended';
+                    break;
+            }
+
+            // Update game info display
+            const gameInfoElement = document.getElementById('gameInfo');
+            const currentGameIdDisplay = document.getElementById('currentGameIdDisplay');
+            
+            if (currentGameId) {
+                gameInfoElement.style.display = 'block';
+                currentGameIdDisplay.textContent = currentGameId;
+            } else {
+                gameInfoElement.style.display = 'none';
+            }
+
+            // Update current player
+            const currentPlayerElement = document.getElementById('currentPlayer');
+            const currentPlayerName = document.getElementById('currentPlayerName');
+            
+            if (gameState.currentPlayerId && gameState.status === 'InProgress') {
+                currentPlayerElement.style.display = 'block';
+                const currentPlayer = gameState.players.find(p => p.playerId === gameState.currentPlayerId);
+                currentPlayerName.textContent = currentPlayer ? currentPlayer.playerName : 'Unknown';
+            } else {
+                currentPlayerElement.style.display = 'none';
+            }
+
+            // Update players list
+            updatePlayersList();
+
+            // Update board
+            updateBoard();
+
+            // Update hotel chains
+            updateHotelChains();
+
+            // Update action buttons
+            updateActionButtons();
+        }
+
+        // Update players list
+        function updatePlayersList() {
+            if (!gameState) return;
+
+            const playersListContent = document.getElementById('playersListContent');
+            playersListContent.innerHTML = '';
+
+            gameState.players.forEach(player => {
+                const playerItem = document.createElement('div');
+                playerItem.className = 'player-item';
+                if (player.playerId === gameState.currentPlayerId) {
+                    playerItem.classList.add('current');
+                }
+
+                playerItem.innerHTML = `
+                    <span class="player-name">${player.playerName}</span>
+                    <span class="player-money">$${player.money.toLocaleString()}</span>
+                `;
+
+                playersListContent.appendChild(playerItem);
+            });
+        }
+
+        // Update board display
+        function updateBoard() {
+            if (!gameState) return;
+
+            // Clear board
+            document.querySelectorAll('.tile').forEach(tile => {
+                tile.className = 'tile';
+                tile.textContent = tile.textContent; // Keep the original text
+            });
+
+            // Update hotel chains on board
+            gameState.board.hotelChains.forEach((chain, chainName) => {
+                chain.tiles.forEach(tile => {
+                    const boardTile = document.querySelector(`[data-row="${tile.row}"][data-col="${tile.column}"]`);
+                    if (boardTile) {
+                        boardTile.classList.add('occupied', chainName.toLowerCase());
+                    }
+                });
+            });
+        }
+
+        // Update hotel chains display
+        function updateHotelChains() {
+            if (!gameState) return;
+
+            const hotelChainsList = document.getElementById('hotelChainsList');
+            hotelChainsList.innerHTML = '';
+
+            gameState.board.hotelChains.forEach((chain, chainName) => {
+                if (chain.tiles.length > 0) {
+                    const chainItem = document.createElement('div');
+                    chainItem.className = 'chain-item';
+                    
+                    chainItem.innerHTML = `
+                        <span class="chain-name">${chainName}</span>
+                        <span class="chain-info">
+                            <div class="chain-price">$${chain.stockPrice}</div>
+                            <div class="chain-size">${chain.tiles.length} tiles</div>
+                        </span>
+                    `;
+
+                    hotelChainsList.appendChild(chainItem);
+                }
+            });
+        }
+
+        // Update player display
+        function updatePlayerDisplay() {
+            if (!playerState) {
+                // If no player state, show default values
+                document.getElementById('playerMoney').textContent = '$6000';
+                document.getElementById('playerStocks').textContent = '0';
+                document.getElementById('playerTilesCount').textContent = '0';
+                document.getElementById('playerStatus').textContent = 'Not in game';
+                return;
+            }
+
+            document.getElementById('playerMoney').textContent = `$${playerState.money.toLocaleString()}`;
+            document.getElementById('playerStocks').textContent = Object.keys(playerState.stocks).length;
+            document.getElementById('playerTilesCount').textContent = playerState.tileIds.length;
+            
+            // Show player status based on game state
+            let statusText = 'Not in game';
+            if (playerState.gameId && playerState.gameId !== '') {
+                statusText = playerState.isCurrentTurn ? 'Your turn' : 'Waiting...';
+            }
+            document.getElementById('playerStatus').textContent = statusText;
+
+            // Update player tiles
+            updatePlayerTiles();
+
+            // Update stock controls
+            updateStockControls();
+        }
+
+        // Update player tiles
+        function updatePlayerTiles() {
+            if (!playerState) return;
+
+            const playerTilesGrid = document.getElementById('playerTilesGrid');
+            playerTilesGrid.innerHTML = '';
+
+            playerState.tileIds.forEach(tileId => {
+                const tile = document.createElement('div');
+                tile.className = 'player-tile';
+                tile.textContent = tileId;
+                tile.onclick = () => selectPlayerTile(tileId);
+                playerTilesGrid.appendChild(tile);
+            });
+        }
+
+        // Select player tile
+        function selectPlayerTile(tileId) {
+            if (!playerState || !playerState.isCurrentTurn) return;
+
+            // Clear previous selection
+            document.querySelectorAll('.player-tile.selected').forEach(tile => {
+                tile.classList.remove('selected');
+            });
+
+            // Select new tile
+            const tile = Array.from(document.querySelectorAll('.player-tile'))
+                .find(t => t.textContent === tileId);
+            if (tile) {
+                tile.classList.add('selected');
+                selectedTile = tileId;
+                updateActionButtons();
+            }
+        }
+
+        // Update stock controls
+        function updateStockControls() {
+            if (!playerState) return;
+
+            const stockControls = document.getElementById('stockControls');
+            const canBuyStocks = playerState.availableActions.includes('BuyStock');
+            
+            stockControls.style.display = canBuyStocks && playerState.isCurrentTurn ? 'grid' : 'none';
+        }
+
+        // Leave current game
+        async function leaveGame() {
+            if (!currentGameId || !currentPlayerId) {
+                showNotification('You are not in a game', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/acquire/player/${currentPlayerId}/leave`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Clear session and state
+                    clearSession();
+                    currentGameId = null;
+                    currentPlayerId = null;
+                    gameState = null;
+                    playerState = null;
+                    
+                    // Reset UI
+                    updateGameDisplay();
+                    updatePlayerDisplay();
+                    
+                    showNotification('Successfully left the game', 'success');
+                } else {
+                    showNotification('Failed to leave game: ' + result.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error leaving game:', error);
+                showNotification('Failed to leave game', 'error');
+            }
+        }
+
+        // Update action buttons
+        function updateActionButtons() {
+            const placeTileBtn = document.getElementById('placeTileBtn');
+            const endTurnBtn = document.getElementById('endTurnBtn');
+            const createGameBtn = document.getElementById('createGameBtn');
+            const joinGameBtn = document.getElementById('joinGameBtn');
+            const leaveGameBtn = document.getElementById('leaveGameBtn');
+
+            // Show/hide buttons based on game state
+            const inGame = currentGameId !== null;
+            
+            createGameBtn.style.display = inGame ? 'none' : 'inline-block';
+            joinGameBtn.style.display = inGame ? 'none' : 'inline-block';
+            leaveGameBtn.style.display = inGame ? 'inline-block' : 'none';
+
+            if (playerState && playerState.isCurrentTurn) {
+                placeTileBtn.disabled = !selectedTile || !selectedBoardPosition;
+                endTurnBtn.disabled = false;
+            } else {
+                placeTileBtn.disabled = true;
+                endTurnBtn.disabled = true;
+            }
+        }
+
+        // Place tile
+        async function placeTile() {
+            if (!selectedTile || !selectedBoardPosition || !currentGameId || !currentPlayerId) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/acquire/player/${currentPlayerId}/place-tile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        row: selectedBoardPosition.row,
+                        column: selectedBoardPosition.col,
+                        tileId: selectedTile
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Clear selections
+                    selectedTile = null;
+                    selectedBoardPosition = null;
+                    
+                    // Reload game state
+                    await loadGameState();
+                    await loadPlayerState();
+                } else {
+                    alert('Failed to place tile: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error placing tile:', error);
+                alert('Failed to place tile');
+            }
+        }
+
+        // Buy stock
+        async function buyStock(chainName) {
+            const quantity = parseInt(document.getElementById(chainName.toLowerCase() + 'Stocks').value);
+            
+            if (quantity <= 0) {
+                alert('Please enter a valid quantity');
+                return;
+            }
+
+            if (!currentGameId || !currentPlayerId) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/acquire/player/${currentPlayerId}/buy-stock`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chainName: chainName,
+                        quantity: quantity
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Reset input
+                    document.getElementById(chainName.toLowerCase() + 'Stocks').value = '0';
+                    
+                    // Reload game state
+                    await loadGameState();
+                    await loadPlayerState();
+                } else {
+                    alert('Failed to buy stock: ' + result.error);
+                }
+            } catch (error) {
+                console.error('Error buying stock:', error);
+                alert('Failed to buy stock');
+            }
+        }
+
+        // End turn
+        async function endTurn() {
+            // This is a simplified implementation
+            // In a real game, you would need to handle turn passing logic
+            alert('Turn end functionality would be implemented here');
+        }
+
+        // Generate random game ID
+        function generateGameId() {
+            return crypto.randomUUID ? crypto.randomUUID() : 
+                'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    const r = Math.random() * 16 | 0;
+                    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                    return v.toString(16);
+                });
+        }
+
+        // Show notification message
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: bold;
+                z-index: 10000;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                transition: all 0.3s ease;
+            `;
+            
+            switch(type) {
+                case 'success':
+                    notification.style.backgroundColor = '#28a745';
+                    break;
+                case 'error':
+                    notification.style.backgroundColor = '#dc3545';
+                    break;
+                default:
+                    notification.style.backgroundColor = '#007bff';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Auto remove after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Copy game ID to clipboard
+        function copyGameId() {
+            if (!currentGameId) return;
+            
+            navigator.clipboard.writeText(currentGameId).then(() => {
+                showNotification('游戏ID已复制到剪贴板！', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = currentGameId;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('游戏ID已复制到剪贴板！', 'success');
+            });
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Session management
+        function saveSession() {
+            const sessionData = {
+                currentGameId: currentGameId,
+                currentPlayerId: currentPlayerId,
+                playerName: document.getElementById('creatorName').value || document.getElementById('playerName').value
+            };
+            sessionStorage.setItem('acquireSession', JSON.stringify(sessionData));
+        }
+
+        function loadSession() {
+            const sessionData = sessionStorage.getItem('acquireSession');
+            if (sessionData) {
+                const session = JSON.parse(sessionData);
+                currentGameId = session.currentGameId;
+                currentPlayerId = session.currentPlayerId;
+                
+                // Update form fields with session data
+                if (session.playerName) {
+                    document.getElementById('creatorName').value = session.playerName;
+                    document.getElementById('playerName').value = session.playerName;
+                }
+                
+                // If we have a game ID, try to reload the game state
+                if (currentGameId) {
+                    loadGameState();
+                }
+            }
+        }
+
+        function clearSession() {
+            sessionStorage.removeItem('acquireSession');
+            currentGameId = null;
+            currentPlayerId = null;
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeBoard();
+            
+            // Load session on page load
+            loadSession();
+            
+            // Auto-refresh game state every 5 seconds when in game
+            setInterval(() => {
+                if (currentGameId && gameState && gameState.status === 'InProgress') {
+                    loadGameState();
+                    if (currentPlayerId) {
+                        loadPlayerState();
+                    }
+                }
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

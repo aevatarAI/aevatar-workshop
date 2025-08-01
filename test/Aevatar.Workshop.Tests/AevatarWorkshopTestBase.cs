@@ -4,7 +4,4 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Aevatar.Workshop.Tests;
 
-public abstract class AevatarWorkshopTestBase : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
-{
-    protected IGAgentFactory GAgentFactory => ServiceProvider.GetRequiredService<IGAgentFactory>();
-}
+public abstract class AevatarWorkshopTestBase : AevatarWorkshopTestBase<AevatarWorkshopTestModule>;

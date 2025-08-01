@@ -510,6 +510,12 @@
       name: { en: 'MCP Demo', zh: 'MCP 演示' },
       desc: { en: 'demodesc/MCPDemo.md', zh: 'demodesc/MCPDemo.zh.md' },
       isCustom: true // Custom rendering for MCP demo
+    },
+    {
+      key: 'AcquireGame',
+      name: { en: 'Acquire Board Game', zh: '并购桌游' },
+      desc: { en: 'demodesc/AcquireGame.md', zh: 'demodesc/AcquireGame.zh.md' },
+      isCustom: true // Custom rendering for Acquire game
     }
   ];
 
@@ -749,6 +755,11 @@
 
     if (demo.isCustom && demo.key === 'MCPDemo') {
       renderMCPDemo(demo);
+      return;
+    }
+
+    if (demo.isCustom && demo.key === 'AcquireGame') {
+      renderAcquireGameDemo(demo);
       return;
     }
 
@@ -1857,6 +1868,67 @@
     link.style.fontWeight = 'bold';
     link.style.transition = 'background-color 0.2s';
     link.textContent = currentLanguage === 'zh' ? '打开独立演示页面' : 'Open Standalone Demo';
+    link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+    
+    mainContent.appendChild(demoCard);
+  }
+
+  // Acquire Game Demo rendering
+  async function renderAcquireGameDemo(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f9ff';
+    linkContainer.style.border = '1px solid #0ea5e9';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = `/demos/acquire-game.html?lang=${currentLanguage}`;
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#0ea5e9';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '打开游戏页面' : 'Open Game Page';
     link.onmouseover = () => { link.style.backgroundColor = '#0284c7'; };
     link.onmouseout = () => { link.style.backgroundColor = '#0ea5e9'; };
 

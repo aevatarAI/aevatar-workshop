@@ -1,8 +1,8 @@
 <Solution>
   <Folder Name="/.claude/" />
-  <Folder Name="/.claude/rules/">
-    <File Path=".claude\rules\gagent-implementation-guide.md" />
-    <File Path=".claude\rules\gagent-unit-testing-guide.md" />
+  <Folder Name="/.claude/docs/">
+    <File Path=".claude\docs\gagent-implementation-guide.md" />
+    <File Path=".claude\docs\gagent-unit-testing-guide.md" />
   </Folder>
   <Folder Name="/.cursor/" />
   <Folder Name="/.cursor/rules/">
@@ -18,18 +18,16 @@
     <File Path="docker\.dockerignore" />
   </Folder>
   <Folder Name="/docs/">
+    <File Path="CLAUDE.md" />
     <File Path="docs\config-sync-architecture.md" />
     <File Path="docs\gagent_executor.md" />
     <File Path="docs\config-sync-index.md" />
-    <File Path="docs\HowToUseGAgentRules.md" />
     <File Path="docs\config-sync-quickstart.md" />
-    <File Path="docs\SmartHomeDemo-Proposal.md" />
     <File Path="docs\gagent-implementation-v1.md" />
-    <File Path="docs\GAgentImplementationRules.md" />
-    <File Path="docs\GAgentImplementationRules.zh.md" />
     <File Path="docs\config-sync-component-diagram.md" />
     <File Path="docs\gagent-development-guide.md" />
     <File Path="docs\gagent-development-guide.zh.md" />
+    <File Path="docs\acquire-implementation.md" />
   </Folder>
   <Folder Name="/scripts/">
     <File Path="quickstart.sh" />

@@ -17,13 +17,11 @@ namespace Aevatar.Workshop.Tests;
 public sealed class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
 {
     private readonly ITestOutputHelper _testOutputHelper;
-    private readonly IGAgentFactory _gAgentFactory;
     private readonly ILogger<ConfigSyncService> _logger;
 
     public ConfigSyncServiceTests(ITestOutputHelper testOutputHelper)
     {
         _testOutputHelper = testOutputHelper;
-        _gAgentFactory = GetRequiredService<IGAgentFactory>();
 
         // Create logger with correct type
         var loggerFactory = GetRequiredService<ILoggerFactory>();
@@ -53,13 +51,13 @@ public sealed class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWork
             .AddInMemoryCollection(configData)
             .Build();
 
-        var service = new ConfigSyncService(configuration, _logger, _gAgentFactory);
+        var service = new ConfigSyncService(configuration, _logger, GAgentFactory);
 
         // Act
         await service.StartAsync(CancellationToken.None);
 
         // Assert - Verify the config was stored
-        var configManager = await _gAgentFactory.GetSystemLLMConfigGAgent();
+        var configManager = await GAgentFactory.GetSystemLLMConfigGAgent();
 
         var response = await configManager.RequestConfigAsync(new ConfigRequestEvent
         {
@@ -102,13 +100,13 @@ public sealed class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWork
             .AddInMemoryCollection(configData)
             .Build();
 
-        var service = new ConfigSyncService(configuration, _logger, _gAgentFactory);
+        var service = new ConfigSyncService(configuration, _logger, GAgentFactory);
 
         // Act
         await service.StartAsync(CancellationToken.None);
 
         // Assert
-        var configManager = await _gAgentFactory.GetMCPServerConfigGAgent();
+        var configManager = await GAgentFactory.GetMCPServerConfigGAgent();
 
         var response = await configManager.RequestConfigAsync(new ConfigRequestEvent
         {
@@ -151,7 +149,7 @@ public sealed class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWork
             .AddInMemoryCollection(configData)
             .Build();
 
-        var service = new ConfigSyncService(configuration, _logger, _gAgentFactory);
+        var service = new ConfigSyncService(configuration, _logger, GAgentFactory);
 
         // Act
         await service.StartAsync(CancellationToken.None);
