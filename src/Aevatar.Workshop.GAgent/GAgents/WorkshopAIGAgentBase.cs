@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Aevatar.Core.Abstractions;
 using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.AI.Options;
@@ -72,8 +73,14 @@ public abstract class WorkshopAIGAgentBase<TState, TStateLogEvent> : AIGAgentBas
             
             if (response.Success && !string.IsNullOrEmpty(response.ConfigJson))
             {
-                // Deserialize as dictionary of LLMConfig
-                var configDict = JsonSerializer.Deserialize<Dictionary<string, LLMConfig>>(response.ConfigJson);
+                Logger.LogInformation("ConfigJson: {Json}", response.ConfigJson);
+                // Deserialize as dictionary of LLMConfig with string enum converter
+                var options = new JsonSerializerOptions
+                {
+                    Converters = { new JsonStringEnumConverter() },
+                    PropertyNameCaseInsensitive = true
+                };
+                var configDict = JsonSerializer.Deserialize<Dictionary<string, LLMConfig>>(response.ConfigJson, options);
 
                 if (configDict != null && configDict.TryGetValue(key, out var config))
                 {
