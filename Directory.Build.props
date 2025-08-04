@@ -1,5 +1,7 @@
 <Project>
     <PropertyGroup>
         <DefaultTargetFramework>net9.0</DefaultTargetFramework>
+        <!-- Ignore package downgrade warnings caused by tool version conflicts -->
+        <NoWarn>$(NoWarn);NU1605</NoWarn>
     </PropertyGroup>
 </Project>
