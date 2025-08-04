@@ -1145,7 +1145,7 @@
                 const response = await fetch('/api/smarthome/command', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ command }),
+                    body: JSON.stringify({ command, systemLLM }),
                     signal: controller.signal
                 });
                 

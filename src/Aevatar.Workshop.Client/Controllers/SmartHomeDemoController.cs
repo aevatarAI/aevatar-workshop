@@ -448,12 +448,13 @@ namespace Aevatar.Workshop.Client.Controllers
         // Request DTOs
         public class InitializeRequest
         {
-            public string SystemLLM { get; set; } = "OpenAI";
+            public string SystemLLM { get; set; } = "NewKey";
         }
 
         public class CommandRequest
         {
             public string Command { get; set; } = string.Empty;
+            public string SystemLLM { get; set; } = string.Empty;
         }
 
         public class SceneRequest

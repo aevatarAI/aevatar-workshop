@@ -87,7 +87,7 @@ public class CommandParsedLogEvent : HomeAIStateLogEvent
 public interface IHomeAIGAgent : IStateGAgent<HomeAIGAgentState>, IAIGAgent
 {
     Task<bool> InitializeAsync(string llmSystem);
-    Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput);
+    Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput, string? llmSystem = null);
     Task<List<string>> GetChatHistoryAsync();
     Task<bool> IsInitializedAsync();
 }
@@ -229,16 +229,21 @@ Notes:
     /// <summary>
     /// Process user's natural language commands
     /// </summary>
-    public async Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput)
+    public async Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput, string? llmSystem = null)
     {
         if (!State.Initialized)
         {
-            return new ChatWithDetailsResponse 
-            { 
-                Response = "I'm not ready yet. Please wait for initialization to complete.",
-                TotalDurationMs = 0,
-                ToolCalls = []
-            };
+            if (llmSystem == null)
+            {
+                return new ChatWithDetailsResponse 
+                { 
+                    Response = "I'm not ready yet. Please wait for initialization to complete.",
+                    TotalDurationMs = 0,
+                    ToolCalls = []
+                };
+            }
+
+            await InitializeAsync(llmSystem);
         }
 
         try
