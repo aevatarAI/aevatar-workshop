@@ -6,6 +6,7 @@ using Aevatar.GAgents.AI.Options;
 using Aevatar.GAgents.AIGAgent.Agent;
 using Aevatar.GAgents.AIGAgent.Dtos;
 using Aevatar.GAgents.AIGAgent.State;
+using Aevatar.GAgents.Basic.BasicGEvent;
 using Aevatar.Workshop.GAgent.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

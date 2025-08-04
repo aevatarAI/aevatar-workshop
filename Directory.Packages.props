@@ -4,8 +4,8 @@
         <AbpVersion>9.0.3</AbpVersion>
         <OrleansVersion>9.0.1</OrleansVersion>
         <SkVersion>1.57.0-alpha</SkVersion>
-        <AevatarCoreVersion>1.5.2-tool.2</AevatarCoreVersion>
-        <AevatarGAgentsVersion>1.5.5-tool.1</AevatarGAgentsVersion>
+        <AevatarCoreVersion>1.5.3</AevatarCoreVersion>
+        <AevatarGAgentsVersion>1.5.5-tool.2</AevatarGAgentsVersion>
     </PropertyGroup>
     <ItemGroup>
         <!-- aevatar-framework package versions -->

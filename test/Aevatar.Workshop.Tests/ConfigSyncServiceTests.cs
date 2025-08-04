@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Aevatar.Core.Abstractions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.Basic.BasicGEvent;
 using Aevatar.Workshop.GAgent;
 using Aevatar.Workshop.GAgent.Options;
 using Aevatar.Workshop.Client.Services;
