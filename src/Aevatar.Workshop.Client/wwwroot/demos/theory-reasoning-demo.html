@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Reasoning Engine Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-healthy { background-color: #28a745; }
+        .status-warning { background-color: #ffc107; }
+        .status-error { background-color: #dc3545; }
+        .status-idle { background-color: #6c757d; }
+        .status-running { background-color: #007bff; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .theory-card {
+            transition: transform 0.2s;
+        }
+        
+        .theory-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .theory-detail .card {
+            border: 1px solid #e3e6f0;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .theory-detail .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .theory-detail pre {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .theory-detail .badge {
+            font-size: 0.8rem;
+        }
+        
+        .theory-content {
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        .modal-dialog.modal-lg {
+            max-width: 900px;
+        }
+        
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+        }
+        
+        .progress-ring circle {
+            stroke-width: 4;
+            fill: transparent;
+            stroke: #e9ecef;
+        }
+        
+        .progress-ring .progress {
+            stroke: #007bff;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.5s;
+        }
+        
+        .tab-content {
+            min-height: 500px;
+        }
+        
+        .reasoning-method {
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: border-color 0.3s;
+        }
+        
+        .reasoning-method.selected {
+            border-color: #007bff;
+            background-color: #f8f9ff;
+        }
+        
+        .thinking-step {
+            border-left: 4px solid #e9ecef;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .thinking-step.analysis {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #f8f9fa 100%);
+        }
+        
+        .thinking-step.synthesis {
+            border-left-color: #17a2b8;
+            background: linear-gradient(135deg, #d1ecf1 0%, #f8f9fa 100%);
+        }
+        
+        .thinking-step.evaluation {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #f8f9fa 100%);
+        }
+        
+        .thinking-step.conclusion {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f8f9fa 100%);
+        }
+        
+        .thinking-step:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .step-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .step-icon.analysis { background-color: #28a745; }
+        .step-icon.synthesis { background-color: #17a2b8; }
+        .step-icon.evaluation { background-color: #ffc107; }
+        .step-icon.conclusion { background-color: #dc3545; }
+        
+        .thinking-metadata {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .ai-response-preview {
+            background: #f1f3f4;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
+        .step-timestamp {
+            font-size: 0.8rem;
+            color: #6c757d;
+            float: right;
+        }
+        
+        .session-timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .session-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 8px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-brain me-2"></i>Theory Reasoning Engine
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text">
+                    <span class="status-indicator" id="systemStatus"></span>
+                    <span id="systemStatusText">Initializing...</span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Control Panel -->
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-cogs me-2"></i>Control Panel</h5>
+                    </div>
+                    <div class="card-body">
+                        <button id="initializeSystemBtn" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-play-circle me-2"></i>Initialize System
+                        </button>
+                        
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="reasoningMethods">Reasoning Methods</label>
+                            <div class="reasoning-method" data-method="deductive">
+                                <input type="checkbox" id="deductive" checked>
+                                <label for="deductive" class="ms-2" data-i18n="deductive">Deductive</label>
+                                <div class="small text-muted" data-i18n="deductiveDesc">Logical deduction from premises</div>
+                            </div>
+                            <div class="reasoning-method" data-method="inductive">
+                                <input type="checkbox" id="inductive" checked>
+                                <label for="inductive" class="ms-2" data-i18n="inductive">Inductive</label>
+                                <div class="small text-muted" data-i18n="inductiveDesc">Pattern recognition and generalization</div>
+                            </div>
+                            <div class="reasoning-method" data-method="abductive">
+                                <input type="checkbox" id="abductive">
+                                <label for="abductive" class="ms-2" data-i18n="abductive">Abductive</label>
+                                <div class="small text-muted" data-i18n="abductiveDesc">Best explanation inference</div>
+                            </div>
+                            <div class="reasoning-method" data-method="analogical">
+                                <input type="checkbox" id="analogical">
+                                <label for="analogical" class="ms-2" data-i18n="analogical">Analogical</label>
+                                <div class="small text-muted" data-i18n="analogicalDesc">Cross-domain pattern transfer</div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label" data-i18n="maxIterations">Max Iterations</label>
+                                <input type="number" id="maxIterations" class="form-control" value="5" min="1" max="20">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" data-i18n="qualityThreshold">Quality Threshold</label>
+                                <input type="number" id="qualityThreshold" class="form-control" value="0.8" min="0" max="1" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="targetDomain">Target Domain</label>
+                            <input type="text" id="targetDomain" class="form-control" value="mathematical_reasoning">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label" data-i18n="llmSystem">LLM System</label>
+                            <select id="systemLLM" class="form-select">
+                                <option value="" disabled>Loading LLM configurations...</option>
+                            </select>
+                            <div class="form-text" data-i18n="llmSystemDesc">Select the AI model for reasoning</div>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input type="checkbox" id="enableAutoReview" class="form-check-input" checked>
+                            <label for="enableAutoReview" class="form-check-label" data-i18n="autoReview">Auto Review</label>
+                        </div>
+                        
+                        <button id="startReasoningBtn" class="btn btn-success w-100 mb-2" disabled>
+                            <i class="fas fa-rocket me-2"></i>Start Reasoning
+                        </button>
+                        
+                        <button id="stopReasoningBtn" class="btn btn-danger w-100" disabled>
+                            <i class="fas fa-stop me-2"></i>Stop Reasoning
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- System Metrics -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6><i class="fas fa-chart-bar me-2"></i>System Metrics</h6>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="row text-center">
+                            <div class="col-6 border-end">
+                                <div class="metric-value text-primary" id="totalTheories">0</div>
+                                <div class="metric-label small" data-i18n="totalTheories">Total Theories</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-value text-success" id="acceptedTheories">0</div>
+                                <div class="metric-label small" data-i18n="accepted">Accepted</div>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <div class="row text-center">
+                            <div class="col-6 border-end">
+                                <div class="metric-value text-info" id="activeSessions">0</div>
+                                <div class="metric-label small" data-i18n="activeSessions">Active Sessions</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="metric-value text-warning" id="successRate">0%</div>
+                                <div class="metric-label small" data-i18n="successRate">Success Rate</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <ul class="nav nav-tabs" id="mainTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#dashboard">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#theories">
+                            <i class="fas fa-lightbulb me-2"></i>Generated Theories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#sessions">
+                            <i class="fas fa-tasks me-2"></i>Reasoning Sessions
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#thinking">
+                            <i class="fas fa-brain me-2"></i>AI Thinking Process
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#tools">
+                            <i class="fas fa-tools me-2"></i>Manual Tools
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content mt-3">
+                    <!-- Dashboard Tab -->
+                    <div class="tab-pane fade show active" id="dashboard">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                                        <div class="card-header">
+                        <h6><i class="fas fa-info-circle me-2"></i><span data-i18n="systemStatus">System Status</span></h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="systemReport" class="code-block">
+System not initialized...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                                        <div class="card-header">
+                        <h6><i class="fas fa-clock me-2"></i><span data-i18n="recentActivity">Recent Activity</span></h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="activityLog" class="session-timeline">
+                                            <div class="text-muted">No recent activity</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-brain me-2"></i>Ψ Theory Overview</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <h6>Binary Universe Theory (Ψ Theory)</h6>
+                                                <p class="text-muted">
+                                                    The Ψ theory is a comprehensive mathematical framework that describes the universe as 
+                                                    an infinite recursive structure of binary distinctions. Starting from a single axiom (A1), 
+                                                    it derives a complete theory system including corollaries, propositions, theorems, and definitions.
+                                                </p>
+                                                <div class="row">
+                                                    <div class="col-6">
+                                                        <strong>Core Components:</strong>
+                                                        <ul class="small">
+                                                            <li>A1: Unique Axiom</li>
+                                                            <li>C series: Corollaries</li>
+                                                            <li>P series: Propositions</li>
+                                                            <li>T series: Theorems</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <strong>Key Features:</strong>
+                                                        <ul class="small">
+                                                            <li>Binary encoding foundation</li>
+                                                            <li>φ-representation system</li>
+                                                            <li>No-11 constraints</li>
+                                                            <li>Recursive self-reference</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 text-center">
+                                                <div class="metric-card">
+                                                    <div class="metric-value">ψ = ψ(ψ)</div>
+                                                    <div class="metric-label">Self-Referential Function</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generated Theories Tab -->
+                    <div class="tab-pane fade" id="theories">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 data-i18n="generatedTheories">Generated Theories</h5>
+                            <button id="refreshTheoriesBtn" class="btn btn-outline-primary">
+                                <i class="fas fa-sync-alt me-2"></i><span data-i18n="refresh">Refresh</span>
+                            </button>
+                        </div>
+                        <div id="theoriesList" class="row">
+                            <div class="col-12 text-center text-muted">
+                                <i class="fas fa-lightbulb fa-3x mb-3"></i>
+                                <p>No theories generated yet. Start a reasoning session to see results.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sessions Tab -->
+                    <div class="tab-pane fade" id="sessions">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 data-i18n="reasoningSessions">Reasoning Sessions</h5>
+                            <button id="refreshSessionsBtn" class="btn btn-outline-primary">
+                                <i class="fas fa-sync-alt me-2"></i><span data-i18n="refresh">Refresh</span>
+                            </button>
+                        </div>
+                        <div id="sessionsList">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-tasks fa-3x mb-3"></i>
+                                <p>No reasoning sessions yet. Start a session to begin automatic theory generation.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Thinking Process Tab -->
+                    <div class="tab-pane fade" id="thinking">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5><i class="fas fa-brain me-2"></i>AI Thinking Process</h5>
+                            <div>
+                                <button id="refreshThinkingBtn" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                                </button>
+                                <button id="autoRefreshToggle" class="btn btn-outline-secondary" data-auto="false">
+                                    <i class="fas fa-play me-2"></i>Auto Refresh
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-chart-bar me-2"></i>Thinking Statistics</h6>
+                                        <div id="thinkingStats">
+                                            <div class="row text-center">
+                                                <div class="col-3">
+                                                    <div class="h4 text-primary mb-0" id="totalSteps">0</div>
+                                                    <small class="text-muted">Total Steps</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="h4 text-success mb-0" id="analysisSteps">0</div>
+                                                    <small class="text-muted">Analysis</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="h4 text-info mb-0" id="synthesisSteps">0</div>
+                                                    <small class="text-muted">Synthesis</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="h4 text-warning mb-0" id="conclusionSteps">0</div>
+                                                    <small class="text-muted">Conclusions</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-filter me-2"></i>Filter & Controls</h6>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <label class="form-label">Session</label>
+                                                <select id="sessionFilter" class="form-select form-select-sm">
+                                                    <option value="">All Sessions</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label">Step Type</label>
+                                                <select id="stepTypeFilter" class="form-select form-select-sm">
+                                                    <option value="">All Types</option>
+                                                    <option value="analysis">Analysis</option>
+                                                    <option value="synthesis">Synthesis</option>
+                                                    <option value="evaluation">Evaluation</option>
+                                                    <option value="conclusion">Conclusion</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h6><i class="fas fa-stream me-2"></i>Thinking Timeline</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="thinkingTimeline" style="max-height: 600px; overflow-y: auto;">
+                                    <div class="text-center text-muted py-5">
+                                        <i class="fas fa-brain fa-3x mb-3"></i>
+                                        <p>Start a reasoning session to see AI thinking process here.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Tools Tab -->
+                    <div class="tab-pane fade" id="tools">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-cog me-2"></i><span data-i18n="formalizationTool">Formalization Tool</span></h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label" data-i18n="theoryContent">Theory Content</label>
+                                            <textarea id="formalizationInput" class="form-control" rows="4" 
+                                                data-i18n-placeholder="enterTheory" placeholder="Enter natural language theory..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label" data-i18n="targetTool">Target Tool</label>
+                                            <select id="formalizationTool" class="form-select">
+                                                <option value="sympy">SymPy</option>
+                                                <option value="z3">Z3</option>
+                                                <option value="lean">Lean</option>
+                                            </select>
+                                        </div>
+                                        <button id="formalizeBtn" class="btn btn-primary">
+                                            <i class="fas fa-calculator me-2"></i><span data-i18n="formalize">Formalize</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-code me-2"></i><span data-i18n="verificationTool">Verification Tool</span></h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label class="form-label" data-i18n="theoryContent">Theory Content</label>
+                                            <textarea id="verificationInput" class="form-control" rows="3" 
+                                                data-i18n-placeholder="enterVerifyTheory" placeholder="Enter theory to verify..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label" data-i18n="formalExpressionOptional">Formal Expression (Optional)</label>
+                                            <textarea id="formalExpressionInput" class="form-control" rows="2" 
+                                                data-i18n-placeholder="enterFormalExpression" placeholder="Enter formal expression..."></textarea>
+                                        </div>
+                                        <button id="verifyBtn" class="btn btn-success">
+                                            <i class="fas fa-check-circle me-2"></i><span data-i18n="verify">Verify</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-balance-scale me-2"></i><span data-i18n="equivalenceReview">Equivalence Review</span></h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-2">
+                                            <label class="form-label small" data-i18n="theory">Theory</label>
+                                            <textarea id="reviewTheoryInput" class="form-control form-control-sm" rows="2" 
+                                                data-i18n-placeholder="naturalLanguageTheory" placeholder="Natural language theory..."></textarea>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label small" data-i18n="formal">Formal</label>
+                                            <textarea id="reviewFormalInput" class="form-control form-control-sm" rows="2" 
+                                                data-i18n-placeholder="formalExpression" placeholder="Formal expression..."></textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small" data-i18n="python">Python</label>
+                                            <textarea id="reviewPythonInput" class="form-control form-control-sm" rows="2" 
+                                                data-i18n-placeholder="pythonCode" placeholder="Python code..."></textarea>
+                                        </div>
+                                        <button id="reviewBtn" class="btn btn-warning">
+                                            <i class="fas fa-search me-2"></i><span data-i18n="review">Review</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tool Results -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6><i class="fas fa-chart-line me-2"></i><span data-i18n="toolResults">Tool Results</span></h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="toolResults">
+                                            <div class="text-center text-muted">
+                                                <i class="fas fa-tools fa-2x mb-2"></i>
+                                                <p>Use the tools above to see results here.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <div id="loadingText">Processing...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Theory Detail Modal -->
+    <div class="modal fade" id="theoryDetailModal" tabindex="-1" aria-labelledby="theoryDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="theoryDetailModalLabel">
+                        <i class="fas fa-lightbulb me-2"></i>Theory Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="theoryDetailLoading" class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading theory details...</p>
+                    </div>
+                    <div id="theoryDetailContent" style="display: none;">
+                        <!-- Theory content will be loaded here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Close
+                    </button>
+                    <button type="button" class="btn btn-primary" id="exportTheoryBtn">
+                        <i class="fas fa-download me-2"></i>Export Markdown
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="theory-reasoning-demo.js"></script>
+</body>
+</html>

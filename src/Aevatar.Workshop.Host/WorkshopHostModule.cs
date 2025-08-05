@@ -6,6 +6,7 @@ using Aevatar.GAgents.PsiOmni.Interfaces;
 using Aevatar.GAgents.PsiOmni.Plugins;
 using Aevatar.GAgents.PsiOmni.Plugins.Services;
 using Aevatar.GAgents.SemanticKernel.Extensions;
+using Aevatar.Workshop.GAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Volo.Abp.AspNetCore.Serilog;
@@ -49,6 +50,9 @@ public class WorkshopHostModule : AbpModule
         // Register web content fetcher service
         context.Services.AddHttpClient<WebContentFetcher>();
         context.Services.AddSingleton<IWebContentFetcher, WebContentFetcher>();
+        
+        // Register session file manager service for theory markdown export
+        context.Services.AddSingleton<ISessionFileManagerService, SessionFileManagerService>();
         
         // Note: Additional search engines and providers configuration has been removed
         // as they are not essential for the configuration management functionality

@@ -123,7 +123,89 @@ public record MyStateLogEvent : StateLogEventBase<MyStateLogEvent>;  // 这会�
 - StateLogEvent 需要与 Orleans 事件溯源系统兼容
 - 使用 class 确保与 Orleans 序列化机制的完全兼容性
 
-### 2.2 状态管理（Orleans 事件溯源）
+### 2.2 重要的实现细节规则
+
+#### 2.2.1 StateLogEvent 基类不能定义为 abstract
+
+**❌ 错误：**
+```csharp
+[GenerateSerializer]
+public abstract class MyStateLogEvent : StateLogEventBase<MyStateLogEvent>;
+```
+
+**✅ 正确：**
+```csharp
+[GenerateSerializer]
+public class MyStateLogEvent : StateLogEventBase<MyStateLogEvent>;
+```
+
+**原因：** Orleans 序列化系统要求 StateLogEvent 基类必须是具体类，不能是抽象类。
+
+#### 2.2.2 AIGAgent 的 ChatWithHistoryAndToolsAsync 返回值处理
+
+**❌ 错误：**
+```csharp
+var response = await ChatWithHistoryAndToolsAsync(prompt);
+var result = ExtractCodeFromResponse(response, request); // 直接使用 response
+```
+
+**✅ 正确：**
+```csharp
+var response = await ChatWithHistoryAndToolsAsync(prompt);
+var result = ExtractCodeFromResponse(response.Response, request); // 使用 response.Response
+```
+
+**原因：** `ChatWithHistoryAndToolsAsync` 方法返回 `ChatWithDetailsResponse` 类型，不是 `string` 类型。要获取 LLM 的答复文本，需要访问其 `Response` 字段。
+
+#### 2.2.3 MCP 服务器配置参数字段名
+
+**❌ 错误：**
+```csharp
+new MCPServerConfig
+{
+    ServerName = "filesystem",
+    Command = "npx",
+    Arguments = new List<string> { "@modelcontextprotocol/server-filesystem", "/workspace" }
+}
+```
+
+**✅ 正确：**
+```csharp
+new MCPServerConfig
+{
+    ServerName = "filesystem", 
+    Command = "npx",
+    Args = new List<string> { "@modelcontextprotocol/server-filesystem", "/workspace" }
+}
+```
+
+**原因：** `MCPServerConfig` 中表示参数列表的字段是 `Args`，不是 `Arguments`。使用错误的属性名会导致配置失效。
+
+#### 2.2.4 GAgent 间交互事件类型规则
+
+**❌ 错误：**
+```csharp
+[GenerateSerializer]
+public record TaskSubmittedEvent : EventBase
+{
+    [Id(0)] public string TaskId { get; init; } = string.Empty;
+    [Id(1)] public TaskInfo TaskInfo { get; init; } = new();
+}
+```
+
+**✅ 正确：**
+```csharp
+[GenerateSerializer]
+public class TaskSubmittedEvent : EventBase
+{
+    [Id(0)] public string TaskId { get; init; } = string.Empty;
+    [Id(1)] public TaskInfo TaskInfo { get; init; } = new();
+}
+```
+
+**原因：** 用于 GAgent 之间交互的 Event 必须是 class，不能是 record。Orleans 事件系统对 record 类型的事件支持存在限制。
+
+### 2.3 状态管理（Orleans 事件溯源）
 ```csharp
 // 步骤 1：定义状态
 [GenerateSerializer]
@@ -162,7 +244,7 @@ protected override void GAgentTransitionState(MyState state, StateLogEventBase<M
 }
 ```
 
-### 2.2 状态初始化
+### 2.4 状态初始化
 
 状态初始化应该通过 `PerformConfigAsync` 方法完成，但必须遵守事件溯源原则，通过 `RaiseEvent` 来修改状态。这需要使用带有四个泛型参数的 GAgentBase，其中第四个参数是配置类型。
 
@@ -277,7 +359,7 @@ var myAgent = await gAgentFactory.GetGAgentAsync<IMyGAgent>(
 - 配置类必须继承自 `ConfigurationBase` 并使用 `[GenerateSerializer]` 和 `[Id(n)]` 属性
 - 记得定义相应的状态日志事件来承载配置数据
 
-### 2.3 状态日志事件
+### 2.5 状态日志事件
 ```csharp
 [GenerateSerializer]
 public abstract record MyStateLogEvent : StateLogEventBase<MyStateLogEvent>;
@@ -634,6 +716,9 @@ src/
 - [ ] 在状态中初始化集合
 - [ ] 所有类都有 [GenerateSerializer]
 - [ ] 所有属性都有 [Id(n)]
+
+### Workshop项目特定规则
+- [ ] **所有demo页面必须使用LLM配置API (`/api/llm-configs/list`) 动态获取可用的LLM模型，不得硬编码LLM选项**
 
 ### 实例化
 - [ ] 使用 IGAgentFactory（而非 IGrainFactory）

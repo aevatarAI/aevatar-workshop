@@ -1,4 +1,5 @@
 using Aevatar.GAgents.Executor;
+using Aevatar.Workshop.GAgent.Services;
 using Aevatar.Workshop.TestBase;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.BlobStoring;
@@ -18,5 +19,8 @@ public class AevatarWorkshopTestModule : AbpModule
         context.Services.AddSingleton<IGAgentExecutor, GAgentExecutor>();
         context.Services.AddSingleton<IGAgentService, GAgentService>();
         context.Services.AddSingleton<IBlobContainer, MockBlobContainer>();
+        
+        // Register session file manager service for testing
+        context.Services.AddSingleton<ISessionFileManagerService, SessionFileManagerService>();
     }
 }

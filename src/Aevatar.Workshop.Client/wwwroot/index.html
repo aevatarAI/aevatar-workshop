@@ -527,6 +527,12 @@
       name: { en: 'PsiGAgent Demo', zh: 'PsiGAgent 演示' },
       desc: { en: 'demodesc/PsiGAgentDemo.md', zh: 'demodesc/PsiGAgentDemo.zh.md' },
       isCustom: true // Custom rendering for PsiGAgent demo
+    },
+    {
+      key: 'TheoryReasoningDemo',
+      name: { en: 'Theory Reasoning Engine', zh: '理论推理引擎' },
+      desc: { en: 'demodesc/TheoryReasoningDemo.md', zh: 'demodesc/TheoryReasoningDemo.zh.md' },
+      isCustom: true // Custom rendering for theory reasoning engine
     }
   ];
 
@@ -790,6 +796,11 @@
 
     if (demo.isCustom && demo.key === 'SmartHomeDemo') {
       renderSmartHomeDemo(demo);
+      return;
+    }
+
+    if (demo.isCustom && demo.key === 'TheoryReasoningDemo') {
+      renderTheoryReasoningDemo(demo);
       return;
     }
 
@@ -2917,6 +2928,101 @@ Click the link above to open the full demo page.`;
     
     mainContent.appendChild(demoCard);
   }
+
+  // Theory Reasoning Engine Demo rendering
+  async function renderTheoryReasoningDemo(demo) {
+    // Create demo card
+    const demoCard = document.createElement('div');
+    demoCard.className = 'demo-card';
+    demoCard.style.maxWidth = '1400px';
+    demoCard.style.height = '100%';
+    demoCard.style.marginLeft = 'auto';
+    demoCard.style.marginRight = 'auto';
+
+    // Title
+    const title = document.createElement('div');
+    title.className = 'demo-title';
+    title.textContent = demo.name[currentLanguage] || demo.name['en'];
+    demoCard.appendChild(title);
+
+    // Link to standalone demo
+    const linkContainer = document.createElement('div');
+    linkContainer.style.marginTop = '20px';
+    linkContainer.style.padding = '16px';
+    linkContainer.style.background = '#f0f3ff';
+    linkContainer.style.border = '1px solid #667eea';
+    linkContainer.style.borderRadius = '8px';
+    linkContainer.style.textAlign = 'center';
+
+    const link = document.createElement('a');
+    link.href = `/demos/theory-reasoning-demo.html?lang=${currentLanguage}`;
+    link.target = '_blank';
+    link.style.display = 'inline-block';
+    link.style.padding = '12px 24px';
+    link.style.background = '#667eea';
+    link.style.color = 'white';
+    link.style.textDecoration = 'none';
+    link.style.borderRadius = '6px';
+    link.style.fontWeight = 'bold';
+    link.style.transition = 'background-color 0.2s';
+    link.textContent = currentLanguage === 'zh' ? '🧠 打开理论推理引擎' : '🧠 Open Theory Reasoning Engine';
+    link.onmouseover = () => { link.style.backgroundColor = '#5a67d8'; };
+    link.onmouseout = () => { link.style.backgroundColor = '#667eea'; };
+
+    linkContainer.appendChild(link);
+    demoCard.appendChild(linkContainer);
+
+    // Description
+    const desc = document.createElement('div');
+    desc.className = 'demo-desc desc-content';
+    desc.style.marginTop = '24px';
+    desc.innerHTML = 'Loading...';
+    const descPath = demo.desc[currentLanguage] || demo.desc['en'];
+    fetch(descPath).then(r => r.text()).then(md => {
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    }).catch(() => {
+      // Fallback content if description file doesn't exist
+      const fallbackContent = currentLanguage === 'zh' 
+        ? `# 理论推理引擎演示
+
+这是一个先进的AI驱动系统，展示了基于Ψ理论的自动数学理论生成和验证。
+
+## 核心特性
+
+- **自动理论生成**: 使用多种推理方法生成新的数学理论
+- **三层验证系统**: 自然语言、形式化表达和Python验证的完整一致性
+- **Ψ理论基础**: 基于二进制宇宙理论的坚实数学基础
+
+点击上方链接开始探索自动数学推理的奇妙世界。`
+        : `# Theory Reasoning Engine Demo
+
+This is an advanced AI-powered system demonstrating automatic mathematical theory generation and verification based on Ψ theory.
+
+## Core Features
+
+- **Automatic Theory Generation**: Generate new mathematical theories using multiple reasoning methods
+- **Three-Layer Verification**: Complete consistency across natural language, formal expressions, and Python verification
+- **Ψ Theory Foundation**: Solid mathematical foundation based on binary universe theory
+
+Click the link above to start exploring the fascinating world of automated mathematical reasoning.`;
+      
+      desc.innerHTML = DOMPurify.sanitize(marked.parse(fallbackContent));
+      if (window.hljs) {
+        desc.querySelectorAll('pre code').forEach(block => {
+          hljs.highlightElement(block);
+        });
+      }
+    });
+    demoCard.appendChild(desc);
+    
+    mainContent.appendChild(demoCard);
+  }
+
 </script>
 </body>
 </html>

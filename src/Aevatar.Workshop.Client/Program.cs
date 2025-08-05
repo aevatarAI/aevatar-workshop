@@ -32,6 +32,18 @@ builder.Configuration.AddEnvironmentVariables();
 
 builder.Services.AddControllers();
 
+// Add CORS configuration
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .WithExposedHeaders("*");
+    });
+});
+
 // Configure SystemLLMConfigOptions
 builder.Services.Configure<SystemLLMConfigOptions>(options =>
 {
@@ -77,6 +89,45 @@ builder.Services.AddSingleton(serviceProvider.GetRequiredService<IGAgentExecutor
 builder.Services.AddSingleton(serviceProvider.GetRequiredService<IGAgentService>());
 
 var app = builder.Build();
+
+// Configure the HTTP request pipeline
+if (app.Environment.EnvironmentName == "Development")
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
+}
+
+app.UseCors();
+
+// Add security headers middleware
+app.Use(async (context, next) =>
+{
+    // Add security headers to prevent Chrome 403 issues
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "SAMEORIGIN";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    
+    // Ensure CORS headers are always present
+    if (!context.Response.Headers.ContainsKey("Access-Control-Allow-Origin"))
+    {
+        context.Response.Headers["Access-Control-Allow-Origin"] = "*";
+    }
+    if (!context.Response.Headers.ContainsKey("Access-Control-Allow-Methods"))
+    {
+        context.Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
+    }
+    if (!context.Response.Headers.ContainsKey("Access-Control-Allow-Headers"))
+    {
+        context.Response.Headers["Access-Control-Allow-Headers"] = "*";
+    }
+    
+    await next();
+});
 
 // Serve static files from wwwroot (index.html)
 app.UseDefaultFiles();
