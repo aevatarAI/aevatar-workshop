@@ -65,6 +65,7 @@ artifacts/
 *.tmp
 *.tmp_proj
 *.log
+*.pid
 *.vspscc
 *.vssscc
 .builds
@@ -259,3 +260,7 @@ paket-files/
 appsettings.secrets.json
 
 .docker-temp/
+
+# Reasoning Session Generated Directories
+# 推理会话生成的目录
+reasoning-session-*/

@@ -100,10 +100,10 @@ public interface IAutoReasoningAIGAgent : IStateGAgent<AutoReasoningState>
 {
     Task<bool> InitializeAsync(string llmSystem);
     Task<string> StartReasoningTaskAsync(ReasoningTask task);
-    Task<List<string>> PerformDeductiveReasoningAsync(List<string> premiseTheoryIds, string targetDomain);
-    Task<List<string>> PerformInductiveReasoningAsync(List<string> exampleTheoryIds, string pattern);
-    Task<List<string>> PerformAbductiveReasoningAsync(string conclusionTheory, string domain);
-    Task<List<string>> PerformAnalogicalReasoningAsync(string sourceTheoryId, string targetDomain);
+    Task<List<string>> PerformDeductiveReasoningAsync(List<string> premiseTheoryIds, string targetDomain, string? sessionId = null);
+    Task<List<string>> PerformInductiveReasoningAsync(List<string> exampleTheoryIds, string pattern, string? sessionId = null);
+    Task<List<string>> PerformAbductiveReasoningAsync(string conclusionTheory, string domain, string? sessionId = null);
+    Task<List<string>> PerformAnalogicalReasoningAsync(string sourceTheoryId, string targetDomain, string? sessionId = null);
     Task<List<ReasoningTask>> GetActiveTasksAsync();
     Task<Dictionary<string, int>> GetReasoningStatsAsync();
     Task<string> GenerateTheoryContentAsync(string reasoningType, List<string> sourceTheories, string targetDomain);
@@ -206,7 +206,7 @@ public class AutoReasoningAIGAgent : WorkshopAIGAgentBase<AutoReasoningState, Au
         return task.TaskId;
     }
 
-    public async Task<List<string>> PerformDeductiveReasoningAsync(List<string> premiseTheoryIds, string targetDomain)
+    public async Task<List<string>> PerformDeductiveReasoningAsync(List<string> premiseTheoryIds, string targetDomain, string? sessionId = null)
     {
         Logger.LogInformation("Performing deductive reasoning from {Count} premises in domain {Domain}",
             premiseTheoryIds.Count, targetDomain);
@@ -332,7 +332,7 @@ public class AutoReasoningAIGAgent : WorkshopAIGAgentBase<AutoReasoningState, Au
                     
                     // Publish thinking steps event for coordinator to capture
                     Logger.LogInformation("🧠 Publishing {Count} thinking steps for deductive reasoning", thinkingSteps.Count);
-                    await PublishThinkingStepsAsync(thinkingSteps, "deductive", Guid.NewGuid().ToString());
+                    await PublishThinkingStepsAsync(thinkingSteps, "deductive", taskId, sessionId);
                     Logger.LogInformation("🧠 Thinking steps published successfully");
                     
                     return new List<string> { theoryId };
@@ -376,7 +376,7 @@ public class AutoReasoningAIGAgent : WorkshopAIGAgentBase<AutoReasoningState, Au
         return new List<string>();
     }
 
-    public async Task<List<string>> PerformInductiveReasoningAsync(List<string> exampleTheoryIds, string pattern)
+    public async Task<List<string>> PerformInductiveReasoningAsync(List<string> exampleTheoryIds, string pattern, string? sessionId = null)
     {
         Logger.LogInformation("Performing inductive reasoning from {Count} examples with pattern {Pattern}",
             exampleTheoryIds.Count, pattern);
@@ -419,7 +419,7 @@ public class AutoReasoningAIGAgent : WorkshopAIGAgentBase<AutoReasoningState, Au
         return new List<string>();
     }
 
-    public async Task<List<string>> PerformAbductiveReasoningAsync(string conclusionTheory, string domain)
+    public async Task<List<string>> PerformAbductiveReasoningAsync(string conclusionTheory, string domain, string? sessionId = null)
     {
         Logger.LogInformation("Performing abductive reasoning for conclusion in domain {Domain}", domain);
 
@@ -462,7 +462,7 @@ public class AutoReasoningAIGAgent : WorkshopAIGAgentBase<AutoReasoningState, Au
         return new List<string>();
     }
 
-    public async Task<List<string>> PerformAnalogicalReasoningAsync(string sourceTheoryId, string targetDomain)
+    public async Task<List<string>> PerformAnalogicalReasoningAsync(string sourceTheoryId, string targetDomain, string? sessionId = null)
     {
         Logger.LogInformation("Performing analogical reasoning from theory {SourceId} to domain {Domain}",
             sourceTheoryId, targetDomain);
@@ -912,7 +912,7 @@ Use any appropriate reasoning method to generate a meaningful new theory that ex
     /// <summary>
     /// Publish thinking steps as events for coordinator to capture
     /// </summary>
-    private async Task PublishThinkingStepsAsync(List<ThinkingStep> thinkingSteps, string reasoningType, string taskId)
+    private async Task PublishThinkingStepsAsync(List<ThinkingStep> thinkingSteps, string reasoningType, string taskId, string? sessionId = null)
     {
         try
         {
@@ -929,7 +929,7 @@ Use any appropriate reasoning method to generate a meaningful new theory that ex
 
             var thinkingEvent = new ThinkingStepsGeneratedEvent
             {
-                ReasoningSessionId = "", // Will be set by coordinator
+                ReasoningSessionId = sessionId ?? "",
                 TaskId = taskId,
                 ReasoningType = reasoningType,
                 ThinkingSteps = stepData,

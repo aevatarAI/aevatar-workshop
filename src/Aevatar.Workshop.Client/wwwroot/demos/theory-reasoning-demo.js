@@ -1293,29 +1293,62 @@ class TheoryReasoningDemo {
             return;
         }
 
-        container.innerHTML = sessions.map(session => `
+        container.innerHTML = sessions.map(session => {
+            const isCompleted = session.status === 'completed' || session.status === 'failed';
+            const progressPercentage = Math.min((session.currentIteration / session.maxIterations * 100), 100);
+            
+            return `
             <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span class="fw-bold">${session.sessionId}</span>
-                    <span class="badge bg-${this.getStatusBadge(session.status)}">${session.status}</span>
+                    <div>
+                        <span class="badge bg-${this.getStatusBadge(session.status)} me-2">${session.status}</span>
+                        ${session.reasoningSteps ? `<span class="badge bg-info"><i class="fas fa-brain me-1"></i>${session.reasoningSteps}</span>` : ''}
+                    </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>${this.getText('progress')}:</strong> ${this.getText('iteration')} ${session.currentIteration}
+                            <strong>${this.getText('progress')}:</strong> ${this.getText('iteration')} ${session.currentIteration}/${session.maxIterations}
                             <div class="progress mt-2">
-                                <div class="progress-bar" role="progressbar" 
-                                     style="width: ${(session.currentIteration / 10 * 100)}%">
+                                <div class="progress-bar ${isCompleted ? 'bg-success' : ''}" role="progressbar" 
+                                     style="width: ${progressPercentage}%">
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <strong>${this.getText('started')}:</strong> ${new Date(session.startedAt).toLocaleString()}
+                            ${session.completedAt ? `<br><strong>Completed:</strong> ${new Date(session.completedAt).toLocaleString()}` : ''}
                         </div>
                     </div>
+                    
+                    ${session.generatedTheories > 0 ? `
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span><i class="fas fa-lightbulb me-1"></i>Generated: ${session.generatedTheories}</span>
+                                <span><i class="fas fa-check-circle me-1"></i>Accepted: ${session.acceptedTheories}</span>
+                                <span><i class="fas fa-times-circle me-1"></i>Rejected: ${session.rejectedTheories}</span>
+                                <span><i class="fas fa-chart-line me-1"></i>Success: ${(session.successRate * 100).toFixed(1)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${session.currentPhase ? `
+                    <div class="row mt-2">
+                        <div class="col-md-12">
+                            <small class="text-muted">
+                                <strong>Current Phase:</strong> ${session.currentPhase}
+                                ${session.completedPhases.length > 0 ? ` | <strong>Completed:</strong> ${session.completedPhases.join(', ')}` : ''}
+                            </small>
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     displayToolResult(title, result) {

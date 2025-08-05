@@ -132,6 +132,8 @@ public interface ITheoryReasoningCoordinatorGAgent : IStateGAgent<TheoryReasonin
     Task<bool> ResumeReasoningSessionAsync(string sessionId);
     Task<ReasoningSession?> GetSessionStatusAsync(string sessionId);
     Task<List<ReasoningSession>> GetActiveSessionsAsync();
+    Task<List<ReasoningSession>> GetAllSessionsAsync();
+    Task<List<ReasoningSession>> GetCompletedSessionsAsync();
     Task<Dictionary<string, int>> GetSystemStatsAsync();
     Task<bool> EnableAutoReasoningAsync(ReasoningSessionConfig defaultConfig);
     Task<bool> DisableAutoReasoningAsync();
@@ -396,6 +398,21 @@ public class TheoryReasoningCoordinatorGAgent : GAgentBase<TheoryReasoningCoordi
     public Task<List<ReasoningSession>> GetActiveSessionsAsync()
     {
         return Task.FromResult(State.ActiveSessions.ToList());
+    }
+
+    public Task<List<ReasoningSession>> GetAllSessionsAsync()
+    {
+        var allSessions = new List<ReasoningSession>();
+        allSessions.AddRange(State.ActiveSessions);
+        allSessions.AddRange(State.CompletedSessions);
+        
+        // Sort by start time, most recent first
+        return Task.FromResult(allSessions.OrderByDescending(s => s.StartedAt).ToList());
+    }
+
+    public Task<List<ReasoningSession>> GetCompletedSessionsAsync()
+    {
+        return Task.FromResult(State.CompletedSessions.OrderByDescending(s => s.CompletedAt ?? s.StartedAt).ToList());
     }
 
     public Task<Dictionary<string, int>> GetSystemStatsAsync()
@@ -693,10 +710,10 @@ public class TheoryReasoningCoordinatorGAgent : GAgentBase<TheoryReasoningCoordi
             {
                 newTheoryIds = method.ToLower() switch
                 {
-                    "deductive" => await _reasoningAgent.PerformDeductiveReasoningAsync(sourceTheoryIds, session.Config.TargetDomain),
-                    "inductive" => await _reasoningAgent.PerformInductiveReasoningAsync(sourceTheoryIds, "pattern_discovery"),
-                    "abductive" => await _reasoningAgent.PerformAbductiveReasoningAsync(sourceTheoryIds.FirstOrDefault() ?? "", session.Config.TargetDomain),
-                    "analogical" => await _reasoningAgent.PerformAnalogicalReasoningAsync(sourceTheoryIds.FirstOrDefault() ?? "", session.Config.TargetDomain),
+                    "deductive" => await _reasoningAgent.PerformDeductiveReasoningAsync(sourceTheoryIds, session.Config.TargetDomain, session.SessionId),
+                    "inductive" => await _reasoningAgent.PerformInductiveReasoningAsync(sourceTheoryIds, "pattern_discovery", session.SessionId),
+                    "abductive" => await _reasoningAgent.PerformAbductiveReasoningAsync(sourceTheoryIds.FirstOrDefault() ?? "", session.Config.TargetDomain, session.SessionId),
+                    "analogical" => await _reasoningAgent.PerformAnalogicalReasoningAsync(sourceTheoryIds.FirstOrDefault() ?? "", session.Config.TargetDomain, session.SessionId),
                     _ => new List<string>()
                 };
                 

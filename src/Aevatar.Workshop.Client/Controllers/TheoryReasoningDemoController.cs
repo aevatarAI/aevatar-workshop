@@ -339,63 +339,39 @@ public class TheoryReasoningDemoController : ControllerBase
         try
         {
             var coordinator = await _gAgentFactory.GetGAgentAsync<ITheoryReasoningCoordinatorGAgent>(WorkshopReasoningConstants.CoordinatorId);
-            var state = await coordinator.GetStateAsync();
+            
+            // Use the new method to get all sessions (already sorted by start time)
+            var allSessions = await coordinator.GetAllSessionsAsync();
+            var activeSessions = await coordinator.GetActiveSessionsAsync();
+            var completedSessions = await coordinator.GetCompletedSessionsAsync();
 
-            var sessions = new List<object>();
-
-            // Add active sessions
-            foreach (var session in state.ActiveSessions)
+            var sessions = allSessions.Select(session => new
             {
-                sessions.Add(new
-                {
-                    sessionId = session.SessionId,
-                    status = session.Status,
-                    startedAt = session.StartedAt,
-                    completedAt = session.CompletedAt,
-                    currentIteration = session.CurrentIteration,
-                    maxIterations = session.Config.MaxIterations,
-                    currentPhase = session.CurrentPhase,
-                    completedPhases = session.CompletedPhases,
-                    generatedTheories = session.GeneratedTheoryIds.Count,
-                    acceptedTheories = session.AcceptedTheoryIds.Count,
-                    rejectedTheories = session.RejectedTheoryIds.Count,
-                    successRate = session.GeneratedTheoryIds.Count > 0
-                        ? (double)session.AcceptedTheoryIds.Count / session.GeneratedTheoryIds.Count
-                        : 0.0,
-                    config = session.Config
-                });
-            }
-
-            // Add completed sessions
-            foreach (var session in state.CompletedSessions)
-            {
-                sessions.Add(new
-                {
-                    sessionId = session.SessionId,
-                    status = session.Status,
-                    startedAt = session.StartedAt,
-                    completedAt = session.CompletedAt,
-                    currentIteration = session.CurrentIteration,
-                    maxIterations = session.Config.MaxIterations,
-                    currentPhase = session.CurrentPhase,
-                    completedPhases = session.CompletedPhases,
-                    generatedTheories = session.GeneratedTheoryIds.Count,
-                    acceptedTheories = session.AcceptedTheoryIds.Count,
-                    rejectedTheories = session.RejectedTheoryIds.Count,
-                    successRate = session.GeneratedTheoryIds.Count > 0
-                        ? (double)session.AcceptedTheoryIds.Count / session.GeneratedTheoryIds.Count
-                        : 0.0,
-                    config = session.Config
-                });
-            }
+                sessionId = session.SessionId,
+                status = session.Status,
+                startedAt = session.StartedAt,
+                completedAt = session.CompletedAt,
+                currentIteration = session.CurrentIteration,
+                maxIterations = session.Config.MaxIterations,
+                currentPhase = session.CurrentPhase,
+                completedPhases = session.CompletedPhases,
+                generatedTheories = session.GeneratedTheoryIds.Count,
+                acceptedTheories = session.AcceptedTheoryIds.Count,
+                rejectedTheories = session.RejectedTheoryIds.Count,
+                successRate = session.GeneratedTheoryIds.Count > 0
+                    ? (double)session.AcceptedTheoryIds.Count / session.GeneratedTheoryIds.Count
+                    : 0.0,
+                config = session.Config,
+                reasoningSteps = session.ReasoningSteps.Count // Include thinking process count
+            }).ToList();
 
             return Ok(new
             {
                 success = true,
                 totalSessions = sessions.Count,
-                activeSessions = state.ActiveSessions.Count,
-                completedSessions = state.CompletedSessions.Count,
-                sessions = sessions.OrderByDescending(s => ((dynamic)s).startedAt).ToList()
+                activeSessions = activeSessions.Count,
+                completedSessions = completedSessions.Count,
+                sessions = sessions // Already sorted by start time in GetAllSessionsAsync
             });
         }
         catch (Exception ex)
@@ -476,8 +452,7 @@ public class TheoryReasoningDemoController : ControllerBase
                 });
             }
 
-            // Get file manager service to generate markdown content
-            var fileManager = HttpContext.RequestServices.GetRequiredService<ISessionFileManagerService>();
+            // Generate markdown content using local method
             var markdownContent = GenerateTheoryMarkdown(theory);
 
             return Ok(new

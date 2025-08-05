@@ -122,7 +122,9 @@ public class SessionFileManagerService : ISessionFileManagerService
 
     public string GetSessionDirectoryPath(string sessionId)
     {
-        return Path.Combine(_projectRootPath, sessionId);
+        // Add prefix to clearly identify reasoning session directories
+        var prefixedSessionId = $"reasoning-session-{sessionId}";
+        return Path.Combine(_projectRootPath, prefixedSessionId);
     }
 
     private string FindProjectRoot()
