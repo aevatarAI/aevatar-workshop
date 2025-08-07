@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Python GAgent Demo</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .demo-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .demo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .demo-card h3 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .status-indicator {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            position: relative;
+        }
+        
+        .status-indicator.ready {
+            background-color: #48bb78;
+            box-shadow: 0 0 20px rgba(72, 187, 120, 0.4);
+        }
+        
+        .status-indicator.error {
+            background-color: #f56565;
+            box-shadow: 0 0 20px rgba(245, 101, 101, 0.4);
+        }
+        
+        .status-indicator.loading {
+            background-color: #ed8936;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.7; 
+                transform: scale(1.1);
+            }
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+        
+        .control-group input,
+        .control-group select,
+        .control-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .control-group input:focus,
+        .control-group select:focus,
+        .control-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        .control-group textarea {
+            min-height: 150px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin: 5px;
+            min-width: 140px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn.btn-success {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+        }
+        
+        .btn.btn-success:hover {
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+        
+        .btn.btn-warning {
+            background: linear-gradient(135deg, #ed8936, #dd6b20);
+        }
+        
+        .btn.btn-warning:hover {
+            box-shadow: 0 8px 25px rgba(237, 137, 54, 0.3);
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .mode-btn {
+            background: #edf2f7;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 80px;
+            text-align: center;
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .results-section {
+            grid-column: 1 / -1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .results-section h3 {
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-size: 1.4rem;
+        }
+        
+        .result-output {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            min-height: 120px;
+            border: 1px solid #2d3748;
+            margin-bottom: 20px;
+        }
+        
+        .result-output.error {
+            background: #fed7d7;
+            color: #c53030;
+            border-color: #fc8181;
+        }
+        
+        .result-output.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border-color: #68d391;
+        }
+        
+        .debug-info {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .debug-info h4 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .debug-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding: 5px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+        
+        .debug-item:last-child {
+            border-bottom: none;
+        }
+        
+        .debug-label {
+            color: #718096;
+            font-weight: 500;
+        }
+        
+        .debug-value {
+            color: #2d3748;
+            font-weight: 600;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-card h5 {
+            color: #4a5568;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            color: #2d3748;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #e6fffa, #b2f5ea);
+            border: 1px solid #81e6d9;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 25px;
+            color: #234e52;
+        }
+        
+        .info-box strong {
+            color: #1a365d;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 1024px) {
+            .demo-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .mode-selector {
+                flex-direction: column;
+            }
+            
+            .mode-btn {
+                flex: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .demo-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐍⚡ Hybrid Python GAgent Demo</h1>
+            <p>Advanced Python execution with automatic mode selection between Legacy and MCP implementations</p>
+            
+            <div class="info-box">
+                <strong>🎯 About Hybrid Python GAgent:</strong> This agent automatically chooses the best execution method based on availability and requirements. It seamlessly switches between traditional subprocess execution and secure MCP-based execution, providing backward compatibility and enhanced security.
+            </div>
+        </div>
+
+        <div class="demo-grid">
+            <!-- Configuration Panel -->
+            <div class="demo-card">
+                <h3>
+                    <div class="status-indicator" id="agent-status"></div>
+                    Agent Configuration
+                </h3>
+                
+                <div class="control-group">
+                    <label for="llm-select">LLM Configuration (for AI features):</label>
+                    <select id="llm-select">
+                        <option value="">Loading LLM configurations...</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <button class="btn btn-success" onclick="openLLMConfig()">🔧 Configure LLM API Key</button>
+                    <small style="color: #718096; font-size: 12px; display: block; margin-top: 8px;">
+                        💡 Need to configure LLM API Key? Click the button above to access system configuration.
+                    </small>
+                </div>
+                
+                <div class="control-group">
+                    <label>Execution Mode:</label>
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="auto" onclick="setExecutionMode('auto')">Auto</button>
+                        <button class="mode-btn" data-mode="legacy" onclick="setExecutionMode('legacy')">Legacy</button>
+                        <button class="mode-btn" data-mode="mcp" onclick="setExecutionMode('mcp')">MCP</button>
+                    </div>
+                    <small style="color: #718096; font-size: 12px;">
+                        <strong>Auto:</strong> Automatically selects best mode<br>
+                        <strong>Legacy:</strong> Traditional subprocess execution<br>
+                        <strong>MCP:</strong> Secure sandboxed execution
+                    </small>
+                </div>
+                
+                <div class="control-group">
+                    <button class="btn" onclick="initializeAgent()">Initialize Agent</button>
+                    <button class="btn btn-warning" onclick="testConnections()">Test Connections</button>
+                </div>
+                
+                <div class="control-group">
+                    <label for="timeout">Execution Timeout (seconds):</label>
+                    <input type="number" id="timeout" value="30" min="1" max="300">
+                </div>
+            </div>
+
+            <!-- Execution Panel -->
+            <div class="demo-card">
+                <h3>Python Code Execution</h3>
+                
+                <div class="control-group">
+                    <label for="python-code">Python Code:</label>
+                    <textarea id="python-code" placeholder="Enter your Python code here...">import sys
+import platform
+import time
+
+def hybrid_demo():
+    """Demonstrate hybrid execution capabilities"""
+    print("🐍 Hybrid Python GAgent Demo")
+    print("=" * 40)
+    print(f"Python version: {sys.version}")
+    print(f"Platform: {platform.system()} {platform.release()}")
+    print(f"Machine: {platform.machine()}")
+    print(f"Processor: {platform.processor()}")
+    
+    # Test basic computation
+    start_time = time.time()
+    
+    # Fibonacci calculation
+    def fibonacci(n):
+        if n <= 1:
+            return n
+        return fibonacci(n-1) + fibonacci(n-2)
+    
+    fib_result = fibonacci(10)
+    execution_time = time.time() - start_time
+    
+    print(f"\\nFibonacci(10) = {fib_result}")
+    print(f"Calculation time: {execution_time:.4f} seconds")
+    
+    # Test available modules
+    try:
+        import math
+        print(f"\\nMath module available")
+        print(f"π = {math.pi}")
+        print(f"e = {math.e}")
+    except ImportError:
+        print("Math module not available")
+    
+    try:
+        import numpy as np
+        print(f"NumPy available: {np.__version__}")
+        arr = np.array([1, 2, 3, 4, 5])
+        print(f"NumPy array sum: {np.sum(arr)}")
+    except ImportError:
+        print("NumPy not available")
+    
+    print("\\n✅ Demo completed successfully!")
+
+if __name__ == "__main__":
+    hybrid_demo()</textarea>
+                </div>
+                
+                <div class="control-group">
+                    <button class="btn btn-success" onclick="executeCode()">Execute Code</button>
+                    <button class="btn btn-warning" onclick="installPackages()">Install Packages</button>
+                </div>
+            </div>
+
+            <!-- Results and Debug Info -->
+            <div class="results-section">
+                <h3>📊 Execution Results & Debug Information</h3>
+                
+                <div class="result-output" id="execution-output">
+                    No execution results yet. Initialize the agent and run some Python code to see results here.
+                </div>
+                
+                <div class="debug-info" id="debug-info" style="display: none;">
+                    <h4>🔍 Debug Information</h4>
+                    <div id="debug-content"></div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h5>Current Mode</h5>
+                        <div class="stat-value" id="current-mode">Unknown</div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Executions</h5>
+                        <div class="stat-value" id="execution-count">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Success Rate</h5>
+                        <div class="stat-value" id="success-rate">0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Avg Time</h5>
+                        <div class="stat-value" id="avg-time">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Agent Status</h5>
+                        <div class="stat-value" id="agent-state">Not Initialized</div>
+                    </div>
+                    <div class="stat-card">
+                        <h5>Connection</h5>
+                        <div class="stat-value" id="connection-status">Unknown</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <script src="hybrid-python-demo.js"></script>
+</body>
+</html>

@@ -3,6 +3,7 @@ using Aevatar.Workshop.GAgent.GAgents;
 using Aevatar.Workshop.TestBase;
 using Shouldly;
 using System.Diagnostics;
+using Aevatar.Workshop.GAgent;
 using Xunit.Abstractions;
 
 namespace Aevatar.Workshop.Tests;
@@ -24,6 +25,202 @@ public sealed class TheoryReasoningEngineTests : AevatarWorkshopTestBase<Aevatar
     }
 
     #region System Initialization Tests
+
+    [Fact]
+    public async Task TheoryReasoningEngine_ThinkingStepsDebugging_ShouldGenerateThinkingSteps()
+    {
+        _testOutputHelper.WriteLine("🧪 Testing thinking steps generation and propagation...");
+
+        var stopwatch = Stopwatch.StartNew();
+
+        // Create the coordinator with fixed GUID (using WorkshopReasoningConstants)
+        var coordinator = await _gAgentFactory.GetGAgentAsync<ITheoryReasoningCoordinatorGAgent>(WorkshopReasoningConstants.CoordinatorId);
+        var reasoningAgent = await _gAgentFactory.GetGAgentAsync<IAutoReasoningAIGAgent>(WorkshopReasoningConstants.ReasoningAgentId);
+
+        // Initialize the system first
+        _testOutputHelper.WriteLine("🔧 Initializing reasoning system...");
+        await coordinator.InitializeSystemAsync();
+        await Task.Delay(2000); // Allow initialization to complete
+
+        // Check initial state
+        var initialState = await coordinator.GetStateAsync();
+        _testOutputHelper.WriteLine($"📊 System status: {initialState.SystemStatus}");
+        _testOutputHelper.WriteLine($"📊 Active sessions: {initialState.ActiveSessions.Count}");
+
+        // Start a simple reasoning session
+        var config = new ReasoningSessionConfig
+        {
+            MaxIterations = 1,
+            TargetDomain = "test_logic",
+            EnabledReasoningMethods = ["deductive"],
+            EnableAutoReview = false,
+            EnableAutoRevision = false
+        };
+
+        _testOutputHelper.WriteLine("🚀 Starting reasoning session...");
+        var sessionId = await coordinator.StartReasoningSessionAsync(config);
+        _testOutputHelper.WriteLine($"📝 Session ID: {sessionId}");
+
+        // Wait for reasoning to complete
+        await Task.Delay(10000); // Longer wait to ensure completion
+
+        // Check session state after reasoning
+        var finalState = await coordinator.GetStateAsync();
+        var session = finalState.ActiveSessions.FirstOrDefault(s => s.SessionId == sessionId) ??
+                      finalState.CompletedSessions.FirstOrDefault(s => s.SessionId == sessionId);
+
+        _testOutputHelper.WriteLine($"📊 Final status: {finalState.SystemStatus}");
+        _testOutputHelper.WriteLine($"📊 Total sessions: {finalState.ActiveSessions.Count + finalState.CompletedSessions.Count}");
+
+        if (session != null)
+        {
+            _testOutputHelper.WriteLine($"📝 Session status: {session.Status}");
+            _testOutputHelper.WriteLine($"🧠 Reasoning steps count: {session.ReasoningSteps.Count}");
+            
+            foreach (var step in session.ReasoningSteps.Take(5)) // Show first 5 steps
+            {
+                var stepContentLength = step.Content?.Length ?? 0;
+                var stepContentPreview = stepContentLength > 0 ? step.Content!.Substring(0, Math.Min(80, stepContentLength)) : "";
+                _testOutputHelper.WriteLine($"  🔍 Step: {step.StepType} - {stepContentPreview}...");
+            }
+
+            // Also test direct reasoning call
+            _testOutputHelper.WriteLine("🧪 Testing direct reasoning call...");
+            var directResult = await reasoningAgent.PerformDeductiveReasoningAsync(
+                new List<string> { "T1-1" }, 
+                "test_domain", 
+                sessionId);
+            
+            _testOutputHelper.WriteLine($"📊 Direct result: {directResult.Count} theories");
+
+            // Wait a bit more for events to propagate
+            await Task.Delay(2000);
+
+            // Check session again
+            var updatedState = await coordinator.GetStateAsync();
+            var updatedSession = updatedState.ActiveSessions.FirstOrDefault(s => s.SessionId == sessionId) ??
+                                 updatedState.CompletedSessions.FirstOrDefault(s => s.SessionId == sessionId);
+
+            if (updatedSession != null)
+            {
+                _testOutputHelper.WriteLine($"🧠 Updated reasoning steps count: {updatedSession.ReasoningSteps.Count}");
+                
+                // Print detailed information about thinking steps
+                foreach (var step in updatedSession.ReasoningSteps)
+                {
+                    _testOutputHelper.WriteLine($"  📋 Step ID: {step.StepId}");
+                    _testOutputHelper.WriteLine($"     Type: {step.StepType}");
+                    _testOutputHelper.WriteLine($"     Reasoning Type: {step.ReasoningType}");
+                    var contentLength = step.Content?.Length ?? 0;
+                    var contentPreview = contentLength > 0 ? step.Content!.Substring(0, Math.Min(100, contentLength)) : "";
+                    _testOutputHelper.WriteLine($"     Content: {contentPreview}...");
+                    _testOutputHelper.WriteLine($"     Timestamp: {step.Timestamp}");
+                    _testOutputHelper.WriteLine("  ---");
+                }
+            }
+
+            // Test assertion - we should have some thinking steps
+            session.ReasoningSteps.Count.ShouldBeGreaterThan(0, 
+                "Session should have thinking steps after reasoning");
+        }
+        else
+        {
+            _testOutputHelper.WriteLine("❌ Session not found!");
+            throw new InvalidOperationException("Session was not found after reasoning");
+        }
+
+        stopwatch.Stop();
+        _testOutputHelper.WriteLine($"⏱️ Test completed in {stopwatch.ElapsedMilliseconds}ms");
+    }
+
+    [Fact]
+    public async Task TheoryReasoningEngine_AgentInitialization_ShouldIdentifyFailures()
+    {
+        _testOutputHelper.WriteLine("🔍 Diagnosing individual agent initialization...");
+
+        // Test each agent individually to identify which one is failing
+        try
+        {
+            // Test Knowledge Agent
+            _testOutputHelper.WriteLine("🧪 Testing Knowledge Agent...");
+            var knowledgeAgent = await _gAgentFactory.GetGAgentAsync<ITheoryKnowledgeGAgent>(WorkshopReasoningConstants.KnowledgeAgentId);
+            var knowledgeResult = await knowledgeAgent.InitializeWithPsiTheoryAsync();
+            _testOutputHelper.WriteLine($"📊 Knowledge Agent initialization: {knowledgeResult}");
+        }
+        catch (Exception ex)
+        {
+            _testOutputHelper.WriteLine($"❌ Knowledge Agent failed: {ex.Message}");
+        }
+
+        try
+        {
+            // Test Verification Agent (no LLM required)
+            _testOutputHelper.WriteLine("🧪 Testing Verification Agent...");
+            var verificationAgent = await _gAgentFactory.GetGAgentAsync<IPythonVerificationGAgent>(WorkshopReasoningConstants.VerificationAgentId);
+            var verificationResult = await verificationAgent.InitializeAsync();
+            _testOutputHelper.WriteLine($"📊 Verification Agent initialization: {verificationResult}");
+        }
+        catch (Exception ex)
+        {
+            _testOutputHelper.WriteLine($"❌ Verification Agent failed: {ex.Message}");
+        }
+
+        try
+        {
+            // Test AI agents (these likely need LLM configuration)
+            _testOutputHelper.WriteLine("🧪 Testing Reasoning Agent...");
+            var reasoningAgent = await _gAgentFactory.GetGAgentAsync<IAutoReasoningAIGAgent>(WorkshopReasoningConstants.ReasoningAgentId);
+            var reasoningResult = await reasoningAgent.InitializeAsync("AzureOpenAI");
+            _testOutputHelper.WriteLine($"📊 Reasoning Agent initialization: {reasoningResult}");
+        }
+        catch (Exception ex)
+        {
+            _testOutputHelper.WriteLine($"❌ Reasoning Agent failed: {ex.Message}");
+        }
+
+        try
+        {
+            _testOutputHelper.WriteLine("🧪 Testing Formalization Agent...");
+            var formalizationAgent = await _gAgentFactory.GetGAgentAsync<IFormalizationAIGAgent>(WorkshopReasoningConstants.FormalizationAgentId);
+            var formalizationResult = await formalizationAgent.InitializeAsync("AzureOpenAI");
+            _testOutputHelper.WriteLine($"📊 Formalization Agent initialization: {formalizationResult}");
+        }
+        catch (Exception ex)
+        {
+            _testOutputHelper.WriteLine($"❌ Formalization Agent failed: {ex.Message}");
+        }
+
+        try
+        {
+            _testOutputHelper.WriteLine("🧪 Testing Review Agent...");
+            var reviewAgent = await _gAgentFactory.GetGAgentAsync<IEquivalenceReviewGAgent>(WorkshopReasoningConstants.ReviewAgentId);
+            var reviewResult = await reviewAgent.InitializeAsync("AzureOpenAI");
+            _testOutputHelper.WriteLine($"📊 Review Agent initialization: {reviewResult}");
+        }
+        catch (Exception ex)
+        {
+            _testOutputHelper.WriteLine($"❌ Review Agent failed: {ex.Message}");
+        }
+
+        // Now test the coordinator
+        try
+        {
+            _testOutputHelper.WriteLine("🧪 Testing Coordinator...");
+            var coordinator = await _gAgentFactory.GetGAgentAsync<ITheoryReasoningCoordinatorGAgent>(WorkshopReasoningConstants.CoordinatorId);
+            var initResult = await coordinator.InitializeSystemAsync("AzureOpenAI");
+            _testOutputHelper.WriteLine($"📊 Coordinator initialization: {initResult}");
+            
+            var state = await coordinator.GetStateAsync();
+            _testOutputHelper.WriteLine($"📊 Final system status: {state.SystemStatus}");
+        }
+        catch (Exception ex)
+        {
+            _testOutputHelper.WriteLine($"❌ Coordinator failed: {ex.Message}");
+        }
+
+        // This test is for diagnosis only - we expect some failures due to missing LLM config
+        _testOutputHelper.WriteLine("🎯 Diagnosis complete. Check output for failed components.");
+    }
 
     [Fact]
     public async Task TheoryReasoningEngine_SystemInitialization_ShouldSucceed()

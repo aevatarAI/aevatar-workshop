@@ -1,0 +1,383 @@
+# LLM UI Configuration Standards
+
+This document outlines the standardized patterns for implementing LLM API key configuration UI across all demo pages in the Aevatar Workshop project.
+
+## 📋 Core Requirements
+
+### 1. **Mandatory API Usage**
+All demo pages **MUST** use the following API endpoints for LLM configuration:
+
+```javascript
+// For listing available LLM systems
+GET /api/llm-configs/list
+
+// For full configuration management (admin features)
+GET /api/llm-configs
+POST /api/llm-configs
+```
+
+**❌ NEVER hardcode LLM options** - always fetch dynamically from the API.
+
+## 🎨 UI Pattern Categories
+
+### **Category A: Full Configuration Interface (Recommended for Complex Demos)**
+
+**Usage:** Smart Home Demo, Theory Reasoning Demo
+
+**Features:**
+- ✅ Real-time LLM configuration status monitoring
+- ✅ Configuration alert notifications
+- ✅ Multi-language support
+- ✅ Automatic configuration change detection
+- ✅ Fallback and error handling
+- ✅ Configuration guidance for users
+
+**Implementation Pattern:**
+
+```html
+<!-- LLM Configuration Alert -->
+<div id="llmConfigAlert" class="llm-config-alert" style="display: none;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="font-size: 24px;">⚠️</div>
+        <div style="flex: 1;">
+            <h4 data-i18n="llm_api_key_needed">LLM API Key Configuration Required</h4>
+            <p data-i18n="llm_api_key_description">
+                To experience AI features, please configure LLM API Key first.
+            </p>
+        </div>
+        <button onclick="dismissLLMAlert()">✕</button>
+    </div>
+</div>
+
+<!-- LLM Configuration Status -->
+<div class="llm-config-status" id="llmConfigStatus">
+    <div style="display: flex; align-items: center; gap: 8px;">
+        <span id="llmStatusIcon">🔄</span>
+        <span id="llmStatusText" data-i18n="llm_checking">Checking LLM configuration...</span>
+    </div>
+</div>
+
+<!-- LLM Selector -->
+<div class="llm-selector">
+    <label for="systemLLM" data-i18n="ai_model">AI Model:</label>
+    <select id="systemLLM">
+        <option value="" data-i18n="loading">Loading...</option>
+    </select>
+    <button onclick="openLLMConfig()" data-i18n="config_llm">Configure LLM</button>
+    <button onclick="reinitializeSystem()" data-i18n="reinitialize">Reinitialize</button>
+</div>
+```
+
+**JavaScript Implementation:**
+
+```javascript
+// Status monitoring functions
+function updateLLMConfigStatus(isConfigured, message) {
+    const statusDiv = document.getElementById('llmConfigStatus');
+    const iconSpan = document.getElementById('llmStatusIcon');
+    const textSpan = document.getElementById('llmStatusText');
+    
+    if (isConfigured) {
+        iconSpan.textContent = '✅';
+        statusDiv.style.background = '#d1fae5';
+        statusDiv.style.borderColor = '#10b981';
+        textSpan.textContent = message || 'LLM configured successfully';
+    } else {
+        iconSpan.textContent = '❌';
+        statusDiv.style.background = '#fee2e2';
+        statusDiv.style.borderColor = '#ef4444';
+        textSpan.textContent = message || 'LLM configuration needed';
+    }
+}
+
+// Configuration change monitoring
+function startLLMConfigWatcher() {
+    if (llmConfigWatcher) {
+        clearInterval(llmConfigWatcher);
+    }
+    
+    llmConfigWatcher = setInterval(async () => {
+        try {
+            const response = await fetch('/api/llm-configs/list');
+            const llmKeys = await response.json();
+            const hasLLMConfig = llmKeys && llmKeys.length > 0;
+            
+            if (hasLLMConfig && (!lastLLMCheckResult || lastLLMCheckResult.length === 0)) {
+                await loadAvailableLLMs();
+                clearInterval(llmConfigWatcher);
+                llmConfigWatcher = null;
+            }
+            lastLLMCheckResult = llmKeys;
+        } catch (error) {
+            console.error('LLM config watcher error:', error);
+        }
+    }, 2000);
+}
+
+function stopLLMConfigWatcher() {
+    if (llmConfigWatcher) {
+        clearInterval(llmConfigWatcher);
+        llmConfigWatcher = null;
+    }
+}
+```
+
+### **Category B: Simple Configuration Interface (Recommended for Basic Demos)**
+
+**Usage:** PSI GAgent Demo, Dynamic AI MCP Demo, Hybrid Python Demo
+
+**Features:**
+- ✅ Basic LLM selection dropdown
+- ✅ Configuration button linking to admin interface
+- ✅ Error handling and fallbacks
+- ✅ Default selection (prefer DeepSeek)
+
+**Implementation Pattern:**
+
+```html
+<!-- Simple LLM Configuration -->
+<div class="control-group">
+    <label for="llm-select">LLM Configuration:</label>
+    <select id="llm-select">
+        <option value="">Loading LLM configurations...</option>
+    </select>
+</div>
+
+<div class="control-group">
+    <button onclick="openLLMConfig()">Configure LLM</button>
+    <button onclick="initializeAgent()">Initialize Agent</button>
+</div>
+```
+
+**JavaScript Implementation:**
+
+```javascript
+async function loadAvailableLLMs() {
+    try {
+        const response = await fetch('/api/llm-configs/list');
+        const llmConfigs = await response.json();
+        
+        const selectElement = document.getElementById('llm-select');
+        selectElement.innerHTML = '';
+        
+        if (llmConfigs && llmConfigs.length > 0) {
+            // ⚠️ IMPORTANT: /api/llm-configs/list returns an ARRAY of key names
+            // NOT an object! e.g., ["AzureOpenAI", "Hyperecho"]
+            const availableLLMs = Array.isArray(llmConfigs) ? llmConfigs : [llmConfigs];
+            
+            // Add default "None" option
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = 'None (Legacy mode only)';
+            selectElement.appendChild(defaultOption);
+            
+            // Add LLM options
+            availableLLMs.forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = key;
+                selectElement.appendChild(option);
+            });
+            
+            // Set DeepSeek as default if available
+            if (availableLLMs.includes('DeepSeek')) {
+                selectElement.value = 'DeepSeek';
+            } else if (availableLLMs.length > 0) {
+                selectElement.value = availableLLMs[0];
+            }
+            
+        } else {
+            const noOption = document.createElement('option');
+            noOption.value = '';
+            noOption.textContent = 'No LLM configurations available';
+            selectElement.appendChild(noOption);
+        }
+
+        // Add change event listener
+        selectElement.addEventListener('change', (e) => {
+            const selectedLLM = e.target.value;
+            console.log(`Selected LLM: ${selectedLLM || 'None'}`);
+            // Handle LLM selection change
+        });
+
+    } catch (error) {
+        console.error('Failed to load LLM configurations:', error);
+        const selectElement = document.getElementById('llm-select');
+        selectElement.innerHTML = '<option value="">Error loading LLM configs</option>';
+    }
+}
+
+// Global LLM configuration function
+function openLLMConfig() {
+    window.open('/', '_blank');
+}
+```
+
+### **Category C: Minimal Configuration Interface**
+
+**Usage:** Basic demos without AI features
+
+**Features:**
+- ✅ Simple notification about LLM requirements
+- ✅ Link to configuration page
+- ✅ Optional graceful degradation
+
+**Implementation Pattern:**
+
+```html
+<!-- Minimal LLM Notice -->
+<div class="info-box">
+    <strong>💡 AI Features Available:</strong> 
+    Configure LLM API Key to enable AI-powered features. 
+    <a href="/" target="_blank">Configure Now</a>
+</div>
+```
+
+## 🔧 Standard Functions
+
+### **Required Functions for All Demos:**
+
+```javascript
+// 1. Load available LLMs (Category A & B)
+async function loadAvailableLLMs() { /* Implementation above */ }
+
+// 2. Open LLM configuration (All categories)
+function openLLMConfig() {
+    window.open('/', '_blank');
+}
+
+// 3. Initialize page LLM loading (All categories)
+window.addEventListener('DOMContentLoaded', function() {
+    loadAvailableLLMs();
+});
+
+// 4. Error handling wrapper (Recommended)
+async function safeApiCall(url, options = {}) {
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error(`API call failed for ${url}:`, error);
+        throw error;
+    }
+}
+```
+
+## 🌐 Internationalization (i18n)
+
+### **Standard Translation Keys:**
+
+```javascript
+const translations = {
+    en: {
+        'llm_api_key_needed': 'LLM API Key Configuration Required',
+        'llm_api_key_description': 'To experience AI features, please configure LLM API Key first.',
+        'llm_checking': 'Checking LLM configuration...',
+        'llm_configured': 'LLM configured successfully',
+        'llm_config_needed': 'LLM configuration needed',
+        'llm_models_configured': '{0} models configured',
+        'config_llm': 'Configure LLM',
+        'ai_model': 'AI Model',
+        'loading': 'Loading...',
+        'reinitialize': 'Reinitialize',
+        'no_llm_configured': 'No LLM configured'
+    },
+    zh: {
+        'llm_api_key_needed': '需要配置 LLM API Key',
+        'llm_api_key_description': '要体验 AI 功能，请先配置 LLM API Key。',
+        'llm_checking': '正在检查 LLM 配置...',
+        'llm_configured': 'LLM 配置正常',
+        'llm_config_needed': 'LLM 配置异常',
+        'llm_models_configured': '已配置 {0} 个模型',
+        'config_llm': '配置 LLM',
+        'ai_model': 'AI 模型',
+        'loading': '加载中...',
+        'reinitialize': '重新初始化',
+        'no_llm_configured': '未配置 LLM'
+    }
+};
+```
+
+## 🎯 Best Practices
+
+### **1. Default LLM Selection Priority:**
+1. DeepSeek (if available)
+2. First available LLM
+3. Empty/None option with graceful degradation
+
+### **2. Error Handling:**
+- Always provide fallback options
+- Show clear error messages to users
+- Log detailed errors to console for debugging
+- Graceful degradation when LLM is unavailable
+
+### **3. User Experience:**
+- Show loading states during API calls
+- Provide clear instructions for configuration
+- Use consistent UI patterns across demos
+- Support both English and Chinese languages
+
+### **4. Performance:**
+- Cache LLM configurations when appropriate
+- Use polling only when necessary (e.g., waiting for config changes)
+- Debounce configuration change events
+
+### **5. Security:**
+- Never expose API keys in frontend code
+- Always use server-side configuration APIs
+- Validate configuration data on both client and server
+
+## 📝 Implementation Checklist
+
+For each new demo page, ensure:
+
+- [ ] Uses `/api/llm-configs/list` API (never hardcoded options)
+- [ ] Implements appropriate UI category (A, B, or C)
+- [ ] Includes error handling and fallbacks
+- [ ] Supports internationalization (en/zh)
+- [ ] Sets DeepSeek as default when available
+- [ ] Provides clear user guidance for configuration
+- [ ] Links to main configuration interface (`openLLMConfig()`)
+- [ ] Tests with no LLM configured scenario
+- [ ] Tests with multiple LLM configurations
+- [ ] Follows consistent styling patterns
+
+## 🚫 Common Anti-Patterns to Avoid
+
+- ❌ **Hardcoding LLM options** in HTML/JavaScript
+- ❌ **Wrong data parsing**: Treating `/api/llm-configs/list` response as object instead of array
+- ❌ **Not handling API call failures** gracefully
+- ❌ **Missing loading states** during API calls
+- ❌ **No fallback** when LLM is unavailable
+- ❌ **Inconsistent UI patterns** across demos
+- ❌ **Exposing sensitive configuration data** in frontend
+- ❌ **Not supporting internationalization** (en/zh)
+- ❌ **Poor error messages** for users
+
+## ⚠️ Critical Data Format Issue
+
+**IMPORTANT**: The `/api/llm-configs/list` endpoint returns an **array of strings**, not an object!
+
+```javascript
+// ❌ WRONG - This will show array indices (1, 2, 3) instead of key names
+const configs = typeof llmConfigs === 'string' ? JSON.parse(llmConfigs) : llmConfigs;
+const availableLLMs = Object.keys(configs); // Wrong!
+
+// ✅ CORRECT - Direct array usage
+const availableLLMs = Array.isArray(llmConfigs) ? llmConfigs : [llmConfigs];
+```
+
+**Example Response:**
+```json
+["AzureOpenAI", "Hyperecho", "DeepSeek"]
+```
+
+This mistake will cause the dropdown to show **array indices (1, 2, 3)** instead of the actual **key names (AzureOpenAI, Hyperecho, DeepSeek)**.
+
+---
+
+**Last Updated:** January 2025  
+**Applies to:** All Aevatar Workshop demo pages requiring LLM configuration
