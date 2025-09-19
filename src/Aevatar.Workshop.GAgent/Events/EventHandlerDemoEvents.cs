@@ -4,7 +4,7 @@ using Orleans;
 namespace Aevatar.Workshop.GAgent.Events;
 
 /// <summary>
-/// 通知事件 - 用于发送通知消息
+/// Notification event - Used to send notification messages
 /// </summary>
 [GenerateSerializer]
 public class NotificationEvent : EventBase
@@ -26,7 +26,7 @@ public enum NotificationLevel
 }
 
 /// <summary>
-/// 数据处理事件 - 用于触发数据处理任务
+/// Data processing event - Used to trigger data processing tasks
 /// </summary>
 [GenerateSerializer]
 public class DataProcessingEvent : EventBase
@@ -47,7 +47,7 @@ public enum ProcessingPriority
 }
 
 /// <summary>
-/// 协调请求事件 - 用于请求多个GAgent协同工作
+/// Coordination request event - Used to request multiple GAgents to work together
 /// </summary>
 [GenerateSerializer]
 public class CoordinationRequestEvent : EventBase
@@ -59,7 +59,7 @@ public class CoordinationRequestEvent : EventBase
 }
 
 /// <summary>
-/// 协调响应事件 - GAgent对协调请求的响应
+/// Coordination response event - GAgent's response to coordination request
 /// </summary>
 [GenerateSerializer]
 public class CoordinationResponseEvent : EventBase
@@ -71,7 +71,7 @@ public class CoordinationResponseEvent : EventBase
 }
 
 /// <summary>
-/// 事件记录事件 - 用于记录其他事件的处理
+/// Event record event - Used to record the processing of other events
 /// </summary>
 [GenerateSerializer]
 public class EventLoggedEvent : EventBase
@@ -85,7 +85,7 @@ public class EventLoggedEvent : EventBase
 }
 
 /// <summary>
-/// 处理完成事件 - 数据处理完成后的通知
+/// Processing completed event - Notification after data processing is completed
 /// </summary>
 [GenerateSerializer]
 public class ProcessingCompletedEvent : EventBase

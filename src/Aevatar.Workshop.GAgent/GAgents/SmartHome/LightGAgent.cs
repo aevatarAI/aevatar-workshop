@@ -10,7 +10,7 @@ namespace Aevatar.Workshop.GAgent.GAgents.SmartHome;
 #region State and Events
 
 /// <summary>
-/// 灯光状态
+/// Light state
 /// </summary>
 [GenerateSerializer]
 public class LightState : StateBase
@@ -23,13 +23,13 @@ public class LightState : StateBase
 }
 
 /// <summary>
-/// 状态日志事件基类
+/// State log event base class
 /// </summary>
 [GenerateSerializer]
 public class LightStateLogEvent : StateLogEventBase<LightStateLogEvent>;
 
 /// <summary>
-/// 灯光开启事件
+/// Light turned on event
 /// </summary>
 [GenerateSerializer]
 public class LightTurnedOnLogEvent : LightStateLogEvent
@@ -38,7 +38,7 @@ public class LightTurnedOnLogEvent : LightStateLogEvent
 }
 
 /// <summary>
-/// 灯光关闭事件
+/// Light turned off event
 /// </summary>
 [GenerateSerializer]
 public class LightTurnedOffLogEvent : LightStateLogEvent
@@ -47,7 +47,7 @@ public class LightTurnedOffLogEvent : LightStateLogEvent
 }
 
 /// <summary>
-/// 亮度调整事件
+/// Brightness changed event
 /// </summary>
 [GenerateSerializer]
 public class BrightnessChangedLogEvent : LightStateLogEvent
@@ -62,7 +62,7 @@ public class BrightnessChangedLogEvent : LightStateLogEvent
 #region Interface
 
 /// <summary>
-/// 灯光控制接口
+/// Light control interface
 /// </summary>
 public interface ILightGAgent : IStateGAgent<LightState>
 {
@@ -78,7 +78,7 @@ public interface ILightGAgent : IStateGAgent<LightState>
 #region Implementation
 
 /// <summary>
-/// 灯光控制智能体
+/// Light control GAgent
 /// </summary>
 [GenerateSerializer]
 public class LightConfiguration : ConfigurationBase
@@ -101,7 +101,7 @@ public class LightGAgent : GAgentBase<LightState, LightStateLogEvent, EventBase,
     
     protected override async Task PerformConfigAsync(LightConfiguration configuration)
     {
-        // 使用事件来初始化状态
+        // Initialize state using events
         RaiseEvent(new SetLightInitialConfigurationLogEvent
         {
             LightId = configuration.LightId,
@@ -113,19 +113,19 @@ public class LightGAgent : GAgentBase<LightState, LightStateLogEvent, EventBase,
 
     public override Task<string> GetDescriptionAsync()
         => Task.FromResult(
-            $"【智能灯光控制器】控制{State.Location}的灯光设备。\n" +
-            $"当前状态：{(State.IsOn ? "已开启" : "已关闭")}，亮度：{State.Brightness}%\n\n" +
-            $"可用命令：\n" +
-            $"• TurnOnLightCommand - 开灯\n" +
-            $"  参数：LightId (string) - 设备ID\n" +
-            $"• TurnOffLightCommand - 关灯\n" + 
-            $"  参数：LightId (string) - 设备ID\n" +
-            $"• SetBrightnessCommand - 调节亮度\n" +
-            $"  参数：LightId (string) - 设备ID, Brightness (int) - 亮度值(0-100)\n\n" +
-            $"使用示例：\n" +
-            $"- 用户说'打开灯' → 使用TurnOnLightCommand\n" +
-            $"- 用户说'把灯调到20%' → 使用SetBrightnessCommand，Brightness=20\n" +
-            $"- 用户说'把灯调暗' → 使用SetBrightnessCommand，降低当前亮度值");
+            $"【Smart Light Controller】Controls lighting devices in {State.Location}.\n" +
+            $"Current status: {(State.IsOn ? "On" : "Off")}, Brightness: {State.Brightness}%\n\n" +
+            $"Available commands:\n" +
+            $"• TurnOnLightCommand - Turn on light\n" +
+            $"  Parameters: LightId (string) - Device ID\n" +
+            $"• TurnOffLightCommand - Turn off light\n" + 
+            $"  Parameters: LightId (string) - Device ID\n" +
+            $"• SetBrightnessCommand - Adjust brightness\n" +
+            $"  Parameters: LightId (string) - Device ID, Brightness (int) - Brightness value (0-100)\n\n" +
+            $"Usage examples:\n" +
+            $"- User says 'turn on light' → Use TurnOnLightCommand\n" +
+            $"- User says 'set light to 20%' → Use SetBrightnessCommand, Brightness=20\n" +
+            $"- User says 'dim the light' → Use SetBrightnessCommand, decrease current brightness value");
 
     #region Public Methods
 
@@ -188,25 +188,13 @@ public class LightGAgent : GAgentBase<LightState, LightStateLogEvent, EventBase,
         {
             Logger.LogInformation("Ignoring TurnOnCommand for different light: {TargetId}, current light id: {LightId}",
                 command.LightId, State.LightId);
-            var lightGAgent =
-                await GAgentFactory.GetGAgentAsync<ILightGAgent>("light agent".ToGuid());
-            Logger.LogInformation($"GrainId： {lightGAgent.GetGrainId().ToString()}");
-            await lightGAgent.TurnOnAsync();
-            // 发布状态变化事件
-            await PublishAsync(new LightStateChangedEvent
-            {
-                LightId = "light agent".ToGuid().ToString("N"),
-                IsOn = true,
-                Brightness = State.Brightness,
-                ChangedAt = State.LastChangeAt
-            });
             return;
         }
 
         Logger.LogInformation("Turning on light {LightId}", State.LightId);
         await TurnOnAsync();
         
-        // 发布状态变化事件
+        // Publish state change event
         await PublishAsync(new LightStateChangedEvent
         {
             LightId = State.LightId,
@@ -222,25 +210,13 @@ public class LightGAgent : GAgentBase<LightState, LightStateLogEvent, EventBase,
         if (command.LightId != State.LightId && !string.IsNullOrEmpty(command.LightId))
         {
             Logger.LogInformation("Ignoring TurnOffCommand for different light: {TargetId}", command.LightId);
-            var lightGAgent =
-                await GAgentFactory.GetGAgentAsync<ILightGAgent>("light agent".ToGuid());
-            Logger.LogInformation($"GrainId： {lightGAgent.GetGrainId().ToString()}");
-            await lightGAgent.TurnOffAsync();
-            // 发布状态变化事件
-            await PublishAsync(new LightStateChangedEvent
-            {
-                LightId = "light agent".ToGuid().ToString("N"),
-                IsOn = false,
-                Brightness = State.Brightness,
-                ChangedAt = State.LastChangeAt
-            });
             return;
         }
 
         Logger.LogInformation("Turning off light {LightId}", State.LightId);
         await TurnOffAsync();
         
-        // 发布状态变化事件
+        // Publish state change event
         await PublishAsync(new LightStateChangedEvent
         {
             LightId = State.LightId,
@@ -265,7 +241,7 @@ public class LightGAgent : GAgentBase<LightState, LightStateLogEvent, EventBase,
             State.LightId, command.Brightness);
         await SetBrightnessAsync(command.Brightness);
         
-        // 发布状态变化事件
+        // Publish state change event
         await PublishAsync(new LightStateChangedEvent
         {
             LightId = State.LightId,

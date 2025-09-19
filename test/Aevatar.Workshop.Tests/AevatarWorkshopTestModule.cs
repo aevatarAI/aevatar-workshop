@@ -1,7 +1,7 @@
 using Aevatar.GAgents.Executor;
-using Aevatar.Workshop.GAgent;
 using Aevatar.Workshop.TestBase;
 using Microsoft.Extensions.DependencyInjection;
+using Volo.Abp.BlobStoring;
 using Volo.Abp.Modularity;
 
 namespace Aevatar.Workshop.Tests;
@@ -17,5 +17,6 @@ public class AevatarWorkshopTestModule : AbpModule
         // Register test services
         context.Services.AddSingleton<IGAgentExecutor, GAgentExecutor>();
         context.Services.AddSingleton<IGAgentService, GAgentService>();
+        context.Services.AddSingleton<IBlobContainer, MockBlobContainer>();
     }
 }

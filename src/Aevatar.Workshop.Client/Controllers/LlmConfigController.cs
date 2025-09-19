@@ -6,6 +6,7 @@ using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.Executor;
 using Aevatar.Workshop.GAgent;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.Basic.BasicGEvent;
 using Aevatar.Workshop.GAgent.Extensions;
 using Microsoft.Extensions.Logging;
 

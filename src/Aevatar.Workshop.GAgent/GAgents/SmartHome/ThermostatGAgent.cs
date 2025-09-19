@@ -10,7 +10,7 @@ namespace Aevatar.Workshop.GAgent.GAgents.SmartHome;
 #region State and Events
 
 /// <summary>
-/// 恒温器状态
+/// Thermostat state
 /// </summary>
 [GenerateSerializer]
 public class ThermostatState : StateBase
@@ -24,13 +24,13 @@ public class ThermostatState : StateBase
 }
 
 /// <summary>
-/// 状态日志事件基类
+/// State log event base class
 /// </summary>
 [GenerateSerializer]
 public class ThermostatStateLogEvent : StateLogEventBase<ThermostatStateLogEvent>;
 
 /// <summary>
-/// 目标温度设置事件
+/// Target temperature set event
 /// </summary>
 [GenerateSerializer]
 public class TargetTemperatureSetLogEvent : ThermostatStateLogEvent
@@ -41,7 +41,7 @@ public class TargetTemperatureSetLogEvent : ThermostatStateLogEvent
 }
 
 /// <summary>
-/// 当前温度更新事件
+/// Current temperature update event
 /// </summary>
 [GenerateSerializer]
 public class CurrentTemperatureUpdatedLogEvent : ThermostatStateLogEvent
@@ -51,7 +51,7 @@ public class CurrentTemperatureUpdatedLogEvent : ThermostatStateLogEvent
 }
 
 /// <summary>
-/// 模式改变事件
+/// Mode change event
 /// </summary>
 [GenerateSerializer]
 public class ModeChangedLogEvent : ThermostatStateLogEvent
@@ -66,7 +66,7 @@ public class ModeChangedLogEvent : ThermostatStateLogEvent
 #region Interface
 
 /// <summary>
-/// 恒温器控制接口
+/// Thermostat control interface
 /// </summary>
 public interface IThermostatGAgent : IStateGAgent<ThermostatState>
 {
@@ -75,7 +75,7 @@ public interface IThermostatGAgent : IStateGAgent<ThermostatState>
     Task<double> GetCurrentTemperatureAsync();
     Task<double> GetTargetTemperatureAsync();
     Task<ThermostatMode> GetModeAsync();
-    Task SimulateTemperatureChangeAsync(); // 模拟温度变化
+    Task SimulateTemperatureChangeAsync(); // Simulate temperature change
 }
 
 #endregion
@@ -83,7 +83,7 @@ public interface IThermostatGAgent : IStateGAgent<ThermostatState>
 #region Implementation
 
 /// <summary>
-/// 恒温器控制智能体
+/// Thermostat control GAgent
 /// </summary>
 [GAgent("thermostat", "smarthome")]
 public class ThermostatGAgent : GAgentBase<ThermostatState, ThermostatStateLogEvent>, IThermostatGAgent
@@ -92,13 +92,13 @@ public class ThermostatGAgent : GAgentBase<ThermostatState, ThermostatStateLogEv
     
     protected override Task OnGAgentActivateAsync(CancellationToken cancellationToken)
     {
-        // 初始化恒温器ID
+        // Initialize thermostat ID
         if (string.IsNullOrEmpty(State.ThermostatId))
         {
             State.ThermostatId = this.GetGrainId().Key.ToString() ?? "default-thermostat";
         }
         
-        // 启动温度模拟定时器
+        // Start temperature simulation timer
         _temperatureSimulationTimer = this.RegisterGrainTimer(
             async (token) => await SimulateTemperatureChangeAsync(),
             new GrainTimerCreationOptions
@@ -120,17 +120,17 @@ public class ThermostatGAgent : GAgentBase<ThermostatState, ThermostatStateLogEv
 
     public override Task<string> GetDescriptionAsync()
         => Task.FromResult(
-            $"【智能恒温器】控制{State.Location}的温度设备。\n" +
-            $"当前状态：室温 {State.CurrentTemperature:F1}°C，目标温度 {State.TargetTemperature:F1}°C，模式 {State.Mode}\n\n" +
-            $"可用命令：\n" +
-            $"• SetTemperatureCommand - 设置目标温度\n" +
-            $"  参数：ThermostatId (string) - 设备ID, Temperature (double) - 温度值(16-30°C)\n" +
-            $"• ChangeModeCommand - 切换工作模式\n" +
-            $"  参数：ThermostatId (string) - 设备ID, Mode (string) - 模式(Off/Heating/Cooling/Auto)\n\n" +
-            $"使用示例：\n" +
-            $"- 用户说'设置温度22度' → 使用SetTemperatureCommand，Temperature=22.0\n" +
-            $"- 用户说'打开制冷' → 使用ChangeModeCommand，Mode='Cooling'\n" +
-            $"- 用户说'关闭空调' → 使用ChangeModeCommand，Mode='Off'");
+            $"[Smart Thermostat] Controls temperature devices at {State.Location}.\n" +
+            $"Current status: Room temperature {State.CurrentTemperature:F1}°C, Target temperature {State.TargetTemperature:F1}°C, Mode {State.Mode}\n\n" +
+            $"Available commands:\n" +
+            $"• SetTemperatureCommand - Set target temperature\n" +
+            $"  Parameters: ThermostatId (string) - Device ID, Temperature (double) - Temperature value (16-30°C)\n" +
+            $"• ChangeModeCommand - Switch working mode\n" +
+            $"  Parameters: ThermostatId (string) - Device ID, Mode (string) - Mode (Off/Heating/Cooling/Auto)\n\n" +
+            $"Usage examples:\n" +
+            $"- User says 'set temperature to 22 degrees' → Use SetTemperatureCommand, Temperature=22.0\n" +
+            $"- User says 'turn on cooling' → Use ChangeModeCommand, Mode='Cooling'\n" +
+            $"- User says 'turn off air conditioning' → Use ChangeModeCommand, Mode='Off'");
 
     #region Public Methods
 
@@ -179,11 +179,11 @@ public class ThermostatGAgent : GAgentBase<ThermostatState, ThermostatStateLogEv
 
     public async Task SimulateTemperatureChangeAsync()
     {
-        // 模拟温度逐渐接近目标温度
+        // Simulate temperature gradually approaching target temperature
         var diff = State.TargetTemperature - State.CurrentTemperature;
         if (Math.Abs(diff) > 0.1)
         {
-            var change = diff * 0.1; // 每次改变10%的差值
+            var change = diff * 0.1; // Change by 10% of difference each time
             var newTemp = State.CurrentTemperature + change;
             
             RaiseEvent(new CurrentTemperatureUpdatedLogEvent
@@ -193,7 +193,7 @@ public class ThermostatGAgent : GAgentBase<ThermostatState, ThermostatStateLogEv
             });
             await ConfirmEvents();
             
-            // 发布温度变化事件
+            // Publish temperature change event
             await PublishAsync(new TemperatureChangedEvent
             {
                 ThermostatId = State.ThermostatId,
@@ -221,7 +221,7 @@ public class ThermostatGAgent : GAgentBase<ThermostatState, ThermostatStateLogEv
             State.ThermostatId, command.TargetTemperature);
         await SetTargetTemperatureAsync(command.TargetTemperature);
         
-        // 发布温度变化事件
+        // Publish temperature change event
         await PublishAsync(new TemperatureChangedEvent
         {
             ThermostatId = State.ThermostatId,
@@ -244,7 +244,7 @@ public class ThermostatGAgent : GAgentBase<ThermostatState, ThermostatStateLogEv
             State.ThermostatId, command.Mode);
         await SetModeAsync(command.Mode);
         
-        // 发布模式变化事件
+        // Publish mode change event
         await PublishAsync(new ModeChangedEvent
         {
             ThermostatId = State.ThermostatId,

@@ -19,15 +19,11 @@ Aevatar 是一个基于 **Orleans Virtual Actor** 模型的分布式多智能体
 ### 什么是 GAgent？
 
 **GAgent** 是 Aevatar 中智能体的基础抽象。每个 GAgent 都是一个独立的、有状态的计算单元，类似于一个"数字员工"，能够：
-s
+
 - 🧠 **独立思考**：处理业务逻辑和决策
 - 💾 **记住信息**：维护自己的状态数据
 - 📡 **与他人通信**：通过事件与其他 GAgent 协作
 - ⚡ **并发工作**：同时处理多个任务
-
-### Orleans Virtual Actor 模型
-
-GAgent 基于 **Orleans Virtual Actor** 模型实现，这意味着：
 
 ```csharp
 // 定义一个简单的 GAgent
@@ -55,7 +51,9 @@ public class CalculatorGAgent : GAgentBase<CalculatorState, CalculatorStateLogEv
 }
 ```
 
-#### Virtual Actor 的关键特性：
+### Orleans Virtual Actor 模型
+
+GAgent 基于 **Orleans Virtual Actor** 模型实现，这意味着：
 
 1. **位置透明性**：您无需关心 GAgent 运行在哪台服务器上
 2. **自动激活**：Orleans 根据需要自动创建和销毁实例

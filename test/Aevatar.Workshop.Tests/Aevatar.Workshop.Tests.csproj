@@ -22,6 +22,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\Aevatar.Workshop.GAgent\Aevatar.Workshop.GAgent.csproj" />
       <ProjectReference Include="..\..\src\Aevatar.Workshop.Client\Aevatar.Workshop.Client.csproj" />
+      <ProjectReference Include="..\Aevatar.Workshop.GuideGAgents\Aevatar.Workshop.GuideGAgents.csproj" />
       <ProjectReference Include="..\Aevatar.Workshop.TestBase\Aevatar.Workshop.TestBase.csproj" />
     </ItemGroup>
 

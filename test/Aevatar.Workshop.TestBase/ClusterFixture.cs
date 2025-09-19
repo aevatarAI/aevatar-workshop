@@ -19,6 +19,7 @@ using Orleans.Configuration;
 using Orleans.Metadata;
 using Orleans.TestingHost;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.BlobStoring;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Local;
 using Volo.Abp.ObjectMapping;
@@ -138,7 +139,8 @@ public class ClusterFixture : IDisposable, ISingletonDependency
                         .AddAzureOpenAITextEmbedding();
 
                     services.AddTransient<IGAgentExecutor, GAgentExecutor>();
-                    services.AddTransient<IGAgentService, GAgentService>();
+                    services.AddTransient<IGAgentService, GAgentService>(); 
+                    services.AddSingleton<IBlobContainer, MockBlobContainer>();
                 })
                 .UseAevatar(true)
                 .UseAevatarPermissionManagement()

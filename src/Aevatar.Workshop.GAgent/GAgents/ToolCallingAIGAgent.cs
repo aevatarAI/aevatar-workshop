@@ -126,10 +126,10 @@ public class ToolCallingAIGAgent : WorkshopAIGAgentBase<ToolCallingAIGAgentState
                         "IMPORTANT RULES:\n" +
                         "- You MUST use calculate_math for ANY mathematical question, including percentages, arithmetic, etc.\n" +
                         "- Convert natural language to math expressions. Examples:\n" +
-                        "  • '250的15%是多少？' or 'What is 15% of 250?' → use calculate_math('250 * 0.15')\n" +
-                        "  • '计算10的平方根' or 'square root of 10' → use calculate_math('sqrt(10)')\n" +
-                        "  • '100加50' or '100 plus 50' → use calculate_math('100 + 50')\n" +
-                        "- For time queries like '东京现在几点' or 'What time in Tokyo', use get_time_in_zone('JST')\n" +
+                        "  • 'What is 15% of 250?' → use calculate_math('250 * 0.15')\n" +
+                        "  • 'square root of 10' → use calculate_math('sqrt(10)')\n" +
+                        "  • '100 plus 50' → use calculate_math('100 + 50')\n" +
+                        "- For time queries like 'What time in Tokyo', use get_time_in_zone('JST')\n" +
                         "- ALWAYS use tools for calculations, NEVER calculate in your head\n" +
                         "- Respond in the same language as the user's query",
                 };

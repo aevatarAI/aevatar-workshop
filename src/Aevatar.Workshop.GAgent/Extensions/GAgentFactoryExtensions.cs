@@ -1,6 +1,7 @@
 using Aevatar.Core.Abstractions;
 using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.Basic.BasicGAgents;
 using Aevatar.Workshop.GAgent.Options;
 
 namespace Aevatar.Workshop.GAgent.Extensions;

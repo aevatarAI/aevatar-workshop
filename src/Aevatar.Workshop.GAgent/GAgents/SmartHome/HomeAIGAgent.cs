@@ -19,7 +19,7 @@ namespace Aevatar.Workshop.GAgent.GAgents.SmartHome;
 #region State and Events
 
 /// <summary>
-/// AI智能家居助手状态
+/// AI smart home assistant state
 /// </summary>
 [GenerateSerializer]
 public class HomeAIGAgentState : AIGAgentStateBase
@@ -31,13 +31,13 @@ public class HomeAIGAgentState : AIGAgentStateBase
 }
 
 /// <summary>
-/// 状态日志事件基类
+/// State log event base class
 /// </summary>
 [GenerateSerializer]
 public class HomeAIStateLogEvent : StateLogEventBase<HomeAIStateLogEvent>;
 
 /// <summary>
-/// 系统初始化事件
+/// System initialization event
 /// </summary>
 [GenerateSerializer]
 public class HomeAIInitializedLogEvent : HomeAIStateLogEvent
@@ -47,7 +47,7 @@ public class HomeAIInitializedLogEvent : HomeAIStateLogEvent
 }
 
 /// <summary>
-/// AI重置事件
+/// AI reset event
 /// </summary>
 [GenerateSerializer]
 public class HomeAIResetLogEvent : HomeAIStateLogEvent
@@ -56,7 +56,7 @@ public class HomeAIResetLogEvent : HomeAIStateLogEvent
 }
 
 /// <summary>
-/// 聊天消息记录事件
+/// Chat message record event
 /// </summary>
 [GenerateSerializer]
 public class ChatMessageLogEvent : HomeAIStateLogEvent
@@ -67,7 +67,7 @@ public class ChatMessageLogEvent : HomeAIStateLogEvent
 }
 
 /// <summary>
-/// 命令解析事件
+/// Command parsing event
 /// </summary>
 [GenerateSerializer]
 public class CommandParsedLogEvent : HomeAIStateLogEvent
@@ -82,12 +82,12 @@ public class CommandParsedLogEvent : HomeAIStateLogEvent
 #region Interface
 
 /// <summary>
-/// 智能家居AI助手接口
+/// Smart home AI assistant interface
 /// </summary>
 public interface IHomeAIGAgent : IStateGAgent<HomeAIGAgentState>, IAIGAgent
 {
     Task<bool> InitializeAsync(string llmSystem);
-    Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput);
+    Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput, string? llmSystem = null);
     Task<List<string>> GetChatHistoryAsync();
     Task<bool> IsInitializedAsync();
 }
@@ -97,7 +97,7 @@ public interface IHomeAIGAgent : IStateGAgent<HomeAIGAgentState>, IAIGAgent
 #region Implementation
 
 /// <summary>
-/// 智能家居AI助手智能体
+/// Smart home AI assistant GAgent
 /// </summary>
 [GAgent("home.ai", "smarthome")]
 public class HomeAIGAgent : WorkshopAIGAgentBase<HomeAIGAgentState, HomeAIStateLogEvent>, IHomeAIGAgent
@@ -143,55 +143,55 @@ public class HomeAIGAgent : WorkshopAIGAgentBase<HomeAIGAgentState, HomeAIStateL
             var initDto = new InitializeDto
             {
                 LLMConfig = new LLMConfigDto { SystemLLM = llmSystem },
-                Instructions = @"你是一个智能家居AI助手，通过自然语言帮助用户控制家中的设备。
+                Instructions = @"You are a smart home AI assistant that helps users control home devices through natural language.
 
-你可以控制以下智能设备：
-1. 灯光系统 - 开关灯、调节亮度
-2. 温控系统 - 设置温度、切换模式
-3. 安防系统 - 布防/撤防
-4. 窗帘系统 - 开关窗帘、调节开合度
+You can control the following smart devices:
+1. Lighting system - Turn lights on/off, adjust brightness
+2. Temperature control system - Set temperature, switch modes
+3. Security system - Arm/disarm
+4. Curtain system - Open/close curtains, adjust position
 
-当用户要求控制设备时，你需要：
-1. 识别目标设备类型（灯光/温控/安防/窗帘）
-2. 理解具体操作（开/关/调节/设置等）
-3. 调用对应的GAgent工具函数
+When users request to control devices, you need to:
+1. Identify the target device type (lighting/temperature/security/curtain)
+2. Understand the specific operation (on/off/adjust/set etc.)
+3. Call the corresponding GAgent tool function
 
-重要：每个设备都是一个独立的GAgent，你需要通过工具调用来控制它们。
+Important: Each device is an independent GAgent, you need to control them through tool calls.
 
-灯光控制示例：
-- 用户说：'打开灯' → 调用 LightGAgent 的 TurnOnLightCommand
-- 用户说：'关闭灯光' → 调用 LightGAgent 的 TurnOffLightCommand  
-- 用户说：'把灯调到20%' → 调用 LightGAgent 的 SetBrightnessCommand，参数 Brightness=20
-- 用户说：'把灯调暗一点' → 先获取当前亮度，然后调用 SetBrightnessCommand 降低亮度值
+Light control examples:
+- User says: 'turn on light' → Call LightGAgent's TurnOnLightCommand
+- User says: 'turn off light' → Call LightGAgent's TurnOffLightCommand  
+- User says: 'set light to 20%' → Call LightGAgent's SetBrightnessCommand, parameter Brightness=20
+- User says: 'dim the light' → First get current brightness, then call SetBrightnessCommand to decrease brightness value
 
-温控控制示例：
-- 用户说：'设置温度22度' → 调用 ThermostatGAgent 的 SetTemperatureCommand，参数 Temperature=22.0
-- 用户说：'打开制冷' → 调用 ThermostatGAgent 的 ChangeModeCommand，参数 Mode='Cooling'
+Temperature control examples:
+- User says: 'set temperature to 22 degrees' → Call ThermostatGAgent's SetTemperatureCommand, parameter Temperature=22.0
+- User says: 'turn on cooling' → Call ThermostatGAgent's ChangeModeCommand, parameter Mode='Cooling'
 
-安防控制示例：
-- 用户说：'启动安防' → 调用 SecurityGAgent 的 ArmSecurityCommand
-- 用户说：'关闭警报' → 调用 SecurityGAgent 的 DisarmSecurityCommand
+Security control examples:
+- User says: 'arm security' → Call SecurityGAgent's ArmSecurityCommand
+- User says: 'disable alarm' → Call SecurityGAgent's DisarmSecurityCommand
 
-窗帘控制示例：
-- 用户说：'打开窗帘' → 调用 CurtainGAgent 的 OpenCurtainCommand
-- 用户说：'把窗帘调到50%' → 调用 CurtainGAgent 的 SetCurtainPositionCommand，参数 Position=50
+Curtain control examples:
+- User says: 'open curtains' → Call CurtainGAgent's OpenCurtainCommand
+- User says: 'set curtains to 50%' → Call CurtainGAgent's SetCurtainPositionCommand, parameter Position=50
 
-场景模式：
-- 早安模式：开灯(100%)、温度22度、关闭安防、打开窗帘(100%)
-- 晚安模式：关灯、温度20度、启动安防、关闭窗帘(0%)
-- 观影模式：灯光20%、温度21度、关闭安防、关闭窗帘(0%)
+Scene modes:
+- Good morning mode: Lights on (100%), temperature 22°C, security disarmed, curtains open (100%)
+- Good night mode: Lights off, temperature 20°C, security armed, curtains closed (0%)
+- Movie mode: Lights 20%, temperature 21°C, security disarmed, curtains closed (0%)
 
-重要：调用设备命令时必须使用正确的设备ID：
-- 灯光设备 LightId: """ + LIGHT_ID.ToString("N") + @"""
-- 温控设备 ThermostatId: """ + THERMOSTAT_ID.ToString("N") + @"""
-- 安防设备 SecuritySystemId: """ + SECURITY_ID.ToString("N") + @"""
-- 窗帘设备 CurtainId: """ + CURTAIN_ID.ToString("N") + @"""
+Important: When calling device commands, you must use the correct device ID:
+- Light device LightId: """ + LIGHT_ID.ToString("N") + @"""
+- Temperature device ThermostatId: """ + THERMOSTAT_ID.ToString("N") + @"""
+- Security device SecuritySystemId: """ + SECURITY_ID.ToString("N") + @"""
+- Curtain device CurtainId: """ + CURTAIN_ID.ToString("N") + @"""
 
-注意事项：
-1. 亮度和窗帘位置范围都是 0-100
-2. 温度范围是 16-30°C
-3. 设备ID必须完全匹配，否则命令会被忽略
-4. 请根据用户的自然语言灵活理解意图，不要机械匹配关键词",
+Notes:
+1. Brightness and curtain position range is 0-100
+2. Temperature range is 16-30°C
+3. Device IDs must match exactly, otherwise commands will be ignored
+4. Please understand user intent flexibly based on natural language, don't mechanically match keywords",
                 ToolGAgents =
                 [
                     GrainId.Create("smarthome.light", LIGHT_ID.ToString("N")),
@@ -227,18 +227,23 @@ public class HomeAIGAgent : WorkshopAIGAgentBase<HomeAIGAgentState, HomeAIStateL
     }
 
     /// <summary>
-    /// 处理用户的自然语言命令
+    /// Process user's natural language commands
     /// </summary>
-    public async Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput)
+    public async Task<ChatWithDetailsResponse> ProcessCommandAsync(string userInput, string? llmSystem = null)
     {
         if (!State.Initialized)
         {
-            return new ChatWithDetailsResponse 
-            { 
-                Response = "I'm not ready yet. Please wait for initialization to complete.",
-                TotalDurationMs = 0,
-                ToolCalls = []
-            };
+            if (llmSystem == null)
+            {
+                return new ChatWithDetailsResponse 
+                { 
+                    Response = "I'm not ready yet. Please wait for initialization to complete.",
+                    TotalDurationMs = 0,
+                    ToolCalls = []
+                };
+            }
+
+            await InitializeAsync(llmSystem);
         }
 
         try

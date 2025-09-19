@@ -6,7 +6,7 @@ namespace Aevatar.Workshop.GAgent.Events;
 #region AI Intent Events
 
 /// <summary>
-/// 设备控制意图事件 - AI理解的用户意图
+/// Device control intent event - AI understood user intent
 /// </summary>
 [GenerateSerializer]
 public class DeviceControlIntentEvent : EventBase
@@ -19,7 +19,7 @@ public class DeviceControlIntentEvent : EventBase
 }
 
 /// <summary>
-/// 场景激活意图事件 - AI识别的场景请求
+/// Scene activation intent event - AI recognized scene request
 /// </summary>
 [GenerateSerializer]
 public class SceneActivationIntentEvent : EventBase
@@ -33,44 +33,44 @@ public class SceneActivationIntentEvent : EventBase
 #region Light Events
 
 /// <summary>
-/// 开灯命令
+/// Turn on light command
 /// </summary>
 [GenerateSerializer]
 public class TurnOnLightCommand : EventBase
 {
     [Id(0)] 
-    [System.ComponentModel.Description("灯光设备的唯一标识符")]
+    [System.ComponentModel.Description("Unique identifier for light device")]
     public string LightId { get; set; } = string.Empty;
 }
 
 /// <summary>
-/// 关灯命令
+/// Turn off light command
 /// </summary>
 [GenerateSerializer]
 public class TurnOffLightCommand : EventBase
 {
     [Id(0)] 
-    [System.ComponentModel.Description("灯光设备的唯一标识符")]
+    [System.ComponentModel.Description("Unique identifier for light device")]
     public string LightId { get; set; } = string.Empty;
 }
 
 /// <summary>
-/// 设置亮度命令
+/// Set brightness command
 /// </summary>
 [GenerateSerializer]
 public class SetBrightnessCommand : EventBase
 {
     [Id(0)] 
-    [System.ComponentModel.Description("灯光设备的唯一标识符")]
+    [System.ComponentModel.Description("Unique identifier for light device")]
     public string LightId { get; set; } = string.Empty;
     
     [Id(1)] 
-    [System.ComponentModel.Description("目标亮度值，范围 0-100，0 表示最暗，100 表示最亮")]
+    [System.ComponentModel.Description("Target brightness value, range 0-100, 0 means darkest, 100 means brightest")]
     public int Brightness { get; set; } // 0-100
 }
 
 /// <summary>
-/// 灯光状态变化事件
+/// Light state change event
 /// </summary>
 [GenerateSerializer]
 public class LightStateChangedEvent : EventBase
@@ -86,22 +86,22 @@ public class LightStateChangedEvent : EventBase
 #region Thermostat Events
 
 /// <summary>
-/// 设置温度命令
+/// Set temperature command
 /// </summary>
 [GenerateSerializer]
 public class SetTemperatureCommand : EventBase
 {
     [Id(0)] 
-    [System.ComponentModel.Description("恒温器设备的唯一标识符")]
+    [System.ComponentModel.Description("Unique identifier for thermostat device")]
     public string ThermostatId { get; set; } = string.Empty;
     
     [Id(1)] 
-    [System.ComponentModel.Description("目标温度，单位：摄氏度，建议范围 16-30")]
+    [System.ComponentModel.Description("Target temperature, unit: Celsius, recommended range 16-30")]
     public double TargetTemperature { get; set; }
 }
 
 /// <summary>
-/// 改变模式命令
+/// Change mode command
 /// </summary>
 [GenerateSerializer]
 public class ChangeModeCommand : EventBase
@@ -111,7 +111,7 @@ public class ChangeModeCommand : EventBase
 }
 
 /// <summary>
-/// 温度变化事件
+/// Temperature change event
 /// </summary>
 [GenerateSerializer]
 public class TemperatureChangedEvent : EventBase
@@ -123,7 +123,7 @@ public class TemperatureChangedEvent : EventBase
 }
 
 /// <summary>
-/// 模式变化事件
+/// Mode change event
 /// </summary>
 [GenerateSerializer]
 public class ModeChangedEvent : EventBase
@@ -147,7 +147,7 @@ public enum ThermostatMode
 #region Security Events
 
 /// <summary>
-/// 布防命令
+/// Arm command
 /// </summary>
 [GenerateSerializer]
 public class ArmSecurityCommand : EventBase
@@ -156,7 +156,7 @@ public class ArmSecurityCommand : EventBase
 }
 
 /// <summary>
-/// 撤防命令
+/// Disarm command
 /// </summary>
 [GenerateSerializer]
 public class DisarmSecurityCommand : EventBase
@@ -165,7 +165,7 @@ public class DisarmSecurityCommand : EventBase
 }
 
 /// <summary>
-/// 安防状态变化事件
+/// Security state change event
 /// </summary>
 [GenerateSerializer]
 public class SecurityStateChangedEvent : EventBase
@@ -176,7 +176,7 @@ public class SecurityStateChangedEvent : EventBase
 }
 
 /// <summary>
-/// 检测到移动事件
+/// Motion detected event
 /// </summary>
 [GenerateSerializer]
 public class MotionDetectedEvent : EventBase
@@ -191,7 +191,7 @@ public class MotionDetectedEvent : EventBase
 #region Coordinator Events
 
 /// <summary>
-/// 场景执行命令
+/// Execute scene command
 /// </summary>
 [GenerateSerializer]
 public class ExecuteSceneCommand : EventBase
@@ -201,7 +201,7 @@ public class ExecuteSceneCommand : EventBase
 }
 
 /// <summary>
-/// 场景执行完成事件
+/// Scene execution completed event
 /// </summary>
 [GenerateSerializer]
 public class SceneExecutedEvent : EventBase

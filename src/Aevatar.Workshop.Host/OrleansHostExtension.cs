@@ -26,26 +26,26 @@ public static class OrleansHostExtension
 
                 if (isDocker)
                 {
-                    // 容器环境：使用特殊配置
+                    // Container environment: use special configuration
                     var advertisedHost = Environment.GetEnvironmentVariable("ORLEANS_ADVERTISED_HOST");
 
                     if (!string.IsNullOrEmpty(advertisedHost))
                     {
-                        // 如果指定了广播地址，使用它
+                        // If broadcast address is specified, use it
                         siloBuilder.UseLocalhostClustering(siloPort, gatewayPort)
                             .Configure<EndpointOptions>(options =>
                             {
                                 options.GatewayListeningEndpoint = new IPEndPoint(IPAddress.Any, gatewayPort);
                                 options.SiloListeningEndpoint = new IPEndPoint(IPAddress.Any, siloPort);
 
-                                // 尝试解析广播地址
+                                // Try to resolve broadcast address
                                 if (IPAddress.TryParse(advertisedHost, out var advertisedIP))
                                 {
                                     options.AdvertisedIPAddress = advertisedIP;
                                 }
                                 else
                                 {
-                                    // 如果不是IP，尝试DNS解析
+                                    // If not IP, try DNS resolution
                                     try
                                     {
                                         var hostEntry = Dns.GetHostEntry(advertisedHost);
@@ -54,7 +54,7 @@ public static class OrleansHostExtension
                                     }
                                     catch
                                     {
-                                        // 如果解析失败，获取本机IP
+                                        // If resolution fails, get local IP
                                         options.AdvertisedIPAddress = GetLocalIPAddress();
                                     }
                                 }
@@ -62,7 +62,7 @@ public static class OrleansHostExtension
                     }
                     else
                     {
-                        // 自动检测本机IP
+                        // Auto-detect local IP
                         var localIP = GetLocalIPAddress();
                         siloBuilder.UseLocalhostClustering(siloPort, gatewayPort)
                             .Configure<EndpointOptions>(options =>
@@ -75,7 +75,7 @@ public static class OrleansHostExtension
                 }
                 else
                 {
-                    // 本地开发环境
+                    // Local development environment
                     siloBuilder.UseLocalhostClustering();
                 }
 
@@ -115,13 +115,13 @@ public static class OrleansHostExtension
     {
         try
         {
-            // 获取所有网络接口
+            // Get all network interfaces
             var host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (var ip in host.AddressList)
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip))
                 {
-                    // 排除Docker的默认网桥地址
+                    // Exclude Docker's default bridge address
                     if (!ip.ToString().StartsWith("172.17."))
                     {
                         return ip;
@@ -129,7 +129,7 @@ public static class OrleansHostExtension
                 }
             }
 
-            // 如果没找到合适的IP，返回第一个非环回IPv4地址
+            // If no suitable IP found, return first non-loopback IPv4 address
             var firstIPv4 = host.AddressList.FirstOrDefault(ip =>
                 ip.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(ip));
 
@@ -137,7 +137,7 @@ public static class OrleansHostExtension
         }
         catch
         {
-            // 如果获取失败，返回环回地址
+            // If acquisition fails, return loopback address
             return IPAddress.Loopback;
         }
     }

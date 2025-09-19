@@ -1,22 +1,21 @@
 using System.Text.Json;
 using Aevatar.Core.Abstractions;
-using Aevatar.Core.Abstractions.Extensions;
 using Aevatar.GAgents.AI.Options;
+using Aevatar.GAgents.Basic.BasicGEvent;
 using Aevatar.Workshop.GAgent;
 using Aevatar.Workshop.GAgent.Options;
 using Aevatar.Workshop.Client.Services;
 using Aevatar.Workshop.GAgent.Extensions;
 using Aevatar.Workshop.TestBase;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Xunit;
+using Shouldly;
 using Xunit.Abstractions;
 
 namespace Aevatar.Workshop.Tests;
 
 [Collection(ClusterCollection.Name)]
-public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
+public sealed class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTestModule>
 {
     private readonly ITestOutputHelper _testOutputHelper;
     private readonly IGAgentFactory _gAgentFactory;
@@ -26,7 +25,7 @@ public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTes
     {
         _testOutputHelper = testOutputHelper;
         _gAgentFactory = GetRequiredService<IGAgentFactory>();
-        
+
         // Create logger with correct type
         var loggerFactory = GetRequiredService<ILoggerFactory>();
         _logger = loggerFactory.CreateLogger<ConfigSyncService>();
@@ -39,15 +38,16 @@ public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTes
         var configData = new Dictionary<string, string?>
         {
             ["SystemLLMConfigs:OpenAI:ProviderEnum"] = "OpenAI",
-            ["SystemLLMConfigs:OpenAI:ModelIdEnum"] = "OpenAIGPT4",
-            ["SystemLLMConfigs:OpenAI:DeploymentOrModelId"] = "gpt-4",
+            ["SystemLLMConfigs:OpenAI:ModelIdEnum"] = "OpenAI",
+            ["SystemLLMConfigs:OpenAI:ModelName"] = "gpt-4",
             ["SystemLLMConfigs:OpenAI:ApiKey"] = "test-key-123",
-            ["SystemLLMConfigs:OpenAI:Temperature"] = "0.7",
-            ["SystemLLMConfigs:DeepSeek:ProviderEnum"] = "OpenAI",
-            ["SystemLLMConfigs:DeepSeek:ModelIdEnum"] = "DeepSeekV3", 
-            ["SystemLLMConfigs:DeepSeek:DeploymentOrModelId"] = "deepseek-chat",
+            ["SystemLLMConfigs:OpenAI:NetworkTimeoutInSeconds"] = "100",
+            ["SystemLLMConfigs:DeepSeek:ProviderEnum"] = "DeepSeek",
+            ["SystemLLMConfigs:DeepSeek:ModelIdEnum"] = "DeepSeek",
+            ["SystemLLMConfigs:DeepSeek:ModelName"] = "deepseek-chat",
             ["SystemLLMConfigs:DeepSeek:Endpoint"] = "https://api.deepseek.com",
-            ["SystemLLMConfigs:DeepSeek:ApiKey"] = "deepseek-key-456"
+            ["SystemLLMConfigs:DeepSeek:ApiKey"] = "deepseek-key-456",
+            ["SystemLLMConfigs:DeepSeek:NetworkTimeoutInSeconds"] = "100"
         };
 
         var configuration = new ConfigurationBuilder()
@@ -61,20 +61,20 @@ public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTes
 
         // Assert - Verify the config was stored
         var configManager = await _gAgentFactory.GetSystemLLMConfigGAgent();
-        
+
         var response = await configManager.RequestConfigAsync(new ConfigRequestEvent
         {
             ConfigType = typeof(SystemLLMConfigOptions).FullName!
         });
 
-        Assert.True(response.Success);
-        Assert.NotEmpty(response.ConfigJson);
+        response.Success.ShouldBeTrue($"Config sync failed: {response.ErrorMessage}");
+        response.ConfigJson.ShouldNotBeEmpty();
 
         var configs = JsonSerializer.Deserialize<Dictionary<string, LLMConfig>>(response.ConfigJson);
-        Assert.NotNull(configs);
-        Assert.Equal(2, configs.Count);
-        Assert.True(configs.ContainsKey("OpenAI"));
-        Assert.True(configs.ContainsKey("DeepSeek"));
+        configs.ShouldNotBeNull();
+        configs.Count.ShouldBe(2);
+        configs.ContainsKey("OpenAI").ShouldBeTrue();
+        configs.ContainsKey("DeepSeek").ShouldBeTrue();
 
         _testOutputHelper.WriteLine($"Successfully synced {configs.Count} LLM configs");
     }
@@ -85,14 +85,18 @@ public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTes
         // Arrange
         var configData = new Dictionary<string, string?>
         {
-            ["MCPServers:0:Name"] = "FileSystemServer",
-            ["MCPServers:0:TransportType"] = "SSE",
-            ["MCPServers:0:Endpoint"] = "http://localhost:3000/sse",
-            ["MCPServers:0:Description"] = "File system MCP server",
-            ["MCPServers:1:Name"] = "WebSearchServer",
-            ["MCPServers:1:TransportType"] = "WebSocket",
-            ["MCPServers:1:Endpoint"] = "ws://localhost:3001/ws",
-            ["MCPServers:1:ApiKey"] = "search-api-key"
+            ["MCPServers:FileSystemServer:Command"] = "npx",
+            ["MCPServers:FileSystemServer:Args:0"] = "-y",
+            ["MCPServers:FileSystemServer:Args:1"] = "@modelcontextprotocol/server-filesystem",
+            ["MCPServers:FileSystemServer:Args:2"] = "/path/to/files",
+            ["MCPServers:FileSystemServer:Description"] = "File system MCP server",
+            ["MCPServers:FileSystemServer:Enabled"] = "true",
+            ["MCPServers:WebSearchServer:Command"] = "npx",
+            ["MCPServers:WebSearchServer:Args:0"] = "-y",
+            ["MCPServers:WebSearchServer:Args:1"] = "@modelcontextprotocol/server-brave-search",
+            ["MCPServers:WebSearchServer:Env:BRAVE_API_KEY"] = "search-api-key",
+            ["MCPServers:WebSearchServer:Description"] = "Web search MCP server",
+            ["MCPServers:WebSearchServer:Enabled"] = "true"
         };
 
         var configuration = new ConfigurationBuilder()
@@ -106,23 +110,34 @@ public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTes
 
         // Assert
         var configManager = await _gAgentFactory.GetMCPServerConfigGAgent();
-        
+
         var response = await configManager.RequestConfigAsync(new ConfigRequestEvent
         {
             ConfigType = typeof(MCPServerOptions).FullName!
         });
 
-        Assert.True(response.Success);
-        Assert.NotEmpty(response.ConfigJson);
+        response.Success.ShouldBeTrue();
+        response.ConfigJson.ShouldNotBeEmpty();
 
-        // MCPServerConfig uses ServerName property instead of Name
-        var servers = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(response.ConfigJson);
-        Assert.NotNull(servers);
-        Assert.Equal(2, servers.Count);
-        
-        // Since MCPServerConfig has been serialized, we need to check the actual JSON properties
-        Assert.Equal("FileSystemServer", servers[0]["Name"].GetString());
-        Assert.Equal("WebSearchServer", servers[1]["Name"].GetString());
+        // Deserialize as Dictionary<string, MCPServerConfig>
+        var servers = JsonSerializer.Deserialize<Dictionary<string, MCPServerConfig>>(response.ConfigJson);
+        servers.ShouldNotBeNull();
+        servers.Count.ShouldBe(2);
+
+        servers.ContainsKey("FileSystemServer").ShouldBeTrue();
+        servers.ContainsKey("WebSearchServer").ShouldBeTrue();
+
+        var fileSystemServer = servers["FileSystemServer"];
+        fileSystemServer.Command.ShouldBe("npx");
+        fileSystemServer.Description.ShouldBe("File system MCP server");
+        fileSystemServer.Enabled.ShouldBeTrue();
+
+        var webSearchServer = servers["WebSearchServer"];
+        webSearchServer.Command.ShouldBe("npx");
+        webSearchServer.Description.ShouldBe("Web search MCP server");
+        webSearchServer.Enabled.ShouldBeTrue();
+        webSearchServer.Env.ShouldNotBeNull();
+        webSearchServer.Env.ContainsKey("BRAVE_API_KEY").ShouldBeTrue();
 
         _testOutputHelper.WriteLine($"Successfully synced {servers.Count} MCP servers");
     }
@@ -145,35 +160,4 @@ public class ConfigSyncServiceTests : AevatarWorkshopTestBase<AevatarWorkshopTes
         // Assert - Should complete without errors
         _testOutputHelper.WriteLine("Successfully handled empty configuration");
     }
-
-    [Fact]
-    public async Task DynamicToolAIGAgent_Should_Use_ConfigManagerGAgent_For_LLM_Config()
-    {
-        // Arrange - First sync config
-        var configData = new Dictionary<string, string?>
-        {
-            ["SystemLLMConfigs:OpenAI:ProviderEnum"] = "OpenAI",
-            ["SystemLLMConfigs:OpenAI:ModelIdEnum"] = "OpenAIGPT4",
-            ["SystemLLMConfigs:OpenAI:DeploymentOrModelId"] = "gpt-4",
-            ["SystemLLMConfigs:OpenAI:ApiKey"] = "test-key-123",
-            ["SystemLLMConfigs:OpenAI:Temperature"] = "0.7"
-        };
-
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(configData)
-            .Build();
-
-        var service = new ConfigSyncService(configuration, _logger, _gAgentFactory);
-        await service.StartAsync(CancellationToken.None);
-
-        // Act - Create DynamicToolAIGAgent and test config resolution
-        var agentGuid = Guid.NewGuid();
-        var agent = await _gAgentFactory.GetGAgentAsync<IDynamicToolAIGAgent>(agentGuid);
-        
-        // The agent should be able to resolve config from ConfigManagerGAgent
-        // This is tested implicitly through the agent's ResolveSystemConfig method
-
-        _testOutputHelper.WriteLine($"Created DynamicToolAIGAgent with ID: {agentGuid}");
-        _testOutputHelper.WriteLine("Agent should now be able to resolve LLM configs from ConfigManagerGAgent");
-    }
-} 
+}

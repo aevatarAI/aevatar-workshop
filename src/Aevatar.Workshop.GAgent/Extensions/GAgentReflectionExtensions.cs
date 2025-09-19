@@ -5,18 +5,18 @@ using Aevatar.Core.Abstractions;
 namespace Aevatar.Workshop.GAgent.Extensions;
 
 /// <summary>
-/// GAgent反射扩展方法
+/// GAgent reflection extension methods
 /// </summary>
 public static class GAgentReflectionExtensions
 {
     /// <summary>
-    /// 从程序集中提取所有GAgent信息
+    /// Extract all GAgent information from assembly
     /// </summary>
     public static List<GAgentInfo> ExtractGAgentInfos(this Assembly assembly, params string[] filterByNamespace)
     {
         var gAgentInfos = new List<GAgentInfo>();
 
-        // 查找所有继承自GAgentBase的类型
+        // Find all types inherited from GAgentBase
         var gAgentTypes = assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract && IsGAgentType(t))
             .Where(t => filterByNamespace.Length == 0 ||
@@ -36,7 +36,7 @@ public static class GAgentReflectionExtensions
     }
 
     /// <summary>
-    /// 从特定类型提取GAgent信息
+    /// Extract GAgent information from specific type
     /// </summary>
     public static GAgentInfo? ExtractGAgentInfo(this Type gAgentType)
     {
@@ -45,22 +45,22 @@ public static class GAgentReflectionExtensions
             return null;
         }
 
-        // 获取GAgent属性
+        // Get GAgent attribute
         var gAgentAttribute = gAgentType.GetCustomAttribute<GAgentAttribute>();
 
-        // 获取GrainType
+        // Get GrainType
         var grainType = GetGrainType(gAgentType, gAgentAttribute);
 
-        // 获取DisplayName (从DescriptionAttribute或DisplayNameAttribute)
+        // Get DisplayName (from DescriptionAttribute or DisplayNameAttribute)
         var displayName = gAgentType.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName
                           ?? gAgentType.GetCustomAttribute<DescriptionAttribute>()?.Description
                           ?? gAgentType.Name;
 
-        // 获取Description (需要实例化后调用GetDescriptionAsync，这里先用类名或attribute)
+        // Get Description (need to call GetDescriptionAsync after instantiation, use class name or attribute here first)
         var description = gAgentType.GetCustomAttribute<DescriptionAttribute>()?.Description
-                          ?? $"{gAgentType.Name} - 演示GAgent";
+                          ?? $"{gAgentType.Name} - Demo GAgent";
 
-        // 获取EventHandlers
+        // Get EventHandlers
         var eventHandlers = ExtractEventHandlers(gAgentType);
 
         return new GAgentInfo
@@ -75,19 +75,19 @@ public static class GAgentReflectionExtensions
     }
 
     /// <summary>
-    /// 提取事件处理器
+    /// Extract event handlers
     /// </summary>
     private static List<string> ExtractEventHandlers(Type gAgentType)
     {
         var handlers = new List<string>();
 
-        // 获取所有方法（包括继承的）
+        // Get all methods (including inherited)
         var methods = gAgentType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance |
                                             BindingFlags.DeclaredOnly);
 
         foreach (var method in methods)
         {
-            // 检查EventHandler属性
+            // Check EventHandler attribute
             if (method.GetCustomAttribute<EventHandlerAttribute>() != null)
             {
                 var parameters = method.GetParameters();
@@ -95,7 +95,7 @@ public static class GAgentReflectionExtensions
                 handlers.Add($"{method.Name}({eventTypeNames})");
             }
 
-            // 检查AllEventHandler属性
+            // Check AllEventHandler attribute
             if (method.GetCustomAttribute<AllEventHandlerAttribute>() != null)
             {
                 var parameters = method.GetParameters();
@@ -103,7 +103,7 @@ public static class GAgentReflectionExtensions
                 handlers.Add($"{method.Name}({eventTypeNames}) [AllEventHandler]");
             }
 
-            // 检查约定的HandleEventAsync方法
+            // Check conventional HandleEventAsync method
             if (method.Name == "HandleEventAsync" && !method.IsSpecialName)
             {
                 var parameters = method.GetParameters();
@@ -119,13 +119,13 @@ public static class GAgentReflectionExtensions
     }
 
     /// <summary>
-    /// 获取GrainType
+    /// Get GrainType
     /// </summary>
     private static GrainType GetGrainType(Type gAgentType, GAgentAttribute? gAgentAttribute)
     {
         if (gAgentAttribute != null)
         {
-            // 根据GAgentAttribute参数创建GrainType
+            // Create GrainType based on GAgentAttribute parameters
             if (!string.IsNullOrEmpty(gAgentAttribute.Alias) && !string.IsNullOrEmpty(gAgentAttribute.Namespace))
             {
                 return GrainType.Create($"{gAgentAttribute.Namespace}.{gAgentAttribute.Alias}");
@@ -137,16 +137,16 @@ public static class GAgentReflectionExtensions
             }
         }
 
-        // 默认使用类名的小写形式
+        // Default to lowercase form of class name
         return GrainType.Create(gAgentType.Name.ToLowerInvariant());
     }
 
     /// <summary>
-    /// 检查是否是GAgent类型
+    /// Check if it's a GAgent type
     /// </summary>
     private static bool IsGAgentType(Type type)
     {
-        // 检查是否继承自GAgentBase
+        // Check if inherited from GAgentBase
         var baseType = type.BaseType;
         while (baseType != null)
         {
@@ -167,7 +167,7 @@ public static class GAgentReflectionExtensions
 }
 
 /// <summary>
-/// GAgent信息
+/// GAgent information
 /// </summary>
 public class GAgentInfo
 {

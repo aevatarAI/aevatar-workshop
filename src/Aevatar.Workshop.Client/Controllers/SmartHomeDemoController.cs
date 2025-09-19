@@ -54,7 +54,7 @@ namespace Aevatar.Workshop.Client.Controllers
                 var lightConfig = new LightConfiguration
                 {
                     LightId = LIGHT_ID.ToString("N"),
-                    Location = "客厅"
+                    Location = "Living Room"
                 };
                 var light = await _gAgentFactory.GetGAgentAsync<ILightGAgent>(LIGHT_ID, lightConfig);
                 _logger.LogInformation("Light GAgent created with GrainId: {GrainId}", light.GetGrainId().ToString());
@@ -448,12 +448,13 @@ namespace Aevatar.Workshop.Client.Controllers
         // Request DTOs
         public class InitializeRequest
         {
-            public string SystemLLM { get; set; } = "OpenAI";
+            public string SystemLLM { get; set; } = "NewKey";
         }
 
         public class CommandRequest
         {
             public string Command { get; set; } = string.Empty;
+            public string SystemLLM { get; set; } = string.Empty;
         }
 
         public class SceneRequest

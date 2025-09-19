@@ -25,9 +25,6 @@ Aevatar is a distributed multi-agent framework built on the **Orleans Virtual Ac
 - 📡 **Communicate with Others**: Collaborate with other GAgents through events
 - ⚡ **Work Concurrently**: Handle multiple tasks simultaneously
 
-### Orleans Virtual Actor Model
-
-GAgents are built on the **Orleans Virtual Actor** model, which means:
 
 ```csharp
 // Define a simple GAgent
@@ -55,7 +52,9 @@ public class CalculatorGAgent : GAgentBase<CalculatorState, CalculatorStateLogEv
 }
 ```
 
-#### Key Features of Virtual Actor:
+### Orleans Virtual Actor Model
+
+GAgents are built on the **Orleans Virtual Actor** model, which means:
 
 1. **Location Transparency**: You don't need to worry about which server the GAgent runs on
 2. **Auto Activation**: Orleans automatically creates and destroys instances as needed

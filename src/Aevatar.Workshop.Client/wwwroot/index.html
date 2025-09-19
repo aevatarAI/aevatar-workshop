@@ -397,6 +397,7 @@
       'saving': 'Saving...',
       'saved-successfully': 'Configuration saved successfully!',
       'save-failed': 'Save failed.',
+      'validation-failed': 'Please check if the URL formats are correct',
       'run-demo': 'Run Demo',
       'host-log': 'Host Log',
       'client-log': 'Client Log',
@@ -434,6 +435,7 @@
       'saving': '保存中...',
       'saved-successfully': '配置保存成功！',
       'save-failed': '保存失败。',
+      'validation-failed': '请检查输入的URL格式是否正确',
       'run-demo': '运行演示',
       'host-log': '主机日志',
       'client-log': '客户端日志',
@@ -476,6 +478,12 @@
       key: 'AevatarBasics',
       name: { en: 'Aevatar Basics', zh: 'Aevatar 基础概念' },
       desc: { en: 'demodesc/AevatarBasics.md', zh: 'demodesc/AevatarBasics.zh.md' },
+      isCustom: false // Use standard markdown rendering
+    },
+    {
+      key: 'GAgentDevelopmentGuide',
+      name: { en: 'GAgent Development Guide', zh: 'GAgent 开发指南' },
+      desc: { en: 'docs/gagent-development-guide.md', zh: 'docs/gagent-development-guide.zh.md' },
       isCustom: false // Use standard markdown rendering
     },
     {
@@ -675,8 +683,32 @@
         }
         llmConfigCancelBtn.onclick = () => { llmConfigModal.style.display = 'none'; };
         llmConfigSaveBtn.onclick = async function() {
+          // Validate all Endpoint URLs before saving
+          let hasValidationErrors = false;
+          const endpointInputs = llmConfigForm.querySelectorAll('input[data-field="Endpoint"]');
+          
+          endpointInputs.forEach(inp => {
+            const value = inp.value;
+            if (!isValidUrl(value)) {
+              const message = currentLanguage === 'zh' ? '请输入有效的URL格式' : 'Please enter a valid URL format';
+              showValidationError(inp, message);
+              hasValidationErrors = true;
+            } else {
+              clearValidationError(inp);
+            }
+          });
+          
+          if (hasValidationErrors) {
+            llmConfigMsg.setAttribute('data-i18n-key', 'validation-failed');
+            llmConfigMsg.textContent = currentLanguage === 'zh' ? '请检查输入的URL格式是否正确' : 'Please check if the URL formats are correct';
+            llmConfigMsg.style.color = '#ef4444';
+            setLanguage(currentLanguage);
+            return;
+          }
+          
           llmConfigMsg.setAttribute('data-i18n-key', 'saving');
           llmConfigMsg.textContent = 'Saving...';
+          llmConfigMsg.style.color = '#b91c1c';
           setLanguage(currentLanguage);
           try {
             const resp = await fetch('/api/llm-configs', {
@@ -1488,6 +1520,32 @@
   // Removed fetchMultichat function as MultiGAgentDemo is deleted
 
   const configLlmBtn = document.getElementById('configLlmBtn');
+  
+  // URL validation helper function
+  function isValidUrl(string) {
+    if (!string || string.trim() === '') return true; // Allow empty URLs
+    try {
+      new URL(string);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+  
+  // Show validation error for input field
+  function showValidationError(input, message) {
+    input.style.borderColor = '#ef4444';
+    input.style.boxShadow = '0 0 0 1px #ef4444';
+    input.title = message;
+  }
+  
+  // Clear validation error for input field
+  function clearValidationError(input) {
+    input.style.borderColor = '';
+    input.style.boxShadow = '';
+    input.title = '';
+  }
+  
   function renderLlmConfigForm() {
     const providerOptions = ['Azure', 'Google', 'OpenAI', 'DeepSeek'];
     const modelIdOptions = {
@@ -1539,7 +1597,9 @@
           });
           html += `</select></label></div>`;
         } else {
-          html += `<div style='margin-top:4px;'><label>${f}: <input type='text' value='${llmConfigData[key][f]||''}' data-key='${key}' data-field='${f}' class='llm-val' style='width:260px;'></label></div>`;
+          const isEndpoint = f === 'Endpoint';
+          const extraClass = isEndpoint ? ' llm-endpoint' : '';
+          html += `<div style='margin-top:4px;'><label>${f}: <input type='text' value='${llmConfigData[key][f]||''}' data-key='${key}' data-field='${f}' class='llm-val${extraClass}' style='width:260px;'></label></div>`;
         }
       });
       html += `</div>`;
@@ -1571,7 +1631,29 @@
         const k = inp.getAttribute('data-key');
         const f = inp.getAttribute('data-field');
         llmConfigData[k][f] = inp.value;
+        
+        // Validate Endpoint URL
+        if (f === 'Endpoint') {
+          if (isValidUrl(inp.value)) {
+            clearValidationError(inp);
+          } else {
+            const message = currentLanguage === 'zh' ? '请输入有效的URL格式' : 'Please enter a valid URL format';
+            showValidationError(inp, message);
+          }
+        }
       };
+      
+      // Add blur event for real-time validation
+      if (inp.getAttribute('data-field') === 'Endpoint') {
+        inp.onblur = function() {
+          if (isValidUrl(inp.value)) {
+            clearValidationError(inp);
+          } else {
+            const message = currentLanguage === 'zh' ? '请输入有效的URL格式' : 'Please enter a valid URL format';
+            showValidationError(inp, message);
+          }
+        };
+      }
     });
     llmConfigForm.querySelectorAll('.llm-provider').forEach(sel => {
       sel.onchange = function() {
